@@ -6,7 +6,9 @@ processes:
     command: cd server && npm run start
     availability:
       restart: "always"
+      max_restarts: 5
   client:
     command: cd client && npm run dev
     availability:
       restart: "always"
+      max_restarts: 5
