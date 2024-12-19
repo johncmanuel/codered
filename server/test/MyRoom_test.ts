@@ -8,7 +8,7 @@ import { MyRoomState } from "../src/rooms/schema/MyRoomState";
 describe("testing your Colyseus app", () => {
   let colyseus: ColyseusTestServer;
 
-  before(async () => colyseus = await boot(appConfig));
+  before(async () => (colyseus = await boot(appConfig)));
   after(async () => colyseus.shutdown());
 
   beforeEach(async () => await colyseus.cleanup());
