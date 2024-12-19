@@ -1,0 +1,12 @@
+# Used for starting apps simultaneously. Only for dev
+version: "0.5"
+
+processes:
+  server:
+    command: cd server && npm run start
+    availability:
+      restart: "always"
+  client:
+    command: cd client && npm run dev
+    availability:
+      restart: "always"
