@@ -31,6 +31,7 @@
     "@sveltejs/adapter-static": "^3.0.1",
     "@sveltejs/kit": "^2.5.8",
     "@sveltejs/vite-plugin-svelte": "^3.1.0",
+    "prettier-plugin-svelte": "^3.3.2",
     "svelte": "^4.2.17",
     "svelte-check": "^4.0.2",
     "terser": "^5.31.0",
@@ -40,6 +41,7 @@
   },
   "type": "module",
   "dependencies": {
+    "colyseus.js": "^0.15.26",
     "phaser": "^3.87.0"
   }
 }
