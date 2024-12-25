@@ -1,11 +1,12 @@
 <script lang="ts">
-  import type { Player } from '@/game/types/room';
-  
+  import type { Player } from "@/game/types/room";
+
   export let players: Player[];
   export let currentPlayerId: string;
 </script>
 
 <div class="player-list">
+  <span>Player Count: {players.length}</span>
   {#each players as player}
     <div class="player">
       <span>{player.name}</span>
