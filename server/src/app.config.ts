@@ -8,11 +8,15 @@ import { playground } from "@colyseus/playground";
 import { MyRoom } from "./rooms/Room";
 
 export default config({
+  options: {
+    devMode: process.env.NODE_ENV !== "production",
+  },
+
   initializeGameServer: (gameServer) => {
     /**
      * Define your room handlers:
      */
-    gameServer.define("my_room", MyRoom);
+    gameServer.define("lobby", MyRoom);
   },
 
   initializeExpress: (app) => {
