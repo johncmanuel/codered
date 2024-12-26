@@ -31,6 +31,12 @@ function createGameStore() {
     setPlayers: (players: Player[]) => update((state) => ({ ...state, players })),
     setIsHost: (isHost: boolean) => update((state) => ({ ...state, isHost })),
     setJoinCode: (joinCode: string) => update((state) => ({ ...state, joinCode })),
+    leaveLobby: () => {
+      update((state) => {
+        state.room?.leave();
+        return { ...initialState, client: state.client };
+      });
+    },
     reset: () => set(initialState),
   };
 }

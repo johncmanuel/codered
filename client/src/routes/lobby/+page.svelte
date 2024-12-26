@@ -57,6 +57,10 @@
       gameStore.setIsHost(room.sessionId === state.hostId);
     });
   }
+  function handleLeaveLobby() {
+    gameStore.leaveLobby();
+    isJoining = false; // Reset the joining state
+  }
 </script>
 
 <main>
@@ -80,6 +84,7 @@
       <h2>Lobby Code: {$gameStore.joinCode}</h2>
 
       <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
+      <button class="leave-button" on:click={handleLeaveLobby}> Leave Lobby </button>
     </div>
   {/if}
 </main>
