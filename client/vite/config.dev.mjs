@@ -6,5 +6,6 @@ export default defineConfig({
   plugins: [sveltekit()],
   server: {
     port: 8080,
+    open: true,
   },
 });
