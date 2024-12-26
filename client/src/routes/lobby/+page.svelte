@@ -35,8 +35,7 @@
         ? await $gameStore.client.joinById<LobbyRoom>(event.detail.code!, {
             name: event.detail.name,
           })
-        : await $gameStore.client.create<LobbyRoom>("my_room", { name: event.detail.name });
-
+        : await $gameStore.client.create<LobbyRoom>("lobby", { name: event.detail.name });
       setupRoom(room);
     } catch (error) {
       gameStore.setError(isJoining ? "Failed to join lobby" : "Failed to create lobby");
