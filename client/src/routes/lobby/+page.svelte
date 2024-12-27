@@ -6,6 +6,7 @@
   import PlayerList from "$lib/components/PlayerList.svelte";
   import type { LobbyRoom, Player } from "@/game/types/room";
   import { BACKEND_URL } from "@/game/lib/backend";
+  import HostControls from "@/lib/components/HostControls.svelte";
 
   let isJoining = false;
 
@@ -56,10 +57,36 @@
       gameStore.setPlayers(players);
       gameStore.setIsHost(room.sessionId === state.hostId);
     });
+
+    room.onMessage("startGame", () => {
+      // Start the game once Colyseus sends the signal
+      // startGame();
+      console.log("Game start, apt apt apt");
+    });
+
+    // Handle errors
+    room.onError((error) => {
+      gameStore.setError(`Room error: ${error}`);
+    });
   }
+
   function handleLeaveLobby() {
     gameStore.leaveLobby();
     isJoining = false; // Reset the joining state
+  }
+
+  function handleStartGame() {
+    if (!$gameStore.room || !$gameStore.isHost) return;
+    if ($gameStore.players.length < 3) {
+      gameStore.setError("You need at least 3 players to start the game");
+      return;
+    }
+
+    try {
+      $gameStore.room.send("startGame");
+    } catch (error) {
+      gameStore.setError("Failed to start game");
+    }
   }
 </script>
 
@@ -85,6 +112,15 @@
 
       <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
       <button class="leave-button" on:click={handleLeaveLobby}> Leave Lobby </button>
+      {#if $gameStore.isHost}
+        <HostControls players={$gameStore.players} onStart={handleStartGame} />
+      {/if}
+
+      {#if $gameStore.error}
+        <div class="error-message">
+          {$gameStore.error}
+        </div>
+      {/if}
     </div>
   {/if}
 </main>
@@ -109,5 +145,29 @@
   .lobby {
     max-width: 600px;
     margin: 0 auto;
+  }
+
+  .ready-button {
+    width: 100%;
+    padding: 0.5rem;
+    margin: 1rem 0;
+    background: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .ready-button:hover {
+    background: #1976d2;
+  }
+
+  .error-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #ffebee;
+    color: #c62828;
+    border-radius: 4px;
+    text-align: center;
   }
 </style>

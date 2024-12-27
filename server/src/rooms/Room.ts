@@ -9,6 +9,22 @@ export class MyRoom extends Room<LobbyState> {
   onCreate(options: any) {
     this.setState(new LobbyState());
     this.state.roomCode = this.generateRoomCode();
+
+    this.onMessage("startGame", (client) => {
+      if (client.sessionId !== this.state.hostId) {
+        return;
+      }
+
+      if (this.clients.length < 3) {
+        console.log("Cannot start game with less than 3 players");
+        return;
+      }
+
+      console.log("Starting game for roomid", this.roomId);
+
+      // Broadcast start game to all clients
+      this.broadcast("startGame");
+    });
   }
 
   onJoin(client: Client, options: any) {
