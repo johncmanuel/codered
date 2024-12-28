@@ -1,4 +1,4 @@
-import { Game as MainGame } from "./scenes/Game";
+import { Game as MainGame } from "./scenes/CodeRed";
 import { AUTO, Game, type Types } from "phaser";
 
 //  Find out more information about the Game Config at:
@@ -12,7 +12,7 @@ const config: Types.Core.GameConfig = {
   scene: [MainGame],
 };
 
-const StartGame = (parent) => {
+const StartGame = (parent: string) => {
   return new Game({ ...config, parent });
 };
 

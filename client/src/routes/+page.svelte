@@ -1,67 +1,176 @@
 <script lang="ts">
-  import type { Scene } from "phaser";
-  import PhaserGame, { type TPhaserRef } from "../game/PhaserGame.svelte";
+  import { onMount, onDestroy } from "svelte";
+  import { Client } from "colyseus.js";
+  import { gameStore } from "@/game/stores/gameStore";
+  import LobbyForm from "$lib/components/LobbyForm.svelte";
+  import PlayerList from "$lib/components/PlayerList.svelte";
+  import type { LobbyRoom, Player } from "@/game/types/room";
+  import { BACKEND_URL } from "@/game/lib/backend";
+  import HostControls from "@/lib/components/HostControls.svelte";
+  import { goto } from "$app/navigation";
 
-  //  References to the PhaserGame component (game and scene are exposed)
-  let phaserRef: TPhaserRef = { game: null, scene: null };
+  let isJoining = false;
 
-  const addSprite = () => {
-    const scene = phaserRef.scene as Scene;
+  onMount(() => {
+    initializeClient();
+  });
 
-    if (scene) {
-      // Add a new sprite to the current scene at a random position
-      const x = Phaser.Math.Between(64, scene.scale.width - 64);
-      const y = Phaser.Math.Between(64, scene.scale.height - 64);
+  onDestroy(() => {
+    $gameStore.room?.leave();
+    gameStore.reset();
+  });
 
-      //  `add.sprite` is a Phaser GameObjectFactory method and it returns a Sprite Game Object instance
-      scene.add.sprite(x, y, "star");
+  async function initializeClient() {
+    try {
+      const client = new Client(BACKEND_URL);
+      gameStore.setClient(client);
+    } catch (error) {
+      gameStore.setError("Failed to connect to server");
     }
-  };
-</script>
-
-<div id="app">
-  <PhaserGame bind:phaserRef />
-  <div>
-    <div>
-      <button class="button" on:click={addSprite}>Add New Sprite</button>
-    </div>
-  </div>
-</div>
-
-<style>
-  #app {
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
   }
 
-  .button {
-    width: 140px;
-    margin: 10px;
-    padding: 10px;
-    background-color: #000000;
-    color: rgba(255, 255, 255, 0.87);
-    border: 1px solid rgba(255, 255, 255, 0.87);
+  async function handleLobbySubmit(event: CustomEvent<{ name: string; code?: string }>) {
+    if (!$gameStore.client) return;
+
+    try {
+      const room = isJoining
+        ? await $gameStore.client.joinById<LobbyRoom>(event.detail.code!, {
+            name: event.detail.name,
+          })
+        : await $gameStore.client.create<LobbyRoom>("lobby", { name: event.detail.name });
+      setupRoom(room);
+    } catch (error) {
+      gameStore.setError(isJoining ? "Failed to join lobby" : "Failed to create lobby");
+      console.error("error in handleLobbySubmit", error);
+    }
+  }
+
+  function setupRoom(room: LobbyRoom) {
+    gameStore.setRoom(room);
+    gameStore.setJoinCode(room.roomId);
+
+    room.onStateChange((state) => {
+      const players: Player[] = Array.from(state.players.entries()).map(([id, data]) => ({
+        id,
+        name: data.name,
+      }));
+
+      gameStore.setPlayers(players);
+      gameStore.setIsHost(room.sessionId === state.hostId);
+    });
+
+    room.onMessage("startGame", async () => {
+      // Start the game once Colyseus sends the signal
+      // startGame();
+      console.log("Game start, apt apt apt");
+      await goto("/game");
+    });
+
+    // Handle errors
+    room.onError((error) => {
+      gameStore.setError(`Room error: ${error}`);
+    });
+  }
+
+  function handleLeaveLobby() {
+    gameStore.leaveLobby();
+    isJoining = false; // Reset the joining state
+  }
+
+  function handleStartGame() {
+    if (!$gameStore.room || !$gameStore.isHost) return;
+    if ($gameStore.players.length < 3) {
+      gameStore.setError("You need at least 3 players to start the game");
+      return;
+    }
+
+    // Send the start game signal to the server
+    try {
+      $gameStore.room.send("startGame");
+    } catch (error) {
+      gameStore.setError("Failed to start game");
+    }
+  }
+</script>
+
+<main>
+  {#if !$gameStore.room}
+    <div class="lobby-creation">
+      <div class="tabs">
+        <button class:active={!isJoining} on:click={() => (isJoining = false)}>
+          Create Lobby
+        </button>
+        <button class:active={isJoining} on:click={() => (isJoining = true)}> Join Lobby </button>
+      </div>
+
+      <LobbyForm {isJoining} on:submit={handleLobbySubmit} />
+
+      {#if $gameStore.error}
+        <p class="error">{$gameStore.error}</p>
+      {/if}
+    </div>
+  {:else}
+    <div class="lobby">
+      <h2>Lobby Code: {$gameStore.joinCode}</h2>
+
+      <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
+      <button class="leave-button" on:click={handleLeaveLobby}> Leave Lobby </button>
+      {#if $gameStore.isHost}
+        <HostControls players={$gameStore.players} onStart={handleStartGame} />
+      {/if}
+
+      {#if $gameStore.error}
+        <div class="error-message">
+          {$gameStore.error}
+        </div>
+      {/if}
+    </div>
+  {/if}
+</main>
+
+<style>
+  .lobby-creation {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .error {
+    color: red;
+    margin-top: 1rem;
+  }
+
+  .lobby {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .ready-button {
+    width: 100%;
+    padding: 0.5rem;
+    margin: 1rem 0;
+    background: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    transition: all 0.3s;
+  }
 
-    &:hover {
-      border: 1px solid #0ec3c9;
-      color: #0ec3c9;
-    }
+  .ready-button:hover {
+    background: #1976d2;
+  }
 
-    &:active {
-      background-color: #0ec3c9;
-    }
-
-    /* Disabled styles */
-    &:disabled {
-      cursor: not-allowed;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: rgba(255, 255, 255, 0.3);
-    }
+  .error-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #ffebee;
+    color: #c62828;
+    border-radius: 4px;
+    text-align: center;
   }
 </style>
