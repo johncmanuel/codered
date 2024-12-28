@@ -1,3 +1,6 @@
+<!-- Acts as bridge between Phaser and Svelte events -->
+<!-- https://github.com/phaserjs/template-svelte?tab=readme-ov-file#svelte-bridge -->
+
 <script context="module" lang="ts">
   import type { Game, Scene } from "phaser";
 
