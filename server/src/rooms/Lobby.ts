@@ -1,8 +1,8 @@
 import { Room, Client } from "@colyseus/core";
-import { LobbyState } from "./schema/RoomState";
+import { LobbyState } from "./schema/LobbyState";
 import { PlayerState } from "./schema/PlayerState";
 
-export class MyRoom extends Room<LobbyState> {
+export class Lobby extends Room<LobbyState> {
   // Allow up to 6 players per room
   maxClients = 6;
 
@@ -20,7 +20,7 @@ export class MyRoom extends Room<LobbyState> {
         return;
       }
 
-      console.log("Starting game for roomid", this.roomId);
+      console.log("Starting game for lobby roomid", this.roomId);
 
       // Broadcast start game to all clients
       this.broadcast("startGame");
@@ -35,7 +35,7 @@ export class MyRoom extends Room<LobbyState> {
     // Set host to be the first player
     if (this.clients.length === 1) this.state.hostId = client.sessionId;
 
-    console.log(client.sessionId, "joined roomId:", this.roomId);
+    console.log(client.sessionId, "joined lobby roomId:", this.roomId);
   }
 
   onLeave(client: Client) {
@@ -46,11 +46,11 @@ export class MyRoom extends Room<LobbyState> {
       this.state.hostId = this.clients[0].sessionId;
     }
 
-    console.log(client.sessionId, "left roomId:", this.roomId);
+    console.log(client.sessionId, "left lobby lobby roomId:", this.roomId);
   }
 
   onDispose() {
-    console.log("room", this.roomId, "disposing...");
+    console.log("lobby", this.roomId, "disposing...");
   }
 
   // Generates a random, unique 6-character room code
