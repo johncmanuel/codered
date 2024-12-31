@@ -1,4 +1,8 @@
 <script lang="ts">
+  import PhaserGame, { type TPhaserRef } from "@/game/PhaserGame.svelte";
+  let phaserRef: TPhaserRef = { game: null, scene: null };
 </script>
 
-<div>welcome to the game</div>
+<div id="app">
+  <PhaserGame bind:phaserRef />
+</div>

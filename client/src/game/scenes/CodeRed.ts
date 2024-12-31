@@ -1,34 +1,26 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
+import { Room } from "colyseus.js";
 
-export class Game extends Scene {
+export class CodeRed extends Scene {
+  room: Room;
+
   constructor() {
     super("Game");
   }
 
-  preload() {
-    this.load.setPath("assets");
+  // Order of execution: init, preload, create, update
+  // Update runs continuously
 
-    this.load.image("star", "star.png");
-    this.load.image("background", "bg.png");
-    this.load.image("logo", "logo.png");
+  init() {}
+
+  preload() {
+    // Load all assets here first!!!!
   }
 
   create() {
-    this.add.image(512, 384, "background");
-    this.add.image(512, 350, "logo").setDepth(100);
-    this.add
-      .text(512, 490, "Make something fun!\nand share it with us:\nsupport@phaser.io", {
-        fontFamily: "Arial Black",
-        fontSize: 38,
-        color: "#ffffff",
-        stroke: "#000000",
-        strokeThickness: 8,
-        align: "center",
-      })
-      .setOrigin(0.5)
-      .setDepth(100);
-
     EventBus.emit("current-scene-ready", this);
   }
+
+  update() {}
 }
