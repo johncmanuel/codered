@@ -1,4 +1,4 @@
-import { Game as MainGame } from "./scenes/CodeRed";
+import { CodeRed as MainGame } from "./scenes/CodeRed";
 import { AUTO, Game, type Types } from "phaser";
 
 //  Find out more information about the Game Config at:
