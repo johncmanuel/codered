@@ -1,3 +1,6 @@
+<!-- Acts as bridge between Phaser and Svelte events -->
+<!-- https://github.com/phaserjs/template-svelte?tab=readme-ov-file#svelte-bridge -->
+
 <script context="module" lang="ts">
   import type { Game, Scene } from "phaser";
 
@@ -11,6 +14,7 @@
   import { onMount } from "svelte";
   import StartGame from "./main";
   import { EventBus } from "./EventBus";
+  // import { type GameStore } from "./stores/gameStore";
 
   export let phaserRef: TPhaserRef = {
     game: null,
@@ -18,6 +22,8 @@
   };
 
   export let currentActiveScene: (scene: Scene) => void | undefined;
+
+  // export let gameStore: GameStore | undefined;
 
   onMount(() => {
     phaserRef.game = StartGame("game-container");
