@@ -2,6 +2,7 @@ import { Room, Client } from "@colyseus/core";
 import { LobbyState } from "./schema/LobbyState";
 import { PlayerState } from "./schema/PlayerState";
 
+// TODO: Merge lobby state and game state into one?
 export class Lobby extends Room<LobbyState> {
   // Allow up to 6 players per room
   maxClients = 6;
@@ -10,6 +11,10 @@ export class Lobby extends Room<LobbyState> {
     this.setState(new LobbyState());
     this.state.roomCode = this.generateRoomCode();
 
+    // Create all our event handlers down below
+    // This is where most of our multiplayer logic will be
+
+    // Handle starting the game
     this.onMessage("startGame", (client) => {
       if (client.sessionId !== this.state.hostId) {
         return;

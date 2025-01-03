@@ -16,3 +16,10 @@ export interface Player {
   id: string;
   name: string;
 }
+
+export interface GameState {
+  health: number;
+  round: number;
+  tasksDone: number;
+  timer: number;
+}
