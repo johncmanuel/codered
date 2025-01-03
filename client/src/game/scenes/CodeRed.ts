@@ -1,9 +1,10 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
-import { Room } from "colyseus.js";
+// import { Room } from "colyseus.js";
+import { type GameStore } from "../stores/gameStore";
 
 export class CodeRed extends Scene {
-  room: Room;
+  gameStore: GameStore;
 
   constructor() {
     super("Game");
@@ -12,13 +13,19 @@ export class CodeRed extends Scene {
   // Order of execution: init, preload, create, update
   // Update runs continuously
 
-  init() {}
+  init() {
+    console.log("Game scene initialized");
+  }
 
   preload() {
     // Load all assets here first!!!!
   }
 
   create() {
+    EventBus.on("test", (gameStore: GameStore) => {
+      console.log("what");
+      console.log("From Phaser", gameStore);
+    });
     EventBus.emit("current-scene-ready", this);
   }
 

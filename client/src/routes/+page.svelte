@@ -1,15 +1,17 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
+  import { EventBus } from "@/game/EventBus";
   import { Client } from "colyseus.js";
   import { gameStore } from "@/game/stores/gameStore";
   import LobbyForm from "$lib/components/LobbyForm.svelte";
   import PlayerList from "$lib/components/PlayerList.svelte";
   import type { LobbyRoom, Player } from "@/game/types/room";
+  import GameComponent from "$lib/components/GameComponent.svelte";
   import { BACKEND_URL } from "@/game/lib/backend";
   import HostControls from "@/lib/components/HostControls.svelte";
-  import { goto } from "$app/navigation";
 
   let isJoining = false;
+  $: hasStarted = false;
 
   onMount(() => {
     initializeClient();
@@ -17,7 +19,7 @@
 
   onDestroy(() => {
     $gameStore.room?.leave();
-    gameStore.reset();
+    // gameStore.reset();
   });
 
   async function initializeClient() {
@@ -38,14 +40,14 @@
             name: event.detail.name,
           })
         : await $gameStore.client.create<LobbyRoom>("lobby", { name: event.detail.name });
-      setupRoom(room);
+      handleRoomEvents(room);
     } catch (error) {
       gameStore.setError(isJoining ? "Failed to join lobby" : "Failed to create lobby");
       console.error("error in handleLobbySubmit", error);
     }
   }
 
-  function setupRoom(room: LobbyRoom) {
+  function handleRoomEvents(room: LobbyRoom) {
     gameStore.setRoom(room);
     gameStore.setJoinCode(room.roomId);
 
@@ -59,11 +61,12 @@
       gameStore.setIsHost(room.sessionId === state.hostId);
     });
 
+    // Start the game once Colyseus sends the signal
     room.onMessage("startGame", async () => {
-      // Start the game once Colyseus sends the signal
-      // startGame();
       console.log("Game start, apt apt apt");
-      await goto("/game");
+      console.log("GameStore", gameStore);
+      hasStarted = true;
+      EventBus.emit("startGame", $gameStore);
     });
 
     // Handle errors
@@ -78,23 +81,27 @@
   }
 
   function handleStartGame() {
+    // Check conditions first
     if (!$gameStore.room || !$gameStore.isHost) return;
     if ($gameStore.players.length < 3) {
       gameStore.setError("You need at least 3 players to start the game");
       return;
     }
 
-    // Send the start game signal to the server
+    // Send the start game signal to Colyseus
     try {
       $gameStore.room.send("startGame");
     } catch (error) {
       gameStore.setError("Failed to start game");
+      console.log("Failed to start game");
     }
   }
 </script>
 
 <main>
-  {#if !$gameStore.room}
+  {#if $gameStore.room && hasStarted}
+    <GameComponent />
+  {:else if !$gameStore.room}
     <div class="lobby-creation">
       <div class="tabs">
         <button class:active={!isJoining} on:click={() => (isJoining = false)}>

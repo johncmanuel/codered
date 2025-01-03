@@ -2,7 +2,7 @@ import { writable } from "svelte/store";
 import type { Client } from "colyseus.js";
 import type { LobbyRoom, Player } from "../types/room";
 
-interface GameStore {
+export interface GameStore {
   client: Client | null;
   room: LobbyRoom | null;
   error: string | null;
