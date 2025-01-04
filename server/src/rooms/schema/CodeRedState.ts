@@ -1,14 +1,13 @@
-import type { Room } from "colyseus.js";
-import { SetSchema, Schema, type, MapSchema } from "@colyseus/schema";
+import { SetSchema, Schema, MapSchema, type } from "@colyseus/schema";
 
-// export class PlayerState extends Schema {
-//   @type("string") name: string;
-// }
-// export class LobbyState extends Schema {
-//   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
-//   @type("string") roomCode: string;
-//   @type("string") hostId: string;
-// }
+// See the doc for all tasks
+//https://docs.google.com/document/d/108iqAIOSarstxAkN5XhzX--UqDadNuoiModpusWcysA/edit?tab=t.0
+export enum Tasks {
+  FIREWALL_CONFIG,
+  PHISHING_EMAIL,
+  VIRUS_CONTAINMENT,
+  NETWORK_MAPPING,
+}
 
 export class PlayerState extends Schema {
   @type("string") name: string;
@@ -29,18 +28,4 @@ export class GameState extends Schema {
 
   // I don't think room code is needed to be synchronized but we'll do it for now
   @type("string") roomCode: string;
-}
-
-export type GameRoom = Room<GameState>;
-
-export interface Player {
-  id: string;
-  name: string;
-}
-
-export interface GameState {
-  health: number;
-  round: number;
-  tasksDone: number;
-  timer: number;
 }

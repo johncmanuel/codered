@@ -5,7 +5,7 @@
   import { gameStore } from "@/game/stores/gameStore";
   import LobbyForm from "$lib/components/LobbyForm.svelte";
   import PlayerList from "$lib/components/PlayerList.svelte";
-  import type { LobbyRoom, Player } from "@/game/types/room";
+  import type { GameRoom, Player } from "@/game/types/room";
   import GameComponent from "$lib/components/GameComponent.svelte";
   import { BACKEND_URL } from "@/game/lib/backend";
   import HostControls from "@/lib/components/HostControls.svelte";
@@ -35,11 +35,12 @@
     if (!$gameStore.client) return;
 
     try {
+      const colyseusRoom = "lobby";
       const room = isJoining
-        ? await $gameStore.client.joinById<LobbyRoom>(event.detail.code!, {
+        ? await $gameStore.client.joinById<GameRoom>(event.detail.code!, {
             name: event.detail.name,
           })
-        : await $gameStore.client.create<LobbyRoom>("lobby", { name: event.detail.name });
+        : await $gameStore.client.create<GameRoom>(colyseusRoom, { name: event.detail.name });
       handleRoomEvents(room);
     } catch (error) {
       gameStore.setError(isJoining ? "Failed to join lobby" : "Failed to create lobby");
@@ -47,7 +48,7 @@
     }
   }
 
-  function handleRoomEvents(room: LobbyRoom) {
+  function handleRoomEvents(room: GameRoom) {
     gameStore.setRoom(room);
     gameStore.setJoinCode(room.roomId);
 
@@ -66,7 +67,7 @@
       console.log("Game start, apt apt apt");
       console.log("GameStore", gameStore);
       hasStarted = true;
-      EventBus.emit("startGame", $gameStore);
+      // EventBus.emit("startGame", $gameStore);
     });
 
     // Handle errors
