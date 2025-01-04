@@ -1,7 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { PlayerState, GameState } from "./schema/CodeRedState";
 
-// TODO: Merge lobby state and game state into one?
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
   maxClients = 6;
