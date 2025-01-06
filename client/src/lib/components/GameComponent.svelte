@@ -4,22 +4,40 @@
   import { EventBus } from "@/game/EventBus";
   import { Scene } from "phaser";
   import PlayerList from "./PlayerList.svelte";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
+  import Timer from "./Timer.svelte";
+
   let phaserRef: TPhaserRef = { game: null, scene: null };
 
+  // Variables for showing UI changes
+  $: timer = 0;
+
   onMount(() => {
-    console.log("emitting test event");
-    EventBus.emit("test", $gameStore);
+    // EventBus.emit("test", $gameStore);
   });
 
+  onDestroy(() => {
+    EventBus.off("updateTimer");
+  });
+
+  // Do stuff once scene is ready to go from the Phaser side
   const onCurrentActiveScene = (scene: Scene) => {
     console.log("onCurrentActiveScene triggered");
-    // EventBus.emit("test", $gameStore);
+    EventBus.emit("test", $gameStore);
+    setupEventBusListeners();
   };
+
+  // Listen for events from the Phaser side
+  function setupEventBusListeners() {
+    EventBus.on("updateTimer", (newTimer: number) => {
+      timer = newTimer;
+    });
+  }
 </script>
 
 <div id="app">
   {#if $gameStore.room}
+    <Timer {timer} />
     <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
     <PhaserGame bind:phaserRef currentActiveScene={onCurrentActiveScene} />
   {/if}

@@ -41,6 +41,7 @@
             name: event.detail.name,
           })
         : await $gameStore.client.create<GameRoom>(colyseusRoom, { name: event.detail.name });
+      // @ts-ignore: ignore type checking here for now
       handleRoomEvents(room);
     } catch (error) {
       gameStore.setError(isJoining ? "Failed to join lobby" : "Failed to create lobby");
@@ -63,7 +64,7 @@
     });
 
     // Start the game once Colyseus sends the signal
-    room.onMessage("startGame", async () => {
+    room.onMessage("startGame", () => {
       console.log("Game start, apt apt apt");
       console.log("GameStore", gameStore);
       hasStarted = true;

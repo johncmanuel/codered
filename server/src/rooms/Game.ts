@@ -1,9 +1,14 @@
-import { Room, Client } from "@colyseus/core";
+import { Room, Client, Delayed } from "@colyseus/core";
 import { PlayerState, GameState } from "./schema/CodeRedState";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
   maxClients = 6;
+
+  timerInterval!: Delayed;
+
+  TIMER_INTERVAL_MS = 2000;
+  TIMEOUT_INTERVAL_MS = 5000;
 
   onCreate(options: any) {
     this.setState(new GameState());
@@ -27,6 +32,27 @@ export class CodeRedRoom extends Room<GameState> {
 
       // Broadcast start game to all clients
       this.broadcast("startGame");
+    });
+
+    this.onMessage("startTimer", () => {
+      // Colyseus' clock methods use milliseconds
+      this.clock.start();
+      console.log("Timer started!");
+
+      this.timerInterval = this.clock.setInterval(() => {
+        this.state.timer++;
+        console.log("Timer:", this.state.timer);
+        this.broadcast("updateTimer", this.state.timer);
+      }, this.TIMER_INTERVAL_MS);
+
+      // clear timer once time limit is reached
+      // putting 5 seconds for now
+      this.clock.setTimeout(() => {
+        this.state.timer = 0;
+        this.clock.stop();
+        console.log("Game over!");
+        this.timerInterval.clear();
+      }, this.TIMEOUT_INTERVAL_MS);
     });
   }
 
