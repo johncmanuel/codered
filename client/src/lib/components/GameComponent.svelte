@@ -6,11 +6,13 @@
   import PlayerList from "./PlayerList.svelte";
   import { onMount, onDestroy } from "svelte";
   import Timer from "./Timer.svelte";
+  import DataHealth from "./DataHealth.svelte";
 
   let phaserRef: TPhaserRef = { game: null, scene: null };
 
   // Variables for showing UI changes
-  $: timer = 0;
+  $: timer = $gameStore.room?.state.timer ?? 0;
+  $: health = $gameStore.room?.state.dataHealth ?? 0;
 
   onMount(() => {
     // EventBus.emit("test", $gameStore);
@@ -32,6 +34,9 @@
     EventBus.on("updateTimer", (newTimer: number) => {
       timer = newTimer;
     });
+    EventBus.on("updateHealth", (newHealth: number) => {
+      health = newHealth;
+    });
   }
 </script>
 
@@ -39,6 +44,7 @@
   {#if $gameStore.room}
     <Timer {timer} />
     <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
+    <DataHealth {health} />
     <PhaserGame bind:phaserRef currentActiveScene={onCurrentActiveScene} />
   {/if}
 </div>

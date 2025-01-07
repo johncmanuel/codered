@@ -37,7 +37,6 @@ export class CodeRed extends Scene {
       }
       this.createServerListeners();
       this.createEventBusListeners();
-      console.log("sending updateTimer to colysues");
       this.gameStore.room?.send("startTimer");
     });
     EventBus.emit("current-scene-ready", this);
@@ -66,16 +65,19 @@ export class CodeRed extends Scene {
       throw new Error("No game store");
     }
 
-    this.gameStore.room?.onMessage("updateTimer", (timer: number) => {
+    this.gameStore.room?.state.listen("timer", (timer: number) => {
       console.log("Timer updated", timer);
       EventBus.emit("updateTimer", timer);
     });
 
-    // Called when the room state has been updated in Colyseus
-    // this.gameStore.room?.onStateChange((state) => {
-    //   this.gameState = state;
-    //   EventBus.emit("updateTimer", state.timer);
-    //   // console.log("State changed", state);
+    this.gameStore.room?.state.listen("dataHealth", (dataHealth: number) => {
+      console.log("Data health updated", dataHealth);
+      EventBus.emit("updateHealth", dataHealth);
+    });
+
+    // this.gameStore.room?.onMessage("updateTimer", (timer: number) => {
+    //   console.log("Timer updated", timer);
+    //   EventBus.emit("updateTimer", timer);
     // });
   }
 }

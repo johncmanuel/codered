@@ -7,7 +7,7 @@ export class CodeRedRoom extends Room<GameState> {
 
   timerInterval!: Delayed;
 
-  TIMER_INTERVAL_MS = 2000;
+  TIMER_INTERVAL_MS = 1000;
   TIMEOUT_INTERVAL_MS = 5000;
 
   onCreate(options: any) {
@@ -32,27 +32,9 @@ export class CodeRedRoom extends Room<GameState> {
 
       // Broadcast start game to all clients
       this.broadcast("startGame");
-    });
 
-    this.onMessage("startTimer", () => {
-      // Colyseus' clock methods use milliseconds
-      this.clock.start();
-      console.log("Timer started!");
-
-      this.timerInterval = this.clock.setInterval(() => {
-        this.state.timer++;
-        console.log("Timer:", this.state.timer);
-        this.broadcast("updateTimer", this.state.timer);
-      }, this.TIMER_INTERVAL_MS);
-
-      // clear timer once time limit is reached
-      // putting 5 seconds for now
-      this.clock.setTimeout(() => {
-        this.state.timer = 0;
-        this.clock.stop();
-        console.log("Game over!");
-        this.timerInterval.clear();
-      }, this.TIMEOUT_INTERVAL_MS);
+      // Start timer immediately, but ideally should do so once everyone is properly connected
+      this.startTimer();
     });
   }
 
@@ -80,6 +62,27 @@ export class CodeRedRoom extends Room<GameState> {
 
   onDispose() {
     console.log("lobby", this.roomId, "disposing...");
+  }
+
+  startTimer() {
+    this.state.timer = 0;
+    this.clock.start();
+    console.log("Timer started!");
+
+    this.timerInterval = this.clock.setInterval(() => {
+      this.state.timer++;
+      console.log("Timer:", this.state.timer);
+      // this.broadcast("updateTimer", this.state.timer);
+    }, this.TIMER_INTERVAL_MS);
+
+    // clear timer once time limit is reached
+    // putting 5 seconds for now
+    // this.clock.setTimeout(() => {
+    //   this.state.timer = 0;
+    //   this.clock.stop();
+    //   console.log("Game over!");
+    //   this.timerInterval.clear();
+    // }, this.TIMEOUT_INTERVAL_MS);
   }
 
   // Generates a random, unique 6-character room code
