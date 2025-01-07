@@ -7,8 +7,8 @@ export class CodeRedRoom extends Room<GameState> {
 
   timerInterval!: Delayed;
 
-  TIMER_INTERVAL_MS = 1000;
-  TIMEOUT_INTERVAL_MS = 5000;
+  // i think
+  maxNumRounds = 6;
 
   onCreate(options: any) {
     this.setState(new GameState());
@@ -65,6 +65,9 @@ export class CodeRedRoom extends Room<GameState> {
   }
 
   startTimer() {
+    const TIMER_INTERVAL_MS = 1000;
+    const TIMEOUT_INTERVAL_MS = 5000;
+
     this.state.timer = 0;
     this.clock.start();
     console.log("Timer started!");
@@ -73,7 +76,7 @@ export class CodeRedRoom extends Room<GameState> {
       this.state.timer++;
       console.log("Timer:", this.state.timer);
       // this.broadcast("updateTimer", this.state.timer);
-    }, this.TIMER_INTERVAL_MS);
+    }, TIMER_INTERVAL_MS);
 
     // clear timer once time limit is reached
     // putting 5 seconds for now
@@ -82,7 +85,7 @@ export class CodeRedRoom extends Room<GameState> {
     //   this.clock.stop();
     //   console.log("Game over!");
     //   this.timerInterval.clear();
-    // }, this.TIMEOUT_INTERVAL_MS);
+    // }, TIMEOUT_INTERVAL_MS);
   }
 
   // Generates a random, unique 6-character room code

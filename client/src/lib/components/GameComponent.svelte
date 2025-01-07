@@ -12,7 +12,8 @@
 
   // Variables for showing UI changes
   $: timer = $gameStore.room?.state.timer ?? 0;
-  $: health = $gameStore.room?.state.dataHealth ?? 0;
+  $: health = $gameStore.room?.state.dataHealth ?? 100;
+  $: currRound = $gameStore.room?.state.round ?? 0;
 
   onMount(() => {
     // EventBus.emit("test", $gameStore);
