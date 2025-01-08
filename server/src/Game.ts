@@ -1,14 +1,16 @@
 import { Room, Client, Delayed } from "@colyseus/core";
-import { PlayerState, GameState } from "./CodeRedState";
+import { PlayerState, GameState, Tasks, TaskState } from "./CodeRedState";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
   maxClients = 6;
 
   timerInterval!: Delayed;
+  taskGenerationInterval!: Delayed;
 
   // i think
   maxNumRounds = 6;
+  numRequiredTasksCompleted = 15;
 
   onCreate(options: any) {
     this.setState(new GameState());
@@ -35,7 +37,17 @@ export class CodeRedRoom extends Room<GameState> {
 
       // Start timer immediately, but ideally should do so once everyone is properly connected
       this.startTimer();
+      // this.gameLoop();
     });
+
+    // Handle stuff once a player finishs a task
+    this.onMessage("taskCompleted", (client, taskId: string) => {});
+
+    // Handle stuff once a player fails a task
+    this.onMessage("taskFailed", (client, taskId: string) => {});
+
+    // Send the game over stats to the clients
+    this.onMessage("gameOverStats", (client) => {});
   }
 
   onJoin(client: Client, options: any) {
@@ -65,27 +77,61 @@ export class CodeRedRoom extends Room<GameState> {
   }
 
   startTimer() {
-    const TIMER_INTERVAL_MS = 1000;
-    const TIMEOUT_INTERVAL_MS = 5000;
-
     this.state.timer = 0;
     this.clock.start();
     console.log("Timer started!");
+  }
 
+  // Technically the game loop
+  gameLoop() {
+    const TIMER_INTERVAL_MS = 1 * 1000;
+    const TASK_GENERATION_INTERVAL_MS = 5 * 1000;
+
+    // Keep track of the current round's timer
     this.timerInterval = this.clock.setInterval(() => {
       this.state.timer++;
-      console.log("Timer:", this.state.timer);
-      // this.broadcast("updateTimer", this.state.timer);
+      // console.log("Timer:", this.state.timer);
     }, TIMER_INTERVAL_MS);
 
-    // clear timer once time limit is reached
-    // putting 5 seconds for now
-    // this.clock.setTimeout(() => {
-    //   this.state.timer = 0;
-    //   this.clock.stop();
-    //   console.log("Game over!");
-    //   this.timerInterval.clear();
-    // }, TIMEOUT_INTERVAL_MS);
+    // Generate a new task periodically
+    this.taskGenerationInterval = this.clock.setInterval(() => {
+      if (this.state.isGameOver) return;
+
+      const task = this.createNewTask();
+      this.broadcast("newTask", task);
+      console.log("New task created for", task.assignedTo);
+
+      // Reduce data health if too many active tasks
+      if (this.state.activeTasks.size > this.clients.length * 2) {
+        this.state.dataHealth -= 5;
+        if (this.state.dataHealth <= 0) {
+          this.state.isGameOver = true;
+          this.broadcast("gameOver");
+        }
+      }
+    }, TASK_GENERATION_INTERVAL_MS);
+  }
+
+  // Randomly select a task
+  // Randomly select a player to assign the task to
+  // Set the time limit for the task
+  // Add the task to the list of tasks
+  createNewTask() {
+    const taskTypes = Object.values(Tasks).filter((t) => typeof t === "number");
+    const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)] as Tasks;
+
+    const playerIds = Array.from(this.state.players.keys());
+    const randomPlayerId = playerIds[Math.floor(Math.random() * playerIds.length)];
+
+    const task = new TaskState();
+    task.id = Math.random().toString(36).substring(2, 9);
+    task.type = Tasks[taskType];
+    task.assignedTo = randomPlayerId;
+    task.timeCreated = this.clock.currentTime;
+    task.timeLimit = 30; // Can be adjusted as players get further in the rounds
+
+    this.state.activeTasks.set(task.id, task);
+    return task;
   }
 
   // Generates a random, unique 6-character room code
