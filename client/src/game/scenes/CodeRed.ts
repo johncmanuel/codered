@@ -36,7 +36,6 @@ export class CodeRed extends Scene {
         throw new Error("No game store");
       }
       this.createServerListeners();
-      this.createEventBusListeners();
       this.gameStore.room?.send("startTimer");
     });
     EventBus.emit("current-scene-ready", this);
@@ -51,12 +50,6 @@ export class CodeRed extends Scene {
   //    if task not completed, decrement health
   //    if number of tasks exceeds 15(?), go to next round
   update() {}
-
-  // Set up event listeners between Svelte and Phaser
-  // This helps send any important events or changes to the UI (Svelte) so players can see them
-  createEventBusListeners() {
-    console.log("Event bus listeners created");
-  }
 
   // Set up listeners for Colyseus messages
   //https://docs.colyseus.io/state/schema-callbacks/#schema-callbacks
