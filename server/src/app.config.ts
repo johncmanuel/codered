@@ -5,7 +5,7 @@ import { playground } from "@colyseus/playground";
 /**
  * Import your Room files
  */
-import { CodeRedRoom } from "./rooms/Game";
+import { CodeRedRoom } from "./Game";
 
 export default config({
   options: {

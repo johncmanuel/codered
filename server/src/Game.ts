@@ -1,5 +1,5 @@
 import { Room, Client, Delayed } from "@colyseus/core";
-import { PlayerState, GameState } from "./schema/CodeRedState";
+import { PlayerState, GameState } from "./CodeRedState";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
