@@ -20,6 +20,7 @@ export class CodeRed extends Scene {
   init() {
     console.log("Initializing");
     this.gameState = new GameState();
+    this.createEventBusListeners();
   }
 
   // Load all assets here first and other stuff
@@ -29,15 +30,6 @@ export class CodeRed extends Scene {
 
   create() {
     console.log("Creating");
-    EventBus.on("test", (gameStore: GameStore) => {
-      console.log("From Svelte", gameStore);
-      this.gameStore = gameStore;
-      if (!this.gameStore) {
-        throw new Error("No game store");
-      }
-      this.createServerListeners();
-      this.gameStore.room?.send("startTimer");
-    });
     EventBus.emit("current-scene-ready", this);
   }
 
@@ -51,7 +43,20 @@ export class CodeRed extends Scene {
   //    if number of tasks exceeds 15(?), go to next round
   update() {}
 
-  // Set up listeners for Colyseus messages
+  // Set up listeners for events from Svelte
+  createEventBusListeners() {
+    EventBus.on("test", (gameStore: GameStore) => {
+      console.log("From Svelte", gameStore);
+      this.gameStore = gameStore;
+      if (!this.gameStore) {
+        throw new Error("No game store");
+      }
+      this.createServerListeners();
+      // this.gameStore.room?.send("startTimer");
+    });
+  }
+
+  // Set up listeners for events from Colyseus server
   //https://docs.colyseus.io/state/schema-callbacks/#schema-callbacks
   createServerListeners() {
     if (!this.gameStore) {
@@ -68,9 +73,9 @@ export class CodeRed extends Scene {
       EventBus.emit("updateHealth", dataHealth);
     });
 
-    // this.gameStore.room?.onMessage("updateTimer", (timer: number) => {
-    //   console.log("Timer updated", timer);
-    //   EventBus.emit("updateTimer", timer);
-    // });
+    this.gameStore.room?.state.listen("round", (round: number) => {
+      console.log("Round updated", round);
+      EventBus.emit("updateRound", round);
+    });
   }
 }

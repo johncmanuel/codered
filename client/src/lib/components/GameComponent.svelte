@@ -7,6 +7,7 @@
   import { onMount, onDestroy } from "svelte";
   import Timer from "./Timer.svelte";
   import DataHealth from "./DataHealth.svelte";
+  import CurrentRound from "./CurrentRound.svelte";
 
   let phaserRef: TPhaserRef = { game: null, scene: null };
 
@@ -14,6 +15,7 @@
   $: timer = $gameStore.room?.state.timer ?? 0;
   $: health = $gameStore.room?.state.dataHealth ?? 100;
   $: currRound = $gameStore.room?.state.round ?? 0;
+  $: maxRounds = 6; // hard code for now, get it from server later
 
   onMount(() => {
     // EventBus.emit("test", $gameStore);
@@ -38,6 +40,9 @@
     EventBus.on("updateHealth", (newHealth: number) => {
       health = newHealth;
     });
+    EventBus.on("updateRound", (newRound: number) => {
+      currRound = newRound;
+    });
   }
 </script>
 
@@ -46,6 +51,7 @@
     <Timer {timer} />
     <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
     <DataHealth {health} />
+    <CurrentRound currentRound={currRound} {maxRounds} />
     <PhaserGame bind:phaserRef currentActiveScene={onCurrentActiveScene} />
   {/if}
 </div>
