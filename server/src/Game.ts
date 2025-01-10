@@ -72,7 +72,11 @@ export class CodeRedRoom extends Room<GameState> {
     });
 
     // Send the game over stats to the clients
-    this.onMessage("gameOverStats", (client) => {});
+    this.onMessage("gameOverStats", (client) => {
+      // Just sending the state data for now. in the future, send relevant data listed in
+      // the proposal.
+      this.broadcast("gameOverStats", this.state);
+    });
   }
 
   onJoin(client: Client, options: any) {
