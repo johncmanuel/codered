@@ -1,5 +1,5 @@
 import { Room, Client, Delayed } from "@colyseus/core";
-import { PlayerState, GameState, Tasks, TaskState } from "./CodeRedState";
+import { PlayerState, GameState, Tasks, TaskState, initRoundTimeLimitSecs } from "./CodeRedState";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -11,7 +11,7 @@ export class CodeRedRoom extends Room<GameState> {
   // i think
   maxNumRounds = 6;
   numRequiredTasksCompleted = 15;
-  roundTimeLimitSecs = 30; // 30s for testing, adjust later
+  roundTimeLimitSecs = initRoundTimeLimitSecs; // 30s for testing, adjust later
 
   onCreate(options: any) {
     this.setState(new GameState());
