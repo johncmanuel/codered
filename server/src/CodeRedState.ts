@@ -26,7 +26,7 @@ export class PlayerState extends Schema {
 // https://docs.colyseus.io/state/schema/#limitations-and-best-practices
 // Add @type for fields that should be synchronized between the clients
 export class GameState extends Schema {
-  @type("number") timer: number = 0;
+  @type("number") timer: number = initRoundTimeLimitSecs;
   @type("number") dataHealth: number = 100;
   @type("number") round: number = 1;
   @type("number") tasksDone: number = 0;
@@ -38,3 +38,5 @@ export class GameState extends Schema {
   // I don't think room code is needed to be synchronized but we'll do it for now
   @type("string") roomCode: string;
 }
+
+export const initRoundTimeLimitSecs = 30;

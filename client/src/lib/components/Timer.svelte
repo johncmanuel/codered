@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let timer = 0;
+  export let timer: number;
 
   function formatTimer(seconds: number): string {
     const minutes = Math.floor(seconds / 60);

@@ -37,7 +37,7 @@ export class CodeRedRoom extends Room<GameState> {
       this.broadcast("startGame");
 
       // Start timer immediately, but ideally should do so once everyone is properly connected
-      this.startTimer();
+      this.startClock();
       this.gameLoop();
     });
 
@@ -105,8 +105,7 @@ export class CodeRedRoom extends Room<GameState> {
     console.log("lobby", this.roomId, "disposing...");
   }
 
-  startTimer() {
-    this.state.timer = 0;
+  startClock() {
     this.clock.start();
     console.log("Timer started!");
   }
@@ -118,8 +117,8 @@ export class CodeRedRoom extends Room<GameState> {
 
     // Keep track of the current round's timer
     this.timerInterval = this.clock.setInterval(() => {
-      this.state.timer++;
-      if (this.state.timer === this.roundTimeLimitSecs) {
+      this.state.timer--;
+      if (this.state.timer === 0) {
         this.startNewRound();
       }
     }, TIMER_INTERVAL_MS);
@@ -155,7 +154,7 @@ export class CodeRedRoom extends Room<GameState> {
   startNewRound() {
     this.state.round++;
     this.state.tasksDone = 0;
-    this.state.timer = 0;
+    this.state.timer = this.roundTimeLimitSecs;
     if (this.state.round > this.maxNumRounds) {
       this.endGame();
     }
