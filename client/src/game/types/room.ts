@@ -10,6 +10,13 @@ import { SetSchema, Schema, type, MapSchema } from "@colyseus/schema";
 //   @type("string") hostId: string;
 // }
 
+export enum Tasks {
+  FIREWALL_CONFIG,
+  PHISHING_EMAIL,
+  VIRUS_CONTAINMENT,
+  NETWORK_MAPPING,
+}
+
 export class TaskState extends Schema {
   @type("string") id: string;
   @type("string") type: string; // Probably don't have to assign this type as Tasks, can do it in the game logic

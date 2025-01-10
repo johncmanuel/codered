@@ -2,7 +2,8 @@ import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 // import { Room } from "colyseus.js";
 import { type GameStore } from "../stores/gameStore";
-import { GameState } from "../types/room";
+import { GameState, type TaskState, type Tasks } from "../types/room";
+import { type MapSchema } from "@colyseus/schema";
 
 // Order of execution in scene: init, preload, create, update
 // update runs continuously
@@ -12,6 +13,8 @@ export class CodeRed extends Scene {
   //
   // Variables that must be shared with Colyseus and UI in Svelte
   gameState: GameState;
+
+  playerId: string;
 
   constructor() {
     super("Game");
@@ -51,18 +54,17 @@ export class CodeRed extends Scene {
       if (!this.gameStore) {
         throw new Error("No game store");
       }
+      if (!this.gameStore.room) {
+        throw new Error("No room");
+      }
+      this.playerId = this.gameStore.room?.sessionId!;
       this.createServerListeners();
-      // this.gameStore.room?.send("startTimer");
     });
   }
 
   // Set up listeners for events from Colyseus server
   //https://docs.colyseus.io/state/schema-callbacks/#schema-callbacks
   createServerListeners() {
-    if (!this.gameStore) {
-      throw new Error("No game store");
-    }
-
     this.gameStore.room?.state.listen("timer", (timer: number) => {
       console.log("Timer updated", timer);
       EventBus.emit("updateTimer", timer);
@@ -76,6 +78,15 @@ export class CodeRed extends Scene {
     this.gameStore.room?.state.listen("round", (round: number) => {
       console.log("Round updated", round);
       EventBus.emit("updateRound", round);
+    });
+
+    this.gameStore.room?.state.listen("activeTasks", (newTask: MapSchema<TaskState>) => {
+      const task = newTask.get(this.playerId);
+      if (task) {
+        console.log("New task assigned", task);
+        console.log("Task type", task.type); // Type is of type Tasks
+        // do more stuff once task is fetched
+      }
     });
   }
 }
