@@ -42,9 +42,6 @@ export class GameState extends Schema {
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
   @type("string") hostId: string;
   @type({ map: TaskState }) activeTasks = new MapSchema<TaskState>();
-
-  // I don't think room code is needed to be synchronized but we'll do it for now
-  @type("string") roomCode: string;
 }
 
 export const initRoundTimeLimitSecs = 30;
