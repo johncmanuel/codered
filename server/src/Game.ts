@@ -1,10 +1,12 @@
 import { Room, Client, Delayed } from "@colyseus/core";
 import { GameState, Tasks, TaskState, initRoundTimeLimitSecs } from "./CodeRedState";
 import { Dispatcher } from "@colyseus/command";
+import { OnTaskFailureCommand } from "./cmds/onTaskFailureCommand";
 import { OnJoinCommand } from "./cmds/onJoinCommand";
 import { OnLeaveCommand } from "./cmds/onLeaveCommand";
 import { StartNewRoundCommand } from "./cmds/startNewRoundCommand";
 import { EndGameCommand } from "./cmds/endGameCommand";
+import { OnTaskCompletionCommand } from "./cmds/onTaskCompletionCommand";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -50,32 +52,19 @@ export class CodeRedRoom extends Room<GameState> {
 
     // Handle stuff once a player finishs a task
     this.onMessage("taskCompleted", (client, taskId: string) => {
-      const task = this.state.activeTasks.get(taskId);
-      if (!task || task.assignedTo !== client.sessionId || task.completed) {
-        console.error("Invalid task completion", taskId, client.sessionId);
-        return;
-      }
-      task.completed = true;
-      this.state.tasksDone++;
-      // Send it back to the client
-      // If want to send to all clients, use this.broadcast()
-      client.send("taskCompleted", taskId);
-      this.state.activeTasks.delete(taskId);
-
-      if (this.state.tasksDone >= this.numRequiredTasksCompleted) {
-        this.startNewRound();
-      }
+      this.dispatcher.dispatch(new OnTaskCompletionCommand(), {
+        client,
+        taskId,
+      });
     });
 
     // Handle stuff once a player fails a task
     this.onMessage("taskFailed", (client, taskId: string) => {
-      const task = this.state.activeTasks.get(taskId);
-      if (!task || task.assignedTo !== client.sessionId || task.completed) {
-        console.error("Invalid task failure", taskId, client.sessionId);
-        return;
-      }
-      this.subtractDataHealth(5);
-      this.state.activeTasks.delete(taskId);
+      this.dispatcher.dispatch(new OnTaskFailureCommand(), {
+        client,
+        taskId,
+        healthDiff: 5,
+      });
     });
 
     // Send the game over stats to the clients
