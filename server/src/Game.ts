@@ -140,13 +140,14 @@ export class CodeRedRoom extends Room<GameState> {
     const taskTypes = Object.values(Tasks).filter((t) => typeof t === "number");
     const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)] as Tasks;
 
-    const playerIds = Array.from(this.state.players.keys());
-    const randomPlayerId = playerIds[Math.floor(Math.random() * playerIds.length)];
+    // Assign the task once player who has correct controls does the task
+    // const playerIds = Array.from(this.state.players.keys());
+    // const randomPlayerId = playerIds[Math.floor(Math.random() * playerIds.length)];
 
     const task = new TaskState();
     task.id = Math.random().toString(36).substring(2, 9);
     task.type = Tasks[taskType];
-    task.assignedTo = randomPlayerId;
+    // task.assignedTo = randomPlayerId;
     task.timeCreated = this.clock.currentTime;
     task.timeLimit = 30; // Can be adjusted as players get further in the rounds
 
