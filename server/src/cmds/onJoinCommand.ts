@@ -6,8 +6,7 @@ export class OnJoinCommand extends Command<
   CodeRedRoom,
   { sessionId: string; clientsLength: number; roomId: string; options: any }
 > {
-  // @ts-ignore: ignore weird typing errors here
-  execute({ sessionId, clientsLength, options, roomId }) {
+  execute({ sessionId, clientsLength, options, roomId } = this.payload) {
     const player = new PlayerState();
     player.name = options.name || `Player ${clientsLength}`;
     this.state.players.set(sessionId, player);

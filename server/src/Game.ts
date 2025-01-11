@@ -1,7 +1,8 @@
 import { Room, Client, Delayed } from "@colyseus/core";
-import { PlayerState, GameState, Tasks, TaskState, initRoundTimeLimitSecs } from "./CodeRedState";
+import { GameState, Tasks, TaskState, initRoundTimeLimitSecs } from "./CodeRedState";
 import { Dispatcher } from "@colyseus/command";
 import { OnJoinCommand } from "./cmds/onJoinCommand";
+import { OnLeaveCommand } from "./cmds/onLeaveCommand";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -92,15 +93,13 @@ export class CodeRedRoom extends Room<GameState> {
     });
   }
 
-  onLeave(client: Client) {
-    this.state.players.delete(client.sessionId);
-
-    // If host leaves, assign new host
-    if (client.sessionId === this.state.hostId && this.clients.length > 0) {
-      this.state.hostId = this.clients[0].sessionId;
-    }
-
-    console.log(client.sessionId, "left lobby lobby roomId:", this.roomId);
+  onLeave(client: Client, options: any) {
+    this.dispatcher.dispatch(new OnLeaveCommand(), {
+      sessionId: client.sessionId,
+      clients: this.clients,
+      roomId: this.roomId,
+      options,
+    });
   }
 
   onDispose() {
