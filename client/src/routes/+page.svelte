@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { EventBus } from "@/game/EventBus";
   import { Client } from "colyseus.js";
   import { gameStore } from "@/game/stores/gameStore";
   import LobbyForm from "$lib/components/LobbyForm.svelte";
@@ -34,8 +33,9 @@
   async function handleLobbySubmit(event: CustomEvent<{ name: string; code?: string }>) {
     if (!$gameStore.client) return;
 
+    const colyseusRoom = "lobby";
+
     try {
-      const colyseusRoom = "lobby";
       const room = isJoining
         ? await $gameStore.client.joinById<GameRoom>(event.detail.code!, {
             name: event.detail.name,

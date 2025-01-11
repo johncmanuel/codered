@@ -5,8 +5,9 @@ import { OnTaskFailureCommand } from "./cmds/onTaskFailureCommand";
 import { OnJoinCommand } from "./cmds/onJoinCommand";
 import { OnLeaveCommand } from "./cmds/onLeaveCommand";
 import { StartNewRoundCommand } from "./cmds/startNewRoundCommand";
-import { EndGameCommand } from "./cmds/endGameCommand";
 import { OnTaskCompletionCommand } from "./cmds/onTaskCompletionCommand";
+import { OnStartGameCommand } from "./cmds/onStartGameCommand";
+import { generateRoomCode } from "./utils";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -22,28 +23,20 @@ export class CodeRedRoom extends Room<GameState> {
 
   dispatcher = new Dispatcher(this);
 
-  onCreate(options: any) {
+  LOBBY_CHANNEL = "coderedlobby";
+
+  async onCreate(options: any) {
     this.setState(new GameState());
-    this.state.roomCode = this.generateRoomCode();
+    this.roomId = await this.generateRoomId();
 
     // Create all our event handlers down below
     // This is where most of our multiplayer logic will be
 
     // Handle starting the game
     this.onMessage("startGame", (client) => {
-      if (client.sessionId !== this.state.hostId) {
-        return;
-      }
-
-      if (this.clients.length < 3) {
-        console.log("Cannot start game with less than 3 players");
-        return;
-      }
-
-      console.log("Starting game for lobby roomid", this.roomId);
-
-      // Let everyone know the game begins now!
-      this.broadcast("startGame");
+      this.dispatcher.dispatch(new OnStartGameCommand(), {
+        client,
+      });
 
       // Start timer immediately, but ideally should do so once everyone is properly connected
       this.startClock();
@@ -92,6 +85,7 @@ export class CodeRedRoom extends Room<GameState> {
   onDispose() {
     console.log("lobby", this.roomId, "disposing...");
     this.dispatcher.stop();
+    this.presence.srem(this.LOBBY_CHANNEL, this.roomId);
   }
 
   startClock() {
@@ -155,9 +149,18 @@ export class CodeRedRoom extends Room<GameState> {
     return task;
   }
 
-  // Generates a random, unique 6-character room code
-  generateRoomCode(): string {
-    const numChars = 6;
-    return Math.random().toString(36).substring(2, numChars).toUpperCase();
+  // See this guide for generating custom room IDs
+  // https://docs.colyseus.io/community/custom-room-id/?h=room+id
+  async generateRoomId(): Promise<string> {
+    const currentIds = await this.presence.smembers(this.LOBBY_CHANNEL);
+    const numChars = 4;
+    let id;
+
+    do {
+      id = generateRoomCode(numChars);
+    } while (currentIds.includes(id));
+
+    await this.presence.sadd(this.LOBBY_CHANNEL, id);
+    return id;
   }
 }
