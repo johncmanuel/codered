@@ -1,5 +1,7 @@
 import { Room, Client, Delayed } from "@colyseus/core";
 import { PlayerState, GameState, Tasks, TaskState, initRoundTimeLimitSecs } from "./CodeRedState";
+import { Dispatcher } from "@colyseus/command";
+import { OnJoinCommand } from "./cmds/onJoinCommand";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -12,6 +14,8 @@ export class CodeRedRoom extends Room<GameState> {
   maxNumRounds = 6;
   numRequiredTasksCompleted = 15;
   roundTimeLimitSecs = initRoundTimeLimitSecs; // 30s for testing, adjust later
+
+  dispatcher = new Dispatcher(this);
 
   onCreate(options: any) {
     this.setState(new GameState());
@@ -80,14 +84,12 @@ export class CodeRedRoom extends Room<GameState> {
   }
 
   onJoin(client: Client, options: any) {
-    const player = new PlayerState();
-    player.name = options.name || `Player ${this.clients.length}`;
-    this.state.players.set(client.sessionId, player);
-
-    // Set host to be the first player
-    if (this.clients.length === 1) this.state.hostId = client.sessionId;
-
-    console.log(client.sessionId, "joined lobby roomId:", this.roomId);
+    this.dispatcher.dispatch(new OnJoinCommand(), {
+      sessionId: client.sessionId,
+      clientsLength: this.clients.length,
+      roomId: this.roomId,
+      options,
+    });
   }
 
   onLeave(client: Client) {
@@ -121,6 +123,7 @@ export class CodeRedRoom extends Room<GameState> {
       if (this.state.timer === 0) {
         this.startNewRound();
       }
+      // Create task here randomly between some range
     }, TIMER_INTERVAL_MS);
 
     console.log("timer outside of interval", this.state.timer);
