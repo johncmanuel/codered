@@ -3,6 +3,8 @@ import { GameState, Tasks, TaskState, initRoundTimeLimitSecs } from "./CodeRedSt
 import { Dispatcher } from "@colyseus/command";
 import { OnJoinCommand } from "./cmds/onJoinCommand";
 import { OnLeaveCommand } from "./cmds/onLeaveCommand";
+import { StartNewRoundCommand } from "./cmds/startNewRoundCommand";
+import { EndGameCommand } from "./cmds/endGameCommand";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -86,24 +88,21 @@ export class CodeRedRoom extends Room<GameState> {
 
   onJoin(client: Client, options: any) {
     this.dispatcher.dispatch(new OnJoinCommand(), {
-      sessionId: client.sessionId,
-      clientsLength: this.clients.length,
-      roomId: this.roomId,
+      client,
       options,
     });
   }
 
   onLeave(client: Client, options: any) {
     this.dispatcher.dispatch(new OnLeaveCommand(), {
-      sessionId: client.sessionId,
-      clients: this.clients,
-      roomId: this.roomId,
+      client,
       options,
     });
   }
 
   onDispose() {
     console.log("lobby", this.roomId, "disposing...");
+    this.dispatcher.stop();
   }
 
   startClock() {
@@ -120,12 +119,10 @@ export class CodeRedRoom extends Room<GameState> {
     this.timerInterval = this.clock.setInterval(() => {
       this.state.timer--;
       if (this.state.timer === 0) {
-        this.startNewRound();
+        this.dispatcher.dispatch(new StartNewRoundCommand());
       }
       // Create task here randomly between some range
     }, TIMER_INTERVAL_MS);
-
-    console.log("timer outside of interval", this.state.timer);
 
     // Generate a new task periodically
     // this.taskGenerationInterval = this.clock.setInterval(() => {
@@ -144,22 +141,6 @@ export class CodeRedRoom extends Room<GameState> {
     //     }
     //   }
     // }, TASK_GENERATION_INTERVAL_MS);
-  }
-
-  subtractDataHealth(healthDiff: number) {
-    this.state.dataHealth -= healthDiff;
-    if (this.state.dataHealth <= 0) {
-      this.endGame();
-    }
-  }
-
-  startNewRound() {
-    this.state.round++;
-    this.state.tasksDone = 0;
-    this.state.timer = this.roundTimeLimitSecs;
-    if (this.state.round > this.maxNumRounds) {
-      this.endGame();
-    }
   }
 
   // Randomly select a task
@@ -182,18 +163,6 @@ export class CodeRedRoom extends Room<GameState> {
 
     this.state.activeTasks.set(task.id, task);
     return task;
-  }
-
-  endGame() {
-    this.state.isGameOver = true;
-    this.broadcast("gameOver");
-
-    // Clear intervals
-    this.timerInterval?.clear();
-    this.taskGenerationInterval?.clear();
-
-    this.clock.stop();
-    this.state.activeTasks.clear();
   }
 
   // Generates a random, unique 6-character room code

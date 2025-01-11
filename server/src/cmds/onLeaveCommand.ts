@@ -1,19 +1,19 @@
 import { Command } from "@colyseus/command";
 import { CodeRedRoom } from "../Game";
-import { ClientArray } from "colyseus";
+import { Client } from "colyseus";
 
-export class OnLeaveCommand extends Command<
-  CodeRedRoom,
-  { sessionId: string; clients: ClientArray; roomId: string; options: any }
-> {
-  execute({ sessionId, clients, options, roomId } = this.payload) {
-    this.state.players.delete(sessionId);
+export class OnLeaveCommand extends Command<CodeRedRoom, { client: Client; options: any }> {
+  execute({ client, options } = this.payload) {
+    const sessionId = client.sessionId;
+    const clients = this.room.clients;
+
+    this.state.players.delete(client.sessionId);
 
     // If host leaves, assign new host
     if (sessionId === this.state.hostId && clients.length > 0) {
       this.state.hostId = clients[0].sessionId;
     }
 
-    console.log(sessionId, "left lobby roomId:", roomId);
+    console.log(sessionId, "left lobby roomId:", this.room.roomId);
   }
 }
