@@ -120,10 +120,10 @@
     </div>
   {:else}
     <div class="lobby">
-      <h2 style="font-size: 34px;">Lobby Code: {$gameStore.joinCode}</h2>
+      <h2 style="font-size: 34px; font-weight: normal; letter-spacing: 2px;">Lobby Code: {$gameStore.joinCode}</h2>
 
       <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
-      <button class="leave-button" on:click={handleLeaveLobby}> Leave Lobby </button>
+      <button class="leave-button" on:click={handleLeaveLobby} style="font-weight: strong;"> Leave Lobby </button>
       {#if $gameStore.isHost}
         <HostControls players={$gameStore.players} onStart={handleStartGame} />
       {/if}
@@ -146,7 +146,7 @@
     border: none;
     border-radius: 5px;
     background-color: #222222;
-    color: rgb(223, 223, 223);
+    color: rgb(255, 255, 255);
     cursor: pointer;
     transition: background-color 0.3s;
   }
