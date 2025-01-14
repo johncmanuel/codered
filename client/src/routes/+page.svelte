@@ -120,7 +120,7 @@
     </div>
   {:else}
     <div class="lobby">
-      <h2>Lobby Code: {$gameStore.joinCode}</h2>
+      <h2 style="font-size: 34px;">Lobby Code: {$gameStore.joinCode}</h2>
 
       <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
       <button class="leave-button" on:click={handleLeaveLobby}> Leave Lobby </button>
@@ -138,6 +138,22 @@
 </main>
 
 <style>
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 24px;
+    font-family: 'Audiowide', sans-serif;
+    border: none;
+    border-radius: 5px;
+    background-color: #222222;
+    color: rgb(223, 223, 223);
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  button:hover {
+    background-color: rgb(190, 10, 10);
+  }
   .lobby-creation {
     max-width: 400px;
     margin: 0 auto;
