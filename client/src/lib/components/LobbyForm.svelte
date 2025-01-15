@@ -46,8 +46,8 @@
     font-family: 'Audiowide', sans-serif;
     border: none;
     border-radius: 10px;
-    background-color: #222222;
-    color: white;
+    background-color: #030303;
+    color: rgb(255, 250, 250);
     outline: none;
     width: 250px;
     text-align: center;
