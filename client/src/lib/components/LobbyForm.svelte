@@ -83,6 +83,6 @@
   {/if}
 
   <button type="submit">
-    {isJoining ? "Join Lobby" : "Create Lobby"}
+    {isJoining ? "Join" : "Confirm"}
   </button>
 </form>
