@@ -9,9 +9,6 @@ import { GameState, type TaskState, type Tasks } from "../types/room";
 export class CodeRed extends Scene {
   // btw this is temporary, we wouldn't need to track this much data
   gameStore: GameStore;
-  //
-  // Variables that must be shared with Colyseus and UI in Svelte
-  gameState: GameState;
 
   playerId: string;
   currentTasks: Map<string, TaskState>; // Map<taskId, TaskState>
@@ -22,7 +19,6 @@ export class CodeRed extends Scene {
 
   init() {
     console.log("Initializing");
-    this.gameState = new GameState();
     this.currentTasks = new Map();
     this.createEventBusListeners();
   }
