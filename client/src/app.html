@@ -50,44 +50,7 @@
         font-size: 24px;
         color: white;
       }
-      .popup {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        color: white;
-        background-color: rgb(0,0,0);
-        background-color: rgba(0,0,0,0.4);
-      }
-
-      .popup-content {
-        color: rgb(0, 0, 0);
-        font: 16px/1.5 'Helvetica Neue', Arial, sans-serif;
-        font-size: 20px;  
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #fffdfd;
-        width: 80%;
-      }
-
-      .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-      }
-
-      .close:hover,
-      .close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-      }
+      
     </style>
   </head>
   <body data-sveltekit-preload-data="hover">
@@ -95,43 +58,5 @@
       <h1 class="title">Code <span class="red-text">Red</span></h1>
     </div>
     <div style="display: contents">%sveltekit.body%</div>
-    <p class="bottom-text">
-      <a href="#" onclick="showPopup('terms')">Terms</a> |
-      <a href="#" onclick="showPopup('privacy')">Privacy</a> |
-      <a href="#" onclick="showPopup('cookie')">Cookie Notice</a> |
-      <a href="#" onclick="showPopup('about us')">About Us</a>
-    </p>
-
-    <div id="popup" class="popup">
-      <div class="popup-content">
-        <span class="close" onclick="closePopup()">&times;</span>
-        <p id="popup-text"></p>
-      </div>
-    </div>
-
-    <script>
-      function showPopup(type) {
-        var popup = document.getElementById("popup");
-        var popupText = document.getElementById("popup-text");
-
-        if (type === 'terms') {
-          popupText.innerText = "Terms content goes here...";
-        } else if (type === 'privacy') {
-          popupText.innerText = "Privacy content goes here...";
-        } else if (type === 'cookie') {
-          popupText.innerText = "Cookie Notice content goes here...";
-        }
-        else if (type === 'about us') {
-          popupText.innerText = "Two students from California State University Fullerton that are passionate about software and game development. The purpose of Code Red is that there are many activities and games designed for icebreakers in large social gatherings. The problem with some icebreaker activities is the emphasis on the in-person experience. Many remote users working for a company or organization may need help to experience the same benefits as those in person. As a result of this activity, many remote workers within their teams will feel more comfortable working with each other. This will result in robust team dynamics and improved worker productivity.";
-        }
-
-        popup.style.display = "block";
-      }
-
-      function closePopup() {
-        var popup = document.getElementById("popup");
-        popup.style.display = "none";
-      }
-    </script>
   </body>
 </html>
