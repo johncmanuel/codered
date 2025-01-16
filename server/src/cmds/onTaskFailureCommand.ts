@@ -9,11 +9,7 @@ export class OnTaskFailureCommand extends Command<
   { client: Client; taskId: string; healthDiff: number }
 > {
   validate({ client, taskId } = this.payload) {
-    return (
-      this.state.activeTasks.has(taskId) &&
-      this.state.activeTasks.get(taskId).assignedTo === client.sessionId &&
-      !this.state.activeTasks.get(taskId).completed
-    );
+    return this.state.activeTasks.has(taskId) && !this.state.activeTasks.get(taskId).completed;
   }
 
   execute({ client, taskId, healthDiff } = this.payload) {

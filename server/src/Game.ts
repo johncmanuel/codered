@@ -7,6 +7,7 @@ import { OnLeaveCommand } from "./cmds/onLeaveCommand";
 import { StartNewRoundCommand } from "./cmds/startNewRoundCommand";
 import { OnTaskCompletionCommand } from "./cmds/onTaskCompletionCommand";
 import { OnStartGameCommand } from "./cmds/onStartGameCommand";
+import { EndGameCommand } from "./cmds/endGameCommand";
 import { generateRoomCode } from "./utils";
 
 export class CodeRedRoom extends Room<GameState> {
@@ -96,34 +97,28 @@ export class CodeRedRoom extends Room<GameState> {
   // Technically the game loop
   gameLoop() {
     const TIMER_INTERVAL_MS = 1 * 1000;
-    const TASK_GENERATION_INTERVAL_MS = 5 * 1000;
+    // const TASK_GENERATION_INTERVAL_MS = 5 * 1000;
 
     // Keep track of the current round's timer
     this.timerInterval = this.clock.setInterval(() => {
       this.state.timer--;
       if (this.state.timer === 0) {
-        this.dispatcher.dispatch(new StartNewRoundCommand());
+        // If there are still active tasks by the time the round ends, the game is over
+        if (this.state.activeTasks.size > 0) {
+          this.dispatcher.dispatch(new EndGameCommand());
+        } else {
+          this.dispatcher.dispatch(new StartNewRoundCommand());
+        }
       }
-      // Create task here randomly between some range
+      // Create task randomly with a 50% chance
+      const chancePercent = 0.5;
+      if (Math.random() < chancePercent && !this.state.isGameOver) {
+        const task = this.createNewTask();
+        // this.broadcast("newTask", task);
+        console.log("New task created:", task.type);
+        console.log(this.state.activeTasks);
+      }
     }, TIMER_INTERVAL_MS);
-
-    // Generate a new task periodically
-    // this.taskGenerationInterval = this.clock.setInterval(() => {
-    //   if (this.state.isGameOver) return;
-    //
-    //   const task = this.createNewTask();
-    //   this.broadcast("newTask", task);
-    //   console.log("New task created for", task.assignedTo);
-    //
-    //   // Reduce data health if too many active tasks
-    //   if (this.state.activeTasks.size > this.clients.length * 2) {
-    //     this.state.dataHealth -= 5;
-    //     if (this.state.dataHealth <= 0) {
-    //       this.state.isGameOver = true;
-    //       this.broadcast("gameOver");
-    //     }
-    //   }
-    // }, TASK_GENERATION_INTERVAL_MS);
   }
 
   // Randomly select a task
@@ -134,18 +129,17 @@ export class CodeRedRoom extends Room<GameState> {
     const taskTypes = Object.values(Tasks).filter((t) => typeof t === "number");
     const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)] as Tasks;
 
-    // Assign the task once player who has correct controls does the task
-    // const playerIds = Array.from(this.state.players.keys());
-    // const randomPlayerId = playerIds[Math.floor(Math.random() * playerIds.length)];
+    const playerIds = Array.from(this.state.players.keys());
+    const randomPlayerId = playerIds[Math.floor(Math.random() * playerIds.length)];
 
     const task = new TaskState();
     task.id = Math.random().toString(36).substring(2, 9);
     task.type = Tasks[taskType];
-    // task.assignedTo = randomPlayerId;
+    task.assignedTo = randomPlayerId;
     task.timeCreated = this.clock.currentTime;
     task.timeLimit = 30; // Can be adjusted as players get further in the rounds
 
-    this.state.activeTasks.set(task.id, task);
+    this.state.activeTasks.set(randomPlayerId, task);
     return task;
   }
 

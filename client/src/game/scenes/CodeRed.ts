@@ -3,7 +3,6 @@ import { EventBus } from "../EventBus";
 // import { Room } from "colyseus.js";
 import { type GameStore } from "../stores/gameStore";
 import { GameState, type TaskState, type Tasks } from "../types/room";
-import { type MapSchema } from "@colyseus/schema";
 
 // Order of execution in scene: init, preload, create, update
 // update runs continuously
@@ -15,6 +14,7 @@ export class CodeRed extends Scene {
   gameState: GameState;
 
   playerId: string;
+  currentTasks: Map<string, TaskState>; // Map<taskId, TaskState>
 
   constructor() {
     super("Game");
@@ -23,6 +23,7 @@ export class CodeRed extends Scene {
   init() {
     console.log("Initializing");
     this.gameState = new GameState();
+    this.currentTasks = new Map();
     this.createEventBusListeners();
   }
 
@@ -58,6 +59,9 @@ export class CodeRed extends Scene {
         throw new Error("No room");
       }
       this.playerId = this.gameStore.room?.sessionId!;
+      if (!this.playerId) {
+        throw new Error("No player ID");
+      }
       this.createServerListeners();
     });
   }
@@ -80,13 +84,38 @@ export class CodeRed extends Scene {
       EventBus.emit("updateRound", round);
     });
 
-    this.gameStore.room?.state.listen("activeTasks", (newTask: MapSchema<TaskState>) => {
-      const task = newTask.get(this.playerId);
-      if (task) {
-        console.log("New task assigned", task);
-        console.log("Task type", task.type); // Type is of type Tasks
-        // do more stuff once task is fetched
+    // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
+
+    // Add only tasks assigned to the player
+    this.gameStore.room?.state.activeTasks.onAdd((task: TaskState, key: string) => {
+      if (this.playerId !== key) {
+        return;
       }
+      console.log("New task created for you", task);
+      // task.type will be used by Phaser to display whatever task to the player
+      console.log("Task type", task.type);
+      // Add it to the current tasks
+      this.currentTasks.set(task.id, task);
+      EventBus.emit("newTask", task);
+
+      // Detect changes made in the task's properties if needed
+      // task.listen("completed", (completed: boolean) => {});
+    });
+
+    // Remove only tasks assigned to the player
+    this.gameStore.room?.state.activeTasks.onRemove((task: TaskState, key: string) => {
+      if (this.playerId !== key) {
+        return;
+      }
+      console.log("Task completed", task);
+      // Remove it from the current tasks
+      this.currentTasks.delete(task.id);
+      EventBus.emit("taskCompleted", task);
+    });
+
+    this.gameStore.room?.onMessage("gameOver", () => {
+      // Switch to game over scene or something
+      console.log("Game over");
     });
   }
 }
