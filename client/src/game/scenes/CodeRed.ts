@@ -1,8 +1,7 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
-// import { Room } from "colyseus.js";
 import { type GameStore } from "../stores/gameStore";
-import { GameState, type TaskState, type Tasks } from "../types/room";
+import { type TaskState, type Tasks } from "../types/room";
 
 // Order of execution in scene: init, preload, create, update
 // update runs continuously

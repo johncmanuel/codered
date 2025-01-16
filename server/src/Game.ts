@@ -116,7 +116,6 @@ export class CodeRedRoom extends Room<GameState> {
         const task = this.createNewTask();
         // this.broadcast("newTask", task);
         console.log("New task created:", task.type);
-        console.log(this.state.activeTasks);
       }
     }, TIMER_INTERVAL_MS);
   }
