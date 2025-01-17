@@ -8,9 +8,11 @@
   import GameComponent from "$lib/components/GameComponent.svelte";
   import { BACKEND_URL } from "@/game/lib/backend";
   import HostControls from "@/lib/components/HostControls.svelte";
+  import About from "@/routes/about.svelte"; 
 
   let isJoining = false;
   $: hasStarted = false;
+  let showAbout = false; 
 
   onMount(() => {
     initializeClient();
@@ -98,9 +100,18 @@
       console.log("Failed to start game");
     }
   }
+
+  function toggleAbout() {
+    showAbout = !showAbout;
+  }
 </script>
 
 <main>
+  <button class="about-us" on:click={toggleAbout}>About Us</button>
+  <!-- {#if showAbout}
+    <About closePopup={toggleAbout} />
+  {/if} -->
+
   {#if $gameStore.room && hasStarted}
     <GameComponent />
   {:else if !$gameStore.room}
@@ -198,4 +209,23 @@
     border-radius: 4px;
     text-align: center;
   }
+  
+  .about-us {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  text-decoration: underline;
+  font: inherit;
+  font-size: 20px;
+}
+
+.about-us:focus {
+  outline: 2px solid rgb(255, 255, 255);
+}
+
 </style>
