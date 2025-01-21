@@ -1,5 +1,5 @@
 <svelte:head>
-  <title>Phaser Svelte Template</title>
+  <title>Code Red</title>
 </svelte:head>
 
 <slot />
