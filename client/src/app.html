@@ -5,9 +5,58 @@
     <link rel="icon" href="%sveltekit.assets%/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     %sveltekit.head%
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
+    <style>
+      .title-container {
+        background-image: url('src/img/cloud.png'); 
+        background-size: 500px 230px; 
+        background-position: center;
+        height: 250px; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        background-repeat: no-repeat; 
+      }
+      .title {
+        color: white;
+        font-family: 'Audiowide', sans-serif;
+        font-size: 70px;
+        text-align: center;
+        margin: 0;
+        padding: 20px;
+        padding-top: 90px; /* Adds space at the top to lower the title */
+        z-index: 1; 
+      }
+      .title-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /*background-color: rgba(0, 0, 0, 0.5); /* Add an overlay for better text visibility */
+        z-index: 0;
+      }
+      .red-text {
+        color: rgb(223, 17, 17);
+      }
+      .bottom-text {
+        position: fixed;
+        bottom: 0px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        font-size: 24px;
+        color: white;
+      }
+      
+    </style>
   </head>
-  <p>Code Red</p>
   <body data-sveltekit-preload-data="hover">
+    <div class="title-container">
+      <h1 class="title">Code <span class="red-text">Red</span></h1>
+    </div>
     <div style="display: contents">%sveltekit.body%</div>
   </body>
 </html>

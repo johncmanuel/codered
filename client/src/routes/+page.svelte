@@ -1,17 +1,18 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { EventBus } from "@/game/EventBus";
   import { Client } from "colyseus.js";
   import { gameStore } from "@/game/stores/gameStore";
   import LobbyForm from "$lib/components/LobbyForm.svelte";
   import PlayerList from "$lib/components/PlayerList.svelte";
-  import type { LobbyRoom, Player } from "@/game/types/room";
+  import type { GameRoom, Player } from "@/game/types/room";
   import GameComponent from "$lib/components/GameComponent.svelte";
   import { BACKEND_URL } from "@/game/lib/backend";
   import HostControls from "@/lib/components/HostControls.svelte";
+  import About from "@/routes/about.svelte"; 
 
   let isJoining = false;
   $: hasStarted = false;
+  let showAbout = false; 
 
   onMount(() => {
     initializeClient();
@@ -34,12 +35,15 @@
   async function handleLobbySubmit(event: CustomEvent<{ name: string; code?: string }>) {
     if (!$gameStore.client) return;
 
+    const colyseusRoom = "lobby";
+
     try {
       const room = isJoining
-        ? await $gameStore.client.joinById<LobbyRoom>(event.detail.code!, {
+        ? await $gameStore.client.joinById<GameRoom>(event.detail.code!, {
             name: event.detail.name,
           })
-        : await $gameStore.client.create<LobbyRoom>("lobby", { name: event.detail.name });
+        : await $gameStore.client.create<GameRoom>(colyseusRoom, { name: event.detail.name });
+      // @ts-ignore: ignore type checking here for now
       handleRoomEvents(room);
     } catch (error) {
       gameStore.setError(isJoining ? "Failed to join lobby" : "Failed to create lobby");
@@ -47,7 +51,7 @@
     }
   }
 
-  function handleRoomEvents(room: LobbyRoom) {
+  function handleRoomEvents(room: GameRoom) {
     gameStore.setRoom(room);
     gameStore.setJoinCode(room.roomId);
 
@@ -62,11 +66,11 @@
     });
 
     // Start the game once Colyseus sends the signal
-    room.onMessage("startGame", async () => {
+    room.onMessage("startGame", () => {
       console.log("Game start, apt apt apt");
       console.log("GameStore", gameStore);
       hasStarted = true;
-      EventBus.emit("startGame", $gameStore);
+      // EventBus.emit("startGame", $gameStore);
     });
 
     // Handle errors
@@ -96,9 +100,18 @@
       console.log("Failed to start game");
     }
   }
+
+  function toggleAbout() {
+    showAbout = !showAbout;
+  }
 </script>
 
 <main>
+  <button class="about-us" on:click={toggleAbout}>About Us</button>
+  <!-- {#if showAbout}
+    <About closePopup={toggleAbout} />
+  {/if} -->
+
   {#if $gameStore.room && hasStarted}
     <GameComponent />
   {:else if !$gameStore.room}
@@ -118,10 +131,10 @@
     </div>
   {:else}
     <div class="lobby">
-      <h2>Lobby Code: {$gameStore.joinCode}</h2>
+      <h2 style="font-size: 34px; font-weight: normal; letter-spacing: 2px;">Lobby Code: {$gameStore.joinCode}</h2>
 
       <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
-      <button class="leave-button" on:click={handleLeaveLobby}> Leave Lobby </button>
+      <button class="leave-button" on:click={handleLeaveLobby} style="font-weight: strong;"> Leave Lobby </button>
       {#if $gameStore.isHost}
         <HostControls players={$gameStore.players} onStart={handleStartGame} />
       {/if}
@@ -136,6 +149,22 @@
 </main>
 
 <style>
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 24px;
+    font-family: 'Audiowide', sans-serif;
+    border: none;
+    border-radius: 5px;
+    background-color: #222222;
+    color: rgb(255, 255, 255);
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  button:hover {
+    background-color: rgb(190, 10, 10);
+  }
   .lobby-creation {
     max-width: 400px;
     margin: 0 auto;
@@ -180,4 +209,23 @@
     border-radius: 4px;
     text-align: center;
   }
+  
+  .about-us {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  text-decoration: underline;
+  font: inherit;
+  font-size: 20px;
+}
+
+.about-us:focus {
+  outline: 2px solid rgb(255, 255, 255);
+}
+
 </style>

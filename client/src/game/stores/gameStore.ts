@@ -1,10 +1,10 @@
 import { writable } from "svelte/store";
 import type { Client } from "colyseus.js";
-import type { LobbyRoom, Player } from "../types/room";
+import type { GameRoom, Player } from "../types/room";
 
 export interface GameStore {
   client: Client | null;
-  room: LobbyRoom | null;
+  room: GameRoom | null;
   error: string | null;
   players: Player[];
   isHost: boolean;
@@ -26,7 +26,7 @@ function createGameStore() {
   return {
     subscribe,
     setClient: (client: Client) => update((state) => ({ ...state, client })),
-    setRoom: (room: LobbyRoom) => update((state) => ({ ...state, room })),
+    setRoom: (room: GameRoom) => update((state) => ({ ...state, room })),
     setError: (error: string) => update((state) => ({ ...state, error })),
     setPlayers: (players: Player[]) => update((state) => ({ ...state, players })),
     setIsHost: (isHost: boolean) => update((state) => ({ ...state, isHost })),
