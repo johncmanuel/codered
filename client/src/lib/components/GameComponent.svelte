@@ -10,15 +10,15 @@
   import CurrentRound from "./CurrentRound.svelte";
   import { type TaskState } from "@/game/types/room";
   import DebugTaskButtons from "./DebugTaskButtons.svelte";
+  import { taskStore } from "@/game/stores/taskStore";
 
   let phaserRef: TPhaserRef = { game: null, scene: null };
 
-  // Variables for showing UI changes
   $: timer = $gameStore.room?.state.timer ?? 0;
   $: health = $gameStore.room?.state.dataHealth ?? 100;
   $: currRound = $gameStore.room?.state.round ?? 0;
   $: maxRounds = 6; // hard code for now, get it from server later
-  $: currentTasks = new Map<string, TaskState>();
+  $: tasksArray = Array.from($taskStore.entries());
 
   onDestroy(() => {
     EventBus.off("updateTimer");
@@ -46,12 +46,10 @@
       currRound = newRound;
     });
     EventBus.on("newTask", (task: TaskState) => {
-      currentTasks.set(task.id, task);
-      currentTasks = currentTasks;
+      taskStore.addTask(task.id, task);
     });
     EventBus.on("taskCompleted", (task: TaskState) => {
-      currentTasks.delete(task.id);
-      currentTasks = currentTasks;
+      taskStore.deleteTask(task.id);
     });
   }
 </script>
@@ -63,7 +61,7 @@
     <DataHealth {health} />
     <CurrentRound currentRound={currRound} {maxRounds} />
     <!-- Display debug buttons for each active task -->
-    {#each Array.from(currentTasks.values()) as task}
+    {#each tasksArray as [id, task]}
       <DebugTaskButtons {task} />
     {/each}
     <PhaserGame bind:phaserRef currentActiveScene={onCurrentActiveScene} />

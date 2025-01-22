@@ -32,14 +32,6 @@ export class CodeRed extends Scene {
     EventBus.emit("current-scene-ready", this);
   }
 
-  // Gameplay loop (psuedocode)
-  // while data health > 0 and current round > 7(?):
-  //    assign random task to player A
-  //    player A does task or someone else who has controls does it
-  //    display task to player A and use Colyseus to let everyone in lobby know player A is doing task
-  //    if task completed, increment number of tasks done
-  //    if task not completed, decrement health
-  //    if number of tasks exceeds 15(?), go to next round
   update() {}
 
   // Set up listeners for events from Svelte
