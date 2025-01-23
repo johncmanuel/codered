@@ -62,6 +62,7 @@
     <DataHealth {health} />
     <CurrentRound currentRound={currRound} {maxRounds} />
     <!-- Display debug buttons for each active task -->
+    <!-- TODO: render debug buttons if it's a debug build -->
     {#each tasksArray as [id, task]}
       <DebugTaskButtons {task} />
     {/each}
