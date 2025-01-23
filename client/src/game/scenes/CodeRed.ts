@@ -22,19 +22,15 @@ export class CodeRed extends Scene {
   }
 
   init() {
-    console.log("Initializing");
     this.currentTasks = new Map();
     this.createEventBusListeners();
   }
 
   // Load all assets here first and other stuff
-  preload() {
-    console.log("Preloading");
-  }
+  preload() {}
 
   // load the game objects stuff here
   create() {
-    console.log("Creating");
     EventBus.emit("current-scene-ready", this);
 
     this.gameOverText = this.add
@@ -63,7 +59,7 @@ export class CodeRed extends Scene {
 
     this.postMatchButton.setInteractive({ useHandCursor: true });
     this.postMatchButton.on("pointerdown", () => {
-      console.log("Post-match button clicked");
+      this.showPostMatchStatistics();
     });
 
     // only show once game is over
@@ -151,5 +147,71 @@ export class CodeRed extends Scene {
         this.postMatchButton.setVisible(true);
       }
     });
+  }
+
+  showPostMatchStatistics() {
+    if (!this.postMatchPanel) return;
+
+    // Hide the "Game Over" text and button
+    if (this.gameOverText) this.gameOverText.setVisible(false);
+    if (this.postMatchButton) this.postMatchButton.setVisible(false);
+
+    // Clear any existing content in the panel
+    this.postMatchPanel.removeAll(true);
+
+    // Add a background for the panel
+    const background = this.add
+      .rectangle(this.cameras.main.width / 2, this.cameras.main.height / 2, 400, 200, 0x000000, 0.8)
+      .setOrigin(0.5, 0.5);
+
+    // Add a title for the panel
+    const title = this.add
+      .text(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2 - 60,
+        "Post-Match Statistics",
+        {
+          fontFamily: "Arial",
+          fontSize: "32px",
+          color: "#ffffff",
+        },
+      )
+      .setOrigin(0.5, 0.5);
+
+    // Add health data
+    const healthText = this.add
+      .text(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        `Data Health: ${this.gameStore.room?.state.dataHealth}`,
+        {
+          fontFamily: "Arial",
+          fontSize: "24px",
+          color: "#ffffff",
+        },
+      )
+      .setOrigin(0.5, 0.5);
+
+    // Add a close button
+    const closeButton = this.add
+      .text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 60, "Close", {
+        fontFamily: "Arial",
+        fontSize: "24px",
+        color: "#ffffff",
+        backgroundColor: "#ff0000",
+        padding: { x: 20, y: 10 },
+      })
+      .setOrigin(0.5, 0.5);
+
+    closeButton.setInteractive({ useHandCursor: true });
+    closeButton.on("pointerdown", () => {
+      this.postMatchPanel?.setVisible(false); // Hide the panel
+      if (this.gameOverText) this.gameOverText.setVisible(true); // Show the "Game Over" text
+      if (this.postMatchButton) this.postMatchButton.setVisible(true); // Show the button
+    });
+
+    // Add all elements to the panel container
+    this.postMatchPanel.add([background, title, healthText, closeButton]);
+    this.postMatchPanel.setVisible(true); // Show the panel
   }
 }
