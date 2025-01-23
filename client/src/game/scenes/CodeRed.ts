@@ -12,6 +12,9 @@ export class CodeRed extends Scene {
   playerId: string;
   currentTasks: Map<string, TaskState>; // Map<taskId, TaskState>
 
+  // setup game objects here
+  gameOverText: Phaser.GameObjects.Text;
+
   constructor() {
     super("Game");
   }
@@ -27,9 +30,22 @@ export class CodeRed extends Scene {
     console.log("Preloading");
   }
 
+  // load the game objects stuff here
   create() {
     console.log("Creating");
     EventBus.emit("current-scene-ready", this);
+
+    this.gameOverText = this.add
+      .text(this.cameras.main.width / 2, this.cameras.main.height / 2, "Game Over", {
+        fontFamily: "Arial",
+        fontSize: "64px",
+        color: "#ff0000",
+        align: "center",
+      })
+      .setOrigin(0.5, 0.5);
+
+    // Only show once game is over
+    this.gameOverText.setVisible(false);
   }
 
   update() {}
@@ -104,8 +120,9 @@ export class CodeRed extends Scene {
     });
 
     this.gameStore.room?.onMessage("gameOver", () => {
-      // Switch to game over scene or something
-      console.log("Game over");
+      if (this.gameOverText) {
+        this.gameOverText.setVisible(true);
+      }
     });
   }
 }
