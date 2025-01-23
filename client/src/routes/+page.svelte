@@ -8,7 +8,7 @@
   import GameComponent from "$lib/components/GameComponent.svelte";
   import { BACKEND_URL } from "@/game/lib/backend";
   import HostControls from "@/lib/components/HostControls.svelte";
-  import About from "@/routes/about.svelte"; 
+  import About from "@/lib/components/about.svelte"; 
 
   let isJoining = false;
   $: hasStarted = false;
@@ -104,6 +104,15 @@
   function toggleAbout() {
     showAbout = !showAbout;
   }
+
+  function copyToClipboard() {
+    navigator.clipboard.writeText($gameStore.joinCode).then(() => {
+      alert("Lobby code copied to clipboard!");
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    }
+    );
+  }
 </script>
 
 <main>
@@ -131,7 +140,9 @@
     </div>
   {:else}
     <div class="lobby">
-      <h2 style="font-size: 34px; font-weight: normal; letter-spacing: 2px;">Lobby Code: {$gameStore.joinCode}</h2>
+      <h2 style="font-size: 34px; font-weight: normal; letter-spacing: 2px;" class="clickable" on:click={copyToClipboard}>
+        Lobby Code: <span class="underline">{$gameStore.joinCode}</span>
+      </h2>
 
       <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
       <button class="leave-button" on:click={handleLeaveLobby} style="font-weight: strong;"> Leave Lobby </button>
@@ -228,4 +239,11 @@
   outline: 2px solid rgb(255, 255, 255);
 }
 
+.clickable {
+  cursor: pointer;
+}
+
+.underline {
+  text-decoration: underline;
+}
 </style>
