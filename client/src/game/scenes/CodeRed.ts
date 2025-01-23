@@ -14,6 +14,8 @@ export class CodeRed extends Scene {
 
   // setup game objects here
   gameOverText: Phaser.GameObjects.Text;
+  postMatchButton: Phaser.GameObjects.Text;
+  postMatchPanel: Phaser.GameObjects.Container;
 
   constructor() {
     super("Game");
@@ -44,7 +46,29 @@ export class CodeRed extends Scene {
       })
       .setOrigin(0.5, 0.5);
 
-    // Only show once game is over
+    this.postMatchButton = this.add
+      .text(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2 + 50, // position below the "Game Over" text
+        "View Post-Match Statistics",
+        {
+          fontFamily: "Arial",
+          fontSize: "32px",
+          color: "#ffffff",
+          backgroundColor: "#0000ff",
+          padding: { x: 20, y: 10 },
+        },
+      )
+      .setOrigin(0.5, 0.5);
+
+    this.postMatchButton.setInteractive({ useHandCursor: true });
+    this.postMatchButton.on("pointerdown", () => {
+      console.log("Post-match button clicked");
+    });
+
+    // only show once game is over
+    this.postMatchPanel = this.add.container(0, 0).setVisible(false);
+    this.postMatchButton.setVisible(false);
     this.gameOverText.setVisible(false);
   }
 
@@ -122,6 +146,9 @@ export class CodeRed extends Scene {
     this.gameStore.room?.onMessage("gameOver", () => {
       if (this.gameOverText) {
         this.gameOverText.setVisible(true);
+      }
+      if (this.postMatchButton) {
+        this.postMatchButton.setVisible(true);
       }
     });
   }
