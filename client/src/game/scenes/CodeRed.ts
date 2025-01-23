@@ -32,14 +32,6 @@ export class CodeRed extends Scene {
     EventBus.emit("current-scene-ready", this);
   }
 
-  // Gameplay loop (psuedocode)
-  // while data health > 0 and current round > 7(?):
-  //    assign random task to player A
-  //    player A does task or someone else who has controls does it
-  //    display task to player A and use Colyseus to let everyone in lobby know player A is doing task
-  //    if task completed, increment number of tasks done
-  //    if task not completed, decrement health
-  //    if number of tasks exceeds 15(?), go to next round
   update() {}
 
   // Set up listeners for events from Svelte
@@ -83,29 +75,32 @@ export class CodeRed extends Scene {
 
     // Add only tasks assigned to the player
     this.gameStore.room?.state.activeTasks.onAdd((task: TaskState, key: string) => {
-      if (this.playerId !== key) {
+      if (this.playerId !== task.assignedTo) {
         return;
       }
       console.log("New task created for you", task);
+
       // task.type will be used by Phaser to display whatever task to the player
       console.log("Task type", task.type);
+
       // Add it to the current tasks
+      // NOTE: the player's current tasks map the task id to the actual task
       this.currentTasks.set(task.id, task);
       EventBus.emit("newTask", task);
 
-      // Detect changes made in the task's properties if needed
+      // NOTE: Detect changes made in the task's properties if needed
       // task.listen("completed", (completed: boolean) => {});
     });
 
     // Remove only tasks assigned to the player
     this.gameStore.room?.state.activeTasks.onRemove((task: TaskState, key: string) => {
-      if (this.playerId !== key) {
+      if (this.playerId !== task.assignedTo) {
         return;
       }
       console.log("Task completed", task);
       // Remove it from the current tasks
       this.currentTasks.delete(task.id);
-      EventBus.emit("taskCompleted", task);
+      EventBus.emit("taskCompleted", task); // maybe instead of task completed, it should be task failed?
     });
 
     this.gameStore.room?.onMessage("gameOver", () => {
