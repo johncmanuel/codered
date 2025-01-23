@@ -111,11 +111,13 @@ export class CodeRedRoom extends Room<GameState> {
         }
       }
       // Create task randomly with a 50% chance
+      // This is temporary, can be adjusted later
       const chancePercent = 0.5;
       if (Math.random() < chancePercent && !this.state.isGameOver) {
         const task = this.createNewTask();
+        this.state.activeTasks.set(task.id, task);
         // this.broadcast("newTask", task);
-        console.log("New task created:", task.type);
+        console.log("New task created:", task.type, "for player", task.assignedTo);
       }
     }, TIMER_INTERVAL_MS);
   }
@@ -138,7 +140,6 @@ export class CodeRedRoom extends Room<GameState> {
     task.timeCreated = this.clock.currentTime;
     task.timeLimit = 30; // Can be adjusted as players get further in the rounds
 
-    this.state.activeTasks.set(randomPlayerId, task);
     return task;
   }
 

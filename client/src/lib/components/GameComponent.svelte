@@ -31,6 +31,7 @@
   const onCurrentActiveScene = (scene: Scene) => {
     console.log("onCurrentActiveScene triggered");
     EventBus.emit("test", $gameStore);
+
     setupEventBusListeners();
   };
 
