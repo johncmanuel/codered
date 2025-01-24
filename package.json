@@ -12,5 +12,8 @@
   "devDependencies": {
     "prettier": "3.4.2",
     "prettier-plugin-svelte": "^3.3.2"
+  },
+  "dependencies": {
+    "@sveltejs/enhanced-img": "^0.4.4"
   }
 }
