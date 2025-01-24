@@ -1,5 +1,11 @@
 import { Room, Client, Delayed } from "@colyseus/core";
-import { GameState, Tasks, TaskState, initRoundTimeLimitSecs } from "./CodeRedState";
+import {
+  GameState,
+  Tasks,
+  TaskState,
+  initRoundTimeLimitSecs,
+  TaskToControls,
+} from "./CodeRedState";
 import { Dispatcher } from "@colyseus/command";
 import { OnTaskFailureCommand } from "./cmds/onTaskFailureCommand";
 import { OnJoinCommand } from "./cmds/onJoinCommand";
@@ -8,7 +14,7 @@ import { StartNewRoundCommand } from "./cmds/startNewRoundCommand";
 import { OnTaskCompletionCommand } from "./cmds/onTaskCompletionCommand";
 import { OnStartGameCommand } from "./cmds/onStartGameCommand";
 import { EndGameCommand } from "./cmds/endGameCommand";
-import { generateRoomCode } from "./utils";
+import { generateRoomCode, shuffleArray } from "./utils";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -38,6 +44,8 @@ export class CodeRedRoom extends Room<GameState> {
       this.dispatcher.dispatch(new OnStartGameCommand(), {
         client,
       });
+
+      this.assignControlsToPlayers();
 
       // Start timer immediately, but ideally should do so once everyone is properly connected
       this.startClock();
@@ -97,7 +105,6 @@ export class CodeRedRoom extends Room<GameState> {
   // Technically the game loop
   gameLoop() {
     const TIMER_INTERVAL_MS = 1 * 1000;
-    // const TASK_GENERATION_INTERVAL_MS = 5 * 1000;
 
     // Keep track of the current round's timer
     this.timerInterval = this.clock.setInterval(() => {
@@ -116,8 +123,7 @@ export class CodeRedRoom extends Room<GameState> {
       if (Math.random() < chancePercent && !this.state.isGameOver) {
         const task = this.createNewTask();
         this.state.activeTasks.set(task.id, task);
-        // this.broadcast("newTask", task);
-        console.log("New task created:", task.type, "for player", task.assignedTo);
+        console.log("New task created:", task.type);
       }
     }, TIMER_INTERVAL_MS);
   }
@@ -130,17 +136,35 @@ export class CodeRedRoom extends Room<GameState> {
     const taskTypes = Object.values(Tasks).filter((t) => typeof t === "number");
     const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)] as Tasks;
 
-    const playerIds = Array.from(this.state.players.keys());
-    const randomPlayerId = playerIds[Math.floor(Math.random() * playerIds.length)];
+    // TODO: assign tasks based on controls rather than player (i.e one for firewall config, one for phishing email, etc)
+    // const playerIds = Array.from(this.state.players.keys());
+    // const randomPlayerId = playerIds[Math.floor(Math.random() * playerIds.length)];
 
     const task = new TaskState();
     task.id = Math.random().toString(36).substring(2, 9);
     task.type = Tasks[taskType];
-    task.assignedTo = randomPlayerId;
-    task.timeCreated = this.clock.currentTime;
     task.timeLimit = 30; // Can be adjusted as players get further in the rounds
-
+    task.control = TaskToControls.get(taskType) || "";
+    if (task.control === "") {
+      console.error("No control found for task type", taskType);
+    }
     return task;
+  }
+
+  assignControlsToPlayers() {
+    const controls = Array.from(TaskToControls.values());
+    if (controls.length < this.state.players.size) {
+      console.warn("there are more players than controls");
+    }
+    const shuffledControls = shuffleArray(controls);
+    this.state.players.forEach((player) => {
+      if (shuffledControls.length > 0) {
+        const control = shuffledControls.pop()!;
+        player.controls.push(control);
+      } else {
+        console.warn("No controls left to assign to players");
+      }
+    });
   }
 
   // See this guide for generating custom room IDs

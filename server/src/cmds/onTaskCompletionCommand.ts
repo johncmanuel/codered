@@ -9,9 +9,8 @@ export class OnTaskCompletionCommand extends Command<
 > {
   validate({ client, taskId } = this.payload) {
     return (
-      this.state.activeTasks.has(taskId) &&
-      !this.state.activeTasks.get(taskId).completed &&
-      client.sessionId === this.state.activeTasks.get(taskId).assignedTo
+      this.state.activeTasks.has(taskId) && !this.state.activeTasks.get(taskId).completed // &&
+      // client.sessionId === this.state.activeTasks.get(taskId).assignedTo
     );
   }
   execute({ client, taskId } = this.payload) {

@@ -11,6 +11,7 @@ export class CodeRed extends Scene {
 
   playerId: string;
   currentTasks: Map<string, TaskState>; // Map<taskId, TaskState>
+  playerControls: Set<string>;
 
   // setup game objects here
   gameOverText: Phaser.GameObjects.Text;
@@ -31,8 +32,6 @@ export class CodeRed extends Scene {
 
   // load the game objects stuff here
   create() {
-    EventBus.emit("current-scene-ready", this);
-
     this.gameOverText = this.add
       .text(this.cameras.main.width / 2, this.cameras.main.height / 2, "Game Over", {
         fontFamily: "Arial",
@@ -66,6 +65,9 @@ export class CodeRed extends Scene {
     this.postMatchPanel = this.add.container(0, 0).setVisible(false);
     this.postMatchButton.setVisible(false);
     this.gameOverText.setVisible(false);
+
+    // keep this at the end
+    EventBus.emit("current-scene-ready", this);
   }
 
   update() {}
@@ -73,7 +75,7 @@ export class CodeRed extends Scene {
   // Set up listeners for events from Svelte
   createEventBusListeners() {
     EventBus.on("test", (gameStore: GameStore) => {
-      console.log("From Svelte", gameStore);
+      // console.log("From Svelte", gameStore);
       this.gameStore = gameStore;
       if (!this.gameStore) {
         throw new Error("No game store");
@@ -109,15 +111,14 @@ export class CodeRed extends Scene {
 
     // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
 
-    // Add only tasks assigned to the player
     this.gameStore.room?.state.activeTasks.onAdd((task: TaskState, key: string) => {
-      if (this.playerId !== task.assignedTo) {
+      if (task.control === "") {
+        console.error("No control found for task type", task.type);
         return;
       }
-      console.log("New task created for you", task);
 
       // task.type will be used by Phaser to display whatever task to the player
-      console.log("Task type", task.type);
+      console.log("Task type for you", task.type);
 
       // Add it to the current tasks
       // NOTE: the player's current tasks map the task id to the actual task
@@ -128,15 +129,27 @@ export class CodeRed extends Scene {
       // task.listen("completed", (completed: boolean) => {});
     });
 
-    // Remove only tasks assigned to the player
     this.gameStore.room?.state.activeTasks.onRemove((task: TaskState, key: string) => {
-      if (this.playerId !== task.assignedTo) {
+      if (!this.currentTasks.has(task.id)) {
+        console.error("Task not found in current tasks", task);
         return;
       }
-      console.log("Task completed", task);
+      console.log("Task completed", task.type);
+
       // Remove it from the current tasks
       this.currentTasks.delete(task.id);
+
       EventBus.emit("taskCompleted", task); // maybe instead of task completed, it should be task failed?
+    });
+
+    this.gameStore.room?.state.players.onChange((player, playerId) => {
+      if (playerId === this.playerId) {
+        console.log("Controls updated", player.controls);
+        player.controls.forEach((control) => {
+          this.playerControls.add(control);
+        });
+        EventBus.emit("updateControls", this.playerControls);
+      }
     });
 
     this.gameStore.room?.onMessage("gameOver", () => {

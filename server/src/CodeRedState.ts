@@ -1,4 +1,4 @@
-import { SetSchema, Schema, MapSchema, type } from "@colyseus/schema";
+import { ArraySchema, Schema, MapSchema, type } from "@colyseus/schema";
 
 // See the doc for all tasks
 //https://docs.google.com/document/d/108iqAIOSarstxAkN5XhzX--UqDadNuoiModpusWcysA/edit?tab=t.0
@@ -7,19 +7,36 @@ export enum Tasks {
   PHISHING_EMAIL,
   VIRUS_CONTAINMENT,
   NETWORK_MAPPING,
+  SYSTEM_REBOOT,
+  SOCIAL_ENGINEERING,
+  // New ones not mentioned in the doc
+  // These are the filler tasks, tasks that are meant to be done easily and should take like 1-2 clicks at most
+  RESTART_PC,
+  RESET_PASSWORDS,
+  MALWARE_SCAN,
+  CREATE_INCIDENT_REPORT,
+  UPDATE_SOFTWARE,
+  PATCH_SECURITY_SOFTWARE,
 }
 
 export class TaskState extends Schema {
   @type("string") id: string;
-  @type("string") type: string; // Probably don't have to assign this type as Tasks, can do it in the game logic
-  @type("string") assignedTo: string;
+  @type("string") type: string;
   @type("boolean") completed: boolean = false;
-  @type("number") timeCreated: number;
   @type("number") timeLimit: number;
+  @type("string") control: string;
 }
+
+// Example entry: [Tasks.FIREWALL_CONFIG, "FIREWALL_CONFIG_CONTROL"]
+export const TaskToControls = new Map<Tasks, string>(
+  Object.values(Tasks)
+    .filter((task) => typeof task === "number")
+    .map((task) => [task, `${Tasks[task]}_CONTROL`]),
+);
 
 export class PlayerState extends Schema {
   @type("string") name: string;
+  @type(["string"]) controls = new ArraySchema<string>();
 }
 
 // Limit for number of fields: 64
