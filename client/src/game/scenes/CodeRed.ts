@@ -152,19 +152,15 @@ export class CodeRed extends Scene {
   showPostMatchStatistics() {
     if (!this.postMatchPanel) return;
 
-    // Hide the "Game Over" text and button
     if (this.gameOverText) this.gameOverText.setVisible(false);
     if (this.postMatchButton) this.postMatchButton.setVisible(false);
 
-    // Clear any existing content in the panel
     this.postMatchPanel.removeAll(true);
 
-    // Add a background for the panel
     const background = this.add
       .rectangle(this.cameras.main.width / 2, this.cameras.main.height / 2, 400, 200, 0x000000, 0.8)
       .setOrigin(0.5, 0.5);
 
-    // Add a title for the panel
     const title = this.add
       .text(
         this.cameras.main.width / 2,
@@ -178,7 +174,6 @@ export class CodeRed extends Scene {
       )
       .setOrigin(0.5, 0.5);
 
-    // Add health data
     const healthText = this.add
       .text(
         this.cameras.main.width / 2,
@@ -192,7 +187,6 @@ export class CodeRed extends Scene {
       )
       .setOrigin(0.5, 0.5);
 
-    // Add a close button
     const closeButton = this.add
       .text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 60, "Close", {
         fontFamily: "Arial",
@@ -205,13 +199,12 @@ export class CodeRed extends Scene {
 
     closeButton.setInteractive({ useHandCursor: true });
     closeButton.on("pointerdown", () => {
-      this.postMatchPanel?.setVisible(false); // Hide the panel
-      if (this.gameOverText) this.gameOverText.setVisible(true); // Show the "Game Over" text
-      if (this.postMatchButton) this.postMatchButton.setVisible(true); // Show the button
+      this.postMatchPanel?.setVisible(false);
+      if (this.gameOverText) this.gameOverText.setVisible(true);
+      if (this.postMatchButton) this.postMatchButton.setVisible(true);
     });
 
-    // Add all elements to the panel container
     this.postMatchPanel.add([background, title, healthText, closeButton]);
-    this.postMatchPanel.setVisible(true); // Show the panel
+    this.postMatchPanel.setVisible(true);
   }
 }
