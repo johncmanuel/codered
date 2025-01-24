@@ -116,7 +116,7 @@
 </script>
 
 <main>
-  <button class="about-us" on:click={toggleAbout}>About Us</button>
+  <!-- <button class="about-us" on:click={toggleAbout}>About Us</button> -->
   <!-- {#if showAbout}
     <About closePopup={toggleAbout} />
   {/if} -->
