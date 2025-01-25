@@ -1,7 +1,7 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
-import { type TaskState, type Tasks } from "../types/room";
+import { type TaskState } from "../types/room";
 
 // Order of execution in scene: init, preload, create, update
 // update runs continuously
@@ -17,6 +17,7 @@ export class CodeRed extends Scene {
   gameOverText: Phaser.GameObjects.Text;
   postMatchButton: Phaser.GameObjects.Text;
   postMatchPanel: Phaser.GameObjects.Container;
+  controlBtns: Phaser.GameObjects.Text[] = [];
 
   constructor() {
     super("Game");
@@ -24,7 +25,21 @@ export class CodeRed extends Scene {
 
   init() {
     this.currentTasks = new Map();
-    this.createEventBusListeners();
+    this.playerControls = new Set();
+    EventBus.on("test", (gameStore: GameStore) => {
+      this.gameStore = gameStore;
+      if (!this.gameStore) {
+        throw new Error("No game store");
+      }
+      if (!this.gameStore.room) {
+        throw new Error("No room");
+      }
+      this.playerId = this.gameStore.room?.sessionId!;
+      if (!this.playerId) {
+        throw new Error("No player ID");
+      }
+      this.createServerListeners();
+    });
   }
 
   // Load all assets here first and other stuff
@@ -73,27 +88,14 @@ export class CodeRed extends Scene {
   update() {}
 
   // Set up listeners for events from Svelte
-  createEventBusListeners() {
-    EventBus.on("test", (gameStore: GameStore) => {
-      // console.log("From Svelte", gameStore);
-      this.gameStore = gameStore;
-      if (!this.gameStore) {
-        throw new Error("No game store");
-      }
-      if (!this.gameStore.room) {
-        throw new Error("No room");
-      }
-      this.playerId = this.gameStore.room?.sessionId!;
-      if (!this.playerId) {
-        throw new Error("No player ID");
-      }
-      this.createServerListeners();
-    });
-  }
+  createEventBusListeners() {}
 
   // Set up listeners for events from Colyseus server
   //https://docs.colyseus.io/state/schema-callbacks/#schema-callbacks
   createServerListeners() {
+    this.getPlayerControls();
+    this.renderControlButtons();
+
     this.gameStore.room?.state.listen("timer", (timer: number) => {
       console.log("Timer updated", timer);
       EventBus.emit("updateTimer", timer);
@@ -120,8 +122,6 @@ export class CodeRed extends Scene {
       // task.type will be used by Phaser to display whatever task to the player
       console.log("Task type for you", task.type);
 
-      // Add it to the current tasks
-      // NOTE: the player's current tasks map the task id to the actual task
       this.currentTasks.set(task.id, task);
       EventBus.emit("newTask", task);
 
@@ -142,16 +142,6 @@ export class CodeRed extends Scene {
       EventBus.emit("taskCompleted", task); // maybe instead of task completed, it should be task failed?
     });
 
-    this.gameStore.room?.state.players.onChange((player, playerId) => {
-      if (playerId === this.playerId) {
-        console.log("Controls updated", player.controls);
-        player.controls.forEach((control) => {
-          this.playerControls.add(control);
-        });
-        EventBus.emit("updateControls", this.playerControls);
-      }
-    });
-
     this.gameStore.room?.onMessage("gameOver", () => {
       if (this.gameOverText) {
         this.gameOverText.setVisible(true);
@@ -160,6 +150,57 @@ export class CodeRed extends Scene {
         this.postMatchButton.setVisible(true);
       }
     });
+  }
+
+  getPlayerControls() {
+    this.gameStore.room?.state.players.forEach((player, key) => {
+      if (key === this.playerId) {
+        player.controls.forEach((control) => {
+          this.playerControls.add(control);
+        });
+        console.log("player contorls", this.playerControls);
+        return;
+      }
+    });
+  }
+
+  renderControlButtons() {
+    const buttonWidth = 150;
+    const buttonHeight = 50;
+    const padding = 20;
+    // Center buttons horizontally
+    const startX =
+      (this.cameras.main.width - this.playerControls.size * (buttonWidth + padding)) / 2;
+    // Position buttons at the bottom of the screen
+    const startY = this.cameras.main.height - buttonHeight - 20;
+
+    let index = 0;
+    this.playerControls.forEach((control) => {
+      const button = this.add
+        .text(startX + index * (buttonWidth + padding), startY, control, {
+          fontFamily: "Arial",
+          fontSize: "16px",
+          color: "#ffffff",
+          backgroundColor: "#0000ff",
+          padding: { x: 10, y: 10 },
+        })
+        .setOrigin(0.5, 0.5)
+        .setInteractive({ useHandCursor: true });
+
+      button.on("pointerdown", () => {
+        this.handleControlButtonClick(control);
+      });
+      button.setVisible(true);
+
+      this.controlBtns.push(button);
+      index++;
+    });
+  }
+
+  // Method to handle control button clicks
+  handleControlButtonClick(control: string) {
+    console.log(`Control button clicked: ${control}`);
+    // Add logic to handle the button click (e.g., start a task minigame)
   }
 
   showPostMatchStatistics() {

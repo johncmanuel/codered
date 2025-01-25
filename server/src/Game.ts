@@ -45,7 +45,7 @@ export class CodeRedRoom extends Room<GameState> {
         client,
       });
 
-      this.assignControlsToPlayers();
+      this.assignPlayerControls();
 
       // Start timer immediately, but ideally should do so once everyone is properly connected
       this.startClock();
@@ -119,6 +119,7 @@ export class CodeRedRoom extends Room<GameState> {
       }
       // Create task randomly with a 50% chance
       // This is temporary, can be adjusted later
+      // TODO: Randomly send to a player via some method?
       const chancePercent = 0.5;
       if (Math.random() < chancePercent && !this.state.isGameOver) {
         const task = this.createNewTask();
@@ -137,8 +138,6 @@ export class CodeRedRoom extends Room<GameState> {
     const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)] as Tasks;
 
     // TODO: assign tasks based on controls rather than player (i.e one for firewall config, one for phishing email, etc)
-    // const playerIds = Array.from(this.state.players.keys());
-    // const randomPlayerId = playerIds[Math.floor(Math.random() * playerIds.length)];
 
     const task = new TaskState();
     task.id = Math.random().toString(36).substring(2, 9);
@@ -151,19 +150,29 @@ export class CodeRedRoom extends Room<GameState> {
     return task;
   }
 
-  assignControlsToPlayers() {
+  assignPlayerControls() {
+    console.log("Assigning controls to players");
     const controls = Array.from(TaskToControls.values());
     if (controls.length < this.state.players.size) {
       console.warn("there are more players than controls");
     }
     const shuffledControls = shuffleArray(controls);
+    const controlsPerPlayer = Math.floor(shuffledControls.length / this.state.players.size);
+    const remainingControls = shuffledControls.length % this.state.players.size;
+    let index = 0;
+
     this.state.players.forEach((player) => {
-      if (shuffledControls.length > 0) {
-        const control = shuffledControls.pop()!;
-        player.controls.push(control);
-      } else {
-        console.warn("No controls left to assign to players");
+      const controlsToAssign = controlsPerPlayer + (index < remainingControls ? 1 : 0);
+      for (let i = 0; i < controlsToAssign; i++) {
+        if (shuffledControls.length > 0) {
+          const control = shuffledControls.shift()!;
+          player.controls.push(control);
+        } else {
+          console.error("Not enough controls to assign to all players.");
+        }
+        console.log("Player", player.name, "assigned control", player.controls[i]);
       }
+      index++;
     });
   }
 
