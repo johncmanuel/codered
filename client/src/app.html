@@ -8,12 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
     <style>
       .title-container {
+        background-image: url('../assets/cloud.png'); 
+        background-size: 500px 230px; 
+        background-position: center;
         height: 250px; 
         display: flex;
         justify-content: center;
         align-items: center;
         position: relative;
-        overflow: hidden; /* Ensure the image doesn't overflow */
+        background-repeat: no-repeat; 
       }
       .title {
         color: white;
@@ -47,18 +50,11 @@
         font-size: 24px;
         color: white;
       }
+      
     </style>
   </head>
   <body data-sveltekit-preload-data="hover">
     <div class="title-container">
-      <img
-        src="src/img/cloud.png"
-        alt="Cloud background"
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: -1;"
-        loading="lazy"
-        width="500"
-        height="230"
-      />
       <h1 class="title">Code <span class="red-text">Red</span></h1>
     </div>
     <div style="display: contents">%sveltekit.body%</div>
