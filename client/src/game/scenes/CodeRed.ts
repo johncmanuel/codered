@@ -10,7 +10,8 @@ export class CodeRed extends Scene {
   gameStore: GameStore;
 
   playerId: string;
-  currentTasks: Map<string, TaskState>; // Map<taskId, TaskState>
+  // Client side data structure for holding all of a player's active tasks
+  controlToTaskId: Map<string, string>; // Map<control, taskId>
   playerControls: Set<string>;
 
   // setup game objects here
@@ -24,8 +25,9 @@ export class CodeRed extends Scene {
   }
 
   init() {
-    this.currentTasks = new Map();
     this.playerControls = new Set();
+    this.controlToTaskId = new Map();
+
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
       if (!this.gameStore) {
@@ -87,9 +89,6 @@ export class CodeRed extends Scene {
 
   update() {}
 
-  // Set up listeners for events from Svelte
-  createEventBusListeners() {}
-
   // Set up listeners for events from Colyseus server
   //https://docs.colyseus.io/state/schema-callbacks/#schema-callbacks
   createServerListeners() {
@@ -97,49 +96,54 @@ export class CodeRed extends Scene {
     this.renderControlButtons();
 
     this.gameStore.room?.state.listen("timer", (timer: number) => {
-      console.log("Timer updated", timer);
       EventBus.emit("updateTimer", timer);
     });
 
     this.gameStore.room?.state.listen("dataHealth", (dataHealth: number) => {
-      console.log("Data health updated", dataHealth);
       EventBus.emit("updateHealth", dataHealth);
     });
 
     this.gameStore.room?.state.listen("round", (round: number) => {
-      console.log("Round updated", round);
       EventBus.emit("updateRound", round);
     });
 
     // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
 
+    // Add tasks only for the player with the appropiate controls
+    // They won't know if they have the task or not, so other players will have to verbally tell them if they're
+    // sent one. It's just like Space Team!
     this.gameStore.room?.state.activeTasks.onAdd((task: TaskState, key: string) => {
-      if (task.control === "") {
-        console.error("No control found for task type", task.type);
+      if (task.control === "" || !task.control || !this.playerControls.has(task.control)) {
         return;
       }
 
-      // task.type will be used by Phaser to display whatever task to the player
-      console.log("Task type for you", task.type);
+      if (this.playerControls.has(task.control)) {
+        this.controlToTaskId.set(task.control, task.id);
+        console.log("Task assigned to you:", task.type);
+      }
 
-      this.currentTasks.set(task.id, task);
-      EventBus.emit("newTask", task);
+      // task.type will be used by Phaser to display whatever task to the player
+      // console.log("Task type for you", task.type);
+      // this.currentTasks.set(task.id, task);
+      // EventBus.emit("newTask", task);
 
       // NOTE: Detect changes made in the task's properties if needed
       // task.listen("completed", (completed: boolean) => {});
     });
 
+    // Remove tasks that players have controls for
     this.gameStore.room?.state.activeTasks.onRemove((task: TaskState, key: string) => {
-      if (!this.currentTasks.has(task.id)) {
-        console.error("Task not found in current tasks", task);
-        return;
+      if (this.controlToTaskId.get(task.control) === task.id) {
+        this.controlToTaskId.delete(task.control);
+        console.log("Task removed from you:", task.type);
       }
-      console.log("Task completed", task.type);
 
-      // Remove it from the current tasks
-      this.currentTasks.delete(task.id);
-
-      EventBus.emit("taskCompleted", task); // maybe instead of task completed, it should be task failed?
+      // if (!this.currentTasks.has(task.id)) {
+      //   console.error("Task not found in current tasks", task);
+      //   return;
+      // }
+      // this.currentTasks.delete(task.id);
+      // EventBus.emit("taskCompleted", task); // maybe instead of task completed, it should be task failed?
     });
 
     this.gameStore.room?.onMessage("gameOver", () => {
@@ -167,7 +171,7 @@ export class CodeRed extends Scene {
   renderControlButtons() {
     const buttonWidth = 150;
     const buttonHeight = 50;
-    const padding = 20;
+    const padding = 50;
     // Center buttons horizontally
     const startX =
       (this.cameras.main.width - this.playerControls.size * (buttonWidth + padding)) / 2;
@@ -177,6 +181,7 @@ export class CodeRed extends Scene {
     let index = 0;
     this.playerControls.forEach((control) => {
       const button = this.add
+        // TODO: work on designs for each control btn
         .text(startX + index * (buttonWidth + padding), startY, control, {
           fontFamily: "Arial",
           fontSize: "16px",
@@ -197,10 +202,21 @@ export class CodeRed extends Scene {
     });
   }
 
-  // Method to handle control button clicks
   handleControlButtonClick(control: string) {
-    console.log(`Control button clicked: ${control}`);
-    // Add logic to handle the button click (e.g., start a task minigame)
+    if (!this.playerControls.has(control)) {
+      console.error("Player does not have control", control);
+      return;
+    }
+
+    const taskId = this.controlToTaskId.get(control);
+    if (!taskId) {
+      console.error("No task found for control", control);
+      return;
+    }
+
+    // Show minigame or w/e here
+    // Then depending if player is successful, send the results to the server
+    this.gameStore.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
   }
 
   showPostMatchStatistics() {

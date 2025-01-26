@@ -102,7 +102,6 @@ export class CodeRedRoom extends Room<GameState> {
     console.log("Timer started!");
   }
 
-  // Technically the game loop
   gameLoop() {
     const TIMER_INTERVAL_MS = 1 * 1000;
 
