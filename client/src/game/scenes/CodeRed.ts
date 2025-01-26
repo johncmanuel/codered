@@ -19,6 +19,7 @@ export class CodeRed extends Scene {
   postMatchButton: Phaser.GameObjects.Text;
   postMatchPanel: Phaser.GameObjects.Container;
   controlBtns: Phaser.GameObjects.Text[] = [];
+  activeTaskNotifications: Map<string, Phaser.GameObjects.Text>;
 
   constructor() {
     super("Game");
@@ -27,6 +28,7 @@ export class CodeRed extends Scene {
   init() {
     this.playerControls = new Set();
     this.controlToTaskId = new Map();
+    this.activeTaskNotifications = new Map();
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -107,6 +109,11 @@ export class CodeRed extends Scene {
       EventBus.emit("updateRound", round);
     });
 
+    // Mainly used for notifying the players, this enables the player to verbally cooperate with others
+    this.gameStore.room?.onMessage("newTask", (task: TaskState) => {
+      this.showTaskNotificationText(task.id, `New Task: ${task.type}`);
+    });
+
     // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
 
     // Add tasks only for the player with the appropiate controls
@@ -124,8 +131,6 @@ export class CodeRed extends Scene {
 
       // task.type will be used by Phaser to display whatever task to the player
       // console.log("Task type for you", task.type);
-      // this.currentTasks.set(task.id, task);
-      // EventBus.emit("newTask", task);
 
       // NOTE: Detect changes made in the task's properties if needed
       // task.listen("completed", (completed: boolean) => {});
@@ -137,12 +142,6 @@ export class CodeRed extends Scene {
         this.controlToTaskId.delete(task.control);
         console.log("Task removed from you:", task.type);
       }
-
-      // if (!this.currentTasks.has(task.id)) {
-      //   console.error("Task not found in current tasks", task);
-      //   return;
-      // }
-      // this.currentTasks.delete(task.id);
       // EventBus.emit("taskCompleted", task); // maybe instead of task completed, it should be task failed?
     });
 
@@ -162,7 +161,6 @@ export class CodeRed extends Scene {
         player.controls.forEach((control) => {
           this.playerControls.add(control);
         });
-        console.log("player contorls", this.playerControls);
         return;
       }
     });
@@ -217,6 +215,35 @@ export class CodeRed extends Scene {
     // Show minigame or w/e here
     // Then depending if player is successful, send the results to the server
     this.gameStore.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
+    this.fadeTaskNotification(taskId);
+  }
+
+  showTaskNotificationText(taskId: string, message: string) {
+    const notificationText = this.add
+      .text(this.cameras.main.width / 2, 50, message, {
+        fontFamily: "Arial",
+        fontSize: "24px",
+        color: "#ffffff",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 10 },
+      })
+      .setOrigin(0.5, 0.5)
+      .setVisible(true);
+    this.activeTaskNotifications.set(taskId, notificationText);
+  }
+
+  fadeTaskNotification(taskId: string) {
+    const notificationText = this.activeTaskNotifications.get(taskId);
+    if (!notificationText) return;
+    this.tweens.add({
+      targets: notificationText,
+      alpha: 0,
+      duration: 1000,
+      onComplete: () => {
+        notificationText.destroy();
+        this.activeTaskNotifications.delete(taskId);
+      },
+    });
   }
 
   showPostMatchStatistics() {

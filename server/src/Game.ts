@@ -118,34 +118,30 @@ export class CodeRedRoom extends Room<GameState> {
       }
       // Create task randomly with a 50% chance
       // This is temporary, can be adjusted later
-      // TODO: Randomly send to a player via some method?
       const chancePercent = 0.5;
       if (Math.random() < chancePercent && !this.state.isGameOver) {
         const task = this.createNewTask();
         this.state.activeTasks.set(task.id, task);
-        console.log("New task created:", task.type);
+        this.sendTaskToRandomPlayer(task);
       }
     }, TIMER_INTERVAL_MS);
   }
 
-  // Randomly select a task
-  // Randomly select a player to assign the task to
-  // Set the time limit for the task
-  // Add the task to the list of tasks
+  sendTaskToRandomPlayer(task: TaskState) {
+    const randomPlayer = this.clients[Math.floor(Math.random() * this.clients.length)];
+    randomPlayer.send("newTask", task);
+    console.log("Task sent to player:", randomPlayer.sessionId, "task type:", task.type);
+  }
+
   createNewTask() {
     const taskTypes = Object.values(Tasks).filter((t) => typeof t === "number");
     const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)] as Tasks;
-
-    // TODO: assign tasks based on controls rather than player (i.e one for firewall config, one for phishing email, etc)
 
     const task = new TaskState();
     task.id = Math.random().toString(36).substring(2, 9);
     task.type = Tasks[taskType];
     task.timeLimit = 30; // Can be adjusted as players get further in the rounds
     task.control = TaskToControls.get(taskType) || "";
-    if (task.control === "") {
-      console.error("No control found for task type", taskType);
-    }
     return task;
   }
 
