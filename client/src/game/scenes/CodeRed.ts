@@ -13,6 +13,7 @@ export class CodeRed extends Scene {
   // Client side data structure for holding all of a player's active tasks
   controlToTaskId: Map<string, string>; // Map<control, taskId>
   playerControls: Set<string>;
+  currentAssignedTask: string | null = null;
 
   // setup game objects here
   gameOverText: Phaser.GameObjects.Text;
@@ -111,7 +112,8 @@ export class CodeRed extends Scene {
 
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others
     this.gameStore.room?.onMessage("newTask", (task: TaskState) => {
-      this.showTaskNotificationText(task.id, `New Task: ${task.type}`);
+      this.currentAssignedTask = task.id;
+      this.showTaskNotificationText(this.currentAssignedTask, `New Task: ${task.type}`);
     });
 
     // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
@@ -120,7 +122,12 @@ export class CodeRed extends Scene {
     // They won't know if they have the task or not, so other players will have to verbally tell them if they're
     // sent one. It's just like Space Team!
     this.gameStore.room?.state.activeTasks.onAdd((task: TaskState, key: string) => {
-      if (task.control === "" || !task.control || !this.playerControls.has(task.control)) {
+      if (
+        task.control === "" ||
+        !task.control ||
+        !this.playerControls.has(task.control) ||
+        this.controlToTaskId.has(task.control)
+      ) {
         return;
       }
 

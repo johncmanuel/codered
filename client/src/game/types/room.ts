@@ -38,6 +38,7 @@ export const TaskToControls = new Map<Tasks, string>(
 export class PlayerState extends Schema {
   @type("string") name: string;
   @type(["string"]) controls = new ArraySchema<string>();
+  @type("string") activeTaskId: string | null = null;
 }
 
 // Limit for number of fields: 64

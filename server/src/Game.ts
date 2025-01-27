@@ -122,13 +122,33 @@ export class CodeRedRoom extends Room<GameState> {
       if (Math.random() < chancePercent && !this.state.isGameOver) {
         const task = this.createNewTask();
         this.state.activeTasks.set(task.id, task);
-        this.sendTaskToRandomPlayer(task);
+        this.assignTaskToRandomPlayer(task);
       }
     }, TIMER_INTERVAL_MS);
   }
 
-  sendTaskToRandomPlayer(task: TaskState) {
+  assignTaskToRandomPlayer(task: TaskState) {
+    // todo: use this.state.players instead of this.clients
+    const playersWithoutActiveTasks = this.clients.filter((client) => {
+      const player = this.state.players.get(client.sessionId);
+      return player && player.activeTaskId === null;
+    });
+
+    console.log(playersWithoutActiveTasks);
+
+    if (playersWithoutActiveTasks.length === 0) {
+      console.log("No players available to assign task to");
+      return;
+    }
+
     const randomPlayer = this.clients[Math.floor(Math.random() * this.clients.length)];
+    const playerState = this.state.players.get(randomPlayer.sessionId);
+    if (!playerState) {
+      console.error("Player not found in state for session ID:", randomPlayer.sessionId);
+      return;
+    }
+
+    this.state.players.get(randomPlayer.sessionId).activeTaskId = task.id;
     randomPlayer.send("newTask", task);
     console.log("Task sent to player:", randomPlayer.sessionId, "task type:", task.type);
   }
