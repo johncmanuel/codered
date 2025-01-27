@@ -44,6 +44,7 @@ export class CodeRed extends Scene {
         throw new Error("No player ID");
       }
       this.createServerListeners();
+      this.getPlayerControls();
     });
   }
 
@@ -86,6 +87,8 @@ export class CodeRed extends Scene {
     this.postMatchButton.setVisible(false);
     this.gameOverText.setVisible(false);
 
+    this.renderControlButtons();
+
     // keep this at the end
     EventBus.emit("current-scene-ready", this);
   }
@@ -95,9 +98,6 @@ export class CodeRed extends Scene {
   // Set up listeners for events from Colyseus server
   //https://docs.colyseus.io/state/schema-callbacks/#schema-callbacks
   createServerListeners() {
-    this.getPlayerControls();
-    this.renderControlButtons();
-
     this.gameStore.room?.state.listen("timer", (timer: number) => {
       EventBus.emit("updateTimer", timer);
     });

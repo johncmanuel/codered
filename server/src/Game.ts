@@ -27,6 +27,7 @@ export class CodeRedRoom extends Room<GameState> {
   maxNumRounds = 6;
   numRequiredTasksCompleted = 15;
   roundTimeLimitSecs = initRoundTimeLimitSecs; // 30s for testing, adjust later
+  lobbyControls: Set<string> = new Set(); // all controls currently assigned to players
 
   dispatcher = new Dispatcher(this);
 
@@ -121,20 +122,19 @@ export class CodeRedRoom extends Room<GameState> {
       const chancePercent = 0.5;
       if (Math.random() < chancePercent && !this.state.isGameOver) {
         const task = this.createNewTask();
-        this.state.activeTasks.set(task.id, task);
-        this.assignTaskToRandomPlayer(task);
+        // sometimes players get assigned a task even if they're already assigned one
+        if (task) {
+          this.assignTaskToRandomPlayer(task);
+          this.state.activeTasks.set(task.id, task);
+        }
       }
     }, TIMER_INTERVAL_MS);
   }
 
   assignTaskToRandomPlayer(task: TaskState) {
-    // todo: use this.state.players instead of this.clients
-    const playersWithoutActiveTasks = this.clients.filter((client) => {
-      const player = this.state.players.get(client.sessionId);
-      return player && player.activeTaskId === null;
-    });
-
-    console.log(playersWithoutActiveTasks);
+    const playersWithoutActiveTasks = Array.from(this.state.players.values()).filter(
+      (p) => p.activeTaskId === null,
+    );
 
     if (playersWithoutActiveTasks.length === 0) {
       console.log("No players available to assign task to");
@@ -153,11 +153,20 @@ export class CodeRedRoom extends Room<GameState> {
     console.log("Task sent to player:", randomPlayer.sessionId, "task type:", task.type);
   }
 
-  createNewTask() {
-    const taskTypes = Object.values(Tasks).filter((t) => typeof t === "number");
-    const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)] as Tasks;
+  createNewTask(): TaskState | null {
+    const taskTypes = Object.values(Tasks).filter((t) => {
+      const control = TaskToControls.get(t as Tasks);
+      return control && this.lobbyControls.has(control);
+    });
 
+    if (taskTypes.length === 0) {
+      console.error("No valid task types available (no matching controls in lobbyControls).");
+      return null;
+    }
+
+    const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)] as Tasks;
     const task = new TaskState();
+
     task.id = Math.random().toString(36).substring(2, 9);
     task.type = Tasks[taskType];
     task.timeLimit = 30; // Can be adjusted as players get further in the rounds
@@ -166,7 +175,6 @@ export class CodeRedRoom extends Room<GameState> {
   }
 
   assignPlayerControls() {
-    console.log("Assigning controls to players");
     const controls = Array.from(TaskToControls.values());
     if (controls.length < this.state.players.size) {
       console.warn("there are more players than controls");
@@ -182,6 +190,7 @@ export class CodeRedRoom extends Room<GameState> {
         if (shuffledControls.length > 0) {
           const control = shuffledControls.shift()!;
           player.controls.push(control);
+          if (!this.lobbyControls.has(control)) this.lobbyControls.add(control);
         } else {
           console.error("Not enough controls to assign to all players.");
         }
