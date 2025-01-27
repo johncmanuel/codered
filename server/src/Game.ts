@@ -117,40 +117,46 @@ export class CodeRedRoom extends Room<GameState> {
           this.dispatcher.dispatch(new StartNewRoundCommand());
         }
       }
-      // Create task randomly with a 50% chance
-      // This is temporary, can be adjusted later
-      const chancePercent = 0.5;
-      if (Math.random() < chancePercent && !this.state.isGameOver) {
+      // TODO: stop sending tasks once it reaches required num of tasks completed
+      if (!this.state.isGameOver) {
         const task = this.createNewTask();
         // sometimes players get assigned a task even if they're already assigned one
         if (task) {
           this.assignTaskToRandomPlayer(task);
-          this.state.activeTasks.set(task.id, task);
         }
       }
     }, TIMER_INTERVAL_MS);
   }
 
   assignTaskToRandomPlayer(task: TaskState) {
-    const playersWithoutActiveTasks = Array.from(this.state.players.values()).filter(
-      (p) => p.activeTaskId === null,
-    );
+    const playersWithoutActiveTasks = Array.from(this.state.players.entries())
+      .filter(([sessionId, player]) => player.activeTaskId === null)
+      .map(([sessionId, player]) => ({ sessionId, player }));
 
     if (playersWithoutActiveTasks.length === 0) {
       console.log("No players available to assign task to");
       return;
     }
 
-    const randomPlayer = this.clients[Math.floor(Math.random() * this.clients.length)];
-    const playerState = this.state.players.get(randomPlayer.sessionId);
-    if (!playerState) {
-      console.error("Player not found in state for session ID:", randomPlayer.sessionId);
+    const randomPlayerEntry =
+      playersWithoutActiveTasks[Math.floor(Math.random() * playersWithoutActiveTasks.length)];
+    if (!randomPlayerEntry) {
+      console.error("No player found to assign task to.");
       return;
     }
 
-    this.state.players.get(randomPlayer.sessionId).activeTaskId = task.id;
-    randomPlayer.send("newTask", task);
-    console.log("Task sent to player:", randomPlayer.sessionId, "task type:", task.type);
+    const { sessionId, player: randomPlayer } = randomPlayerEntry;
+    const playerClient = this.clients.find((c) => c.sessionId === sessionId);
+
+    if (!playerClient) {
+      console.error("Client not found for player with sessionId:", sessionId);
+      return;
+    }
+
+    this.state.players.get(sessionId)!.activeTaskId = task.id;
+    this.state.activeTasks.set(task.id, task);
+    playerClient.send("newTask", task);
+    console.log("Task sent to player:", sessionId, "task type:", task.type);
   }
 
   createNewTask(): TaskState | null {

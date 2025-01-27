@@ -49,7 +49,7 @@ export class GameState extends Schema {
   @type("number") round: number = 1;
   @type("number") tasksDone: number = 0;
   @type("boolean") isGameOver: boolean = false;
-  @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
+  @type({ map: PlayerState }) players = new MapSchema<PlayerState>(); // sessionId -> PlayerState
   @type("string") hostId: string;
   @type({ map: TaskState }) activeTasks = new MapSchema<TaskState>();
 }

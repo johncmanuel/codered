@@ -11,8 +11,8 @@ export class CodeRed extends Scene {
 
   playerId: string;
   // Client side data structure for holding all of a player's active tasks
-  controlToTaskId: Map<string, string>; // Map<control, taskId>
-  playerControls: Set<string>;
+  controlToTaskId: Map<string, string> = new Map(); // Map<control, taskId>
+  playerControls: Set<string> = new Set();
   currentAssignedTask: string | null = null;
 
   // setup game objects here
@@ -20,17 +20,13 @@ export class CodeRed extends Scene {
   postMatchButton: Phaser.GameObjects.Text;
   postMatchPanel: Phaser.GameObjects.Container;
   controlBtns: Phaser.GameObjects.Text[] = [];
-  activeTaskNotifications: Map<string, Phaser.GameObjects.Text>;
+  activeTaskNotifications: Map<string, Phaser.GameObjects.Text> = new Map();
 
   constructor() {
     super("Game");
   }
 
   init() {
-    this.playerControls = new Set();
-    this.controlToTaskId = new Map();
-    this.activeTaskNotifications = new Map();
-
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
       if (!this.gameStore) {
@@ -45,6 +41,8 @@ export class CodeRed extends Scene {
       }
       this.createServerListeners();
       this.getPlayerControls();
+
+      this.renderControlButtons();
     });
   }
 
@@ -86,8 +84,6 @@ export class CodeRed extends Scene {
     this.postMatchPanel = this.add.container(0, 0).setVisible(false);
     this.postMatchButton.setVisible(false);
     this.gameOverText.setVisible(false);
-
-    this.renderControlButtons();
 
     // keep this at the end
     EventBus.emit("current-scene-ready", this);
@@ -138,9 +134,6 @@ export class CodeRed extends Scene {
 
       // task.type will be used by Phaser to display whatever task to the player
       // console.log("Task type for you", task.type);
-
-      // NOTE: Detect changes made in the task's properties if needed
-      // task.listen("completed", (completed: boolean) => {});
     });
 
     // Remove tasks that players have controls for
@@ -163,17 +156,19 @@ export class CodeRed extends Scene {
   }
 
   getPlayerControls() {
-    this.gameStore.room?.state.players.forEach((player, key) => {
-      if (key === this.playerId) {
-        player.controls.forEach((control) => {
-          this.playerControls.add(control);
-        });
-        return;
-      }
+    const player = this.gameStore.room?.state.players.get(this.playerId);
+    if (!player) {
+      console.error("Player not found in room state");
+      return;
+    }
+    player.controls.forEach((control) => {
+      this.playerControls.add(control);
     });
+    console.log("Player controls", this.playerControls);
   }
 
   renderControlButtons() {
+    console.log("Rendering control buttons");
     const buttonWidth = 150;
     const buttonHeight = 50;
     const padding = 50;
