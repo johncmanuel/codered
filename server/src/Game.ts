@@ -14,7 +14,9 @@ import { StartNewRoundCommand } from "./cmds/startNewRoundCommand";
 import { OnTaskCompletionCommand } from "./cmds/onTaskCompletionCommand";
 import { OnStartGameCommand } from "./cmds/onStartGameCommand";
 import { EndGameCommand } from "./cmds/endGameCommand";
-import { generateRoomCode, shuffleArray } from "./utils";
+import { generateRoomCode } from "./utils";
+import { AssignPlayerControlsCommand } from "./cmds/assignPlayerControlsCommand";
+import { AssignTaskToRandomPlayerCommand } from "./cmds/assignTaskToRandomPlayerCommand";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -42,8 +44,7 @@ export class CodeRedRoom extends Room<GameState> {
 
     // Handle starting the game
     this.onMessage("startGame", (client) => {
-      this.assignPlayerControls();
-
+      this.dispatcher.dispatch(new AssignPlayerControlsCommand());
       this.dispatcher.dispatch(new OnStartGameCommand(), {
         client,
       });
@@ -122,41 +123,10 @@ export class CodeRedRoom extends Room<GameState> {
       if (!this.state.isGameOver) {
         const task = this.createNewTask();
         if (task) {
-          this.assignTaskToRandomPlayer(task);
+          this.dispatcher.dispatch(new AssignTaskToRandomPlayerCommand(), { task });
         }
       }
     }, TIMER_INTERVAL_MS);
-  }
-
-  assignTaskToRandomPlayer(task: TaskState) {
-    const playersWithoutActiveTasks = Array.from(this.state.players.entries())
-      .filter(([sessionId, player]) => player.activeTaskId === null)
-      .map(([sessionId, player]) => ({ sessionId, player }));
-
-    if (playersWithoutActiveTasks.length === 0) {
-      console.log("No players available to assign task to");
-      return;
-    }
-
-    const randomPlayerEntry =
-      playersWithoutActiveTasks[Math.floor(Math.random() * playersWithoutActiveTasks.length)];
-    if (!randomPlayerEntry) {
-      console.error("No player found to assign task to.");
-      return;
-    }
-
-    const { sessionId, player: randomPlayer } = randomPlayerEntry;
-    const playerClient = this.clients.find((c) => c.sessionId === sessionId);
-
-    if (!playerClient) {
-      console.error("Client not found for player with sessionId:", sessionId);
-      return;
-    }
-
-    this.state.players.get(sessionId)!.activeTaskId = task.id;
-    this.state.activeTasks.set(task.id, task);
-    playerClient.send("newTask", task);
-    console.log("Task sent to player:", sessionId, "task type:", task.type);
   }
 
   createNewTask(): TaskState | null {
@@ -178,33 +148,6 @@ export class CodeRedRoom extends Room<GameState> {
     task.timeLimit = 30; // Can be adjusted as players get further in the rounds
     task.control = TaskToControls.get(taskType) || "";
     return task;
-  }
-
-  assignPlayerControls() {
-    const controls = Array.from(TaskToControls.values());
-    if (controls.length < this.state.players.size) {
-      console.warn("there are more players than controls");
-    }
-    const shuffledControls = shuffleArray(controls);
-    const controlsPerPlayer = Math.floor(shuffledControls.length / this.state.players.size);
-    const remainingControls = shuffledControls.length % this.state.players.size;
-    let index = 0;
-
-    // Ensure 1 type of each control exists and each player receives a fair amount of controls
-    this.state.players.forEach((player) => {
-      const controlsToAssign = controlsPerPlayer + (index < remainingControls ? 1 : 0);
-      for (let i = 0; i < controlsToAssign; i++) {
-        if (shuffledControls.length > 0) {
-          const control = shuffledControls.shift()!;
-          player.controls.push(control);
-          if (!this.lobbyControls.has(control)) this.lobbyControls.add(control);
-        } else {
-          console.error("Not enough controls to assign to all players.");
-        }
-        console.log("Player", player.name, "assigned control", player.controls[i]);
-      }
-      index++;
-    });
   }
 
   // See this guide for generating custom room IDs
