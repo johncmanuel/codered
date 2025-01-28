@@ -1,5 +1,11 @@
 import { Room, Client, Delayed } from "@colyseus/core";
-import { GameState, Tasks, TaskState, initRoundTimeLimitSecs } from "./CodeRedState";
+import {
+  GameState,
+  Tasks,
+  TaskState,
+  initRoundTimeLimitSecs,
+  TaskToControls,
+} from "./CodeRedState";
 import { Dispatcher } from "@colyseus/command";
 import { OnTaskFailureCommand } from "./cmds/onTaskFailureCommand";
 import { OnJoinCommand } from "./cmds/onJoinCommand";
@@ -9,18 +15,23 @@ import { OnTaskCompletionCommand } from "./cmds/onTaskCompletionCommand";
 import { OnStartGameCommand } from "./cmds/onStartGameCommand";
 import { EndGameCommand } from "./cmds/endGameCommand";
 import { generateRoomCode } from "./utils";
+import { AssignPlayerControlsCommand } from "./cmds/assignPlayerControlsCommand";
+import { AssignTaskToRandomPlayerCommand } from "./cmds/assignTaskToRandomPlayerCommand";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
   maxClients = 6;
 
   timerInterval!: Delayed;
-  taskGenerationInterval!: Delayed;
+
+  TIMER_INTERVAL_MS = 1 * 1000;
 
   // i think
   maxNumRounds = 6;
   numRequiredTasksCompleted = 15;
   roundTimeLimitSecs = initRoundTimeLimitSecs; // 30s for testing, adjust later
+  lobbyControls: Set<string> = new Set(); // all controls currently assigned to players
+  numPlayersReady: number = 0;
 
   dispatcher = new Dispatcher(this);
 
@@ -38,10 +49,18 @@ export class CodeRedRoom extends Room<GameState> {
       this.dispatcher.dispatch(new OnStartGameCommand(), {
         client,
       });
+      this.broadcast("startGame");
+    });
 
-      // Start timer immediately, but ideally should do so once everyone is properly connected
-      this.startClock();
-      this.gameLoop();
+    // handle stuff once all players are properly connected
+    this.onMessage("playerReady", () => {
+      this.numPlayersReady++;
+      // start the game once all players are in
+      if (this.numPlayersReady === this.state.players.size) {
+        this.broadcast("allPlayersReady");
+        this.startClock();
+        this.gameLoop();
+      }
     });
 
     // Handle stuff once a player finishs a task
@@ -94,11 +113,8 @@ export class CodeRedRoom extends Room<GameState> {
     console.log("Timer started!");
   }
 
-  // Technically the game loop
   gameLoop() {
-    const TIMER_INTERVAL_MS = 1 * 1000;
-    // const TASK_GENERATION_INTERVAL_MS = 5 * 1000;
-
+    this.dispatcher.dispatch(new AssignPlayerControlsCommand());
     // Keep track of the current round's timer
     this.timerInterval = this.clock.setInterval(() => {
       this.state.timer--;
@@ -108,38 +124,39 @@ export class CodeRedRoom extends Room<GameState> {
           this.dispatcher.dispatch(new EndGameCommand());
         } else {
           this.dispatcher.dispatch(new StartNewRoundCommand());
+          // assign new controls at start of each round
+          // haven't tested this yet but let's find out
+          this.dispatcher.dispatch(new AssignPlayerControlsCommand());
         }
       }
-      // Create task randomly with a 50% chance
-      // This is temporary, can be adjusted later
-      const chancePercent = 0.5;
-      if (Math.random() < chancePercent && !this.state.isGameOver) {
+      // TODO: stop sending tasks once it reaches required num of tasks completed
+      if (!this.state.isGameOver) {
         const task = this.createNewTask();
-        this.state.activeTasks.set(task.id, task);
-        // this.broadcast("newTask", task);
-        console.log("New task created:", task.type, "for player", task.assignedTo);
+        if (task) {
+          this.dispatcher.dispatch(new AssignTaskToRandomPlayerCommand(), { task });
+        }
       }
-    }, TIMER_INTERVAL_MS);
+    }, this.TIMER_INTERVAL_MS);
   }
 
-  // Randomly select a task
-  // Randomly select a player to assign the task to
-  // Set the time limit for the task
-  // Add the task to the list of tasks
-  createNewTask() {
-    const taskTypes = Object.values(Tasks).filter((t) => typeof t === "number");
+  createNewTask(): TaskState | null {
+    const taskTypes = Object.values(Tasks).filter((t) => {
+      const control = TaskToControls.get(t as Tasks);
+      return control && this.lobbyControls.has(control);
+    });
+
+    if (taskTypes.length === 0) {
+      console.error("No valid task types available (no matching controls in lobbyControls).");
+      return null;
+    }
+
     const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)] as Tasks;
-
-    const playerIds = Array.from(this.state.players.keys());
-    const randomPlayerId = playerIds[Math.floor(Math.random() * playerIds.length)];
-
     const task = new TaskState();
+
     task.id = Math.random().toString(36).substring(2, 9);
     task.type = Tasks[taskType];
-    task.assignedTo = randomPlayerId;
-    task.timeCreated = this.clock.currentTime;
     task.timeLimit = 30; // Can be adjusted as players get further in the rounds
-
+    task.control = TaskToControls.get(taskType) || "";
     return task;
   }
 

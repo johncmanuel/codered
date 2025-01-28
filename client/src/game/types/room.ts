@@ -1,33 +1,44 @@
 import type { Room } from "colyseus.js";
-import { SetSchema, Schema, type, MapSchema } from "@colyseus/schema";
+import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
 
-// export class PlayerState extends Schema {
-//   @type("string") name: string;
-// }
-// export class LobbyState extends Schema {
-//   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
-//   @type("string") roomCode: string;
-//   @type("string") hostId: string;
-// }
-
+// See the doc for all tasks
+//https://docs.google.com/document/d/108iqAIOSarstxAkN5XhzX--UqDadNuoiModpusWcysA/edit?tab=t.0
 export enum Tasks {
   FIREWALL_CONFIG,
   PHISHING_EMAIL,
   VIRUS_CONTAINMENT,
   NETWORK_MAPPING,
+  SYSTEM_REBOOT,
+  SOCIAL_ENGINEERING,
+  // New ones not mentioned in the doc
+  // These are the filler tasks, tasks that are meant to be done easily and should take like 1-2 clicks at most
+  RESTART_PC,
+  RESET_PASSWORDS,
+  MALWARE_SCAN,
+  CREATE_INCIDENT_REPORT,
+  UPDATE_SOFTWARE,
+  PATCH_SECURITY_SOFTWARE,
 }
 
 export class TaskState extends Schema {
   @type("string") id: string;
-  @type("string") type: string; // Probably don't have to assign this type as Tasks, can do it in the game logic
-  @type("string") assignedTo: string;
+  @type("string") type: string;
   @type("boolean") completed: boolean = false;
-  @type("number") timeCreated: number;
   @type("number") timeLimit: number;
+  @type("string") control: string;
 }
+
+// Example entry: [Tasks.FIREWALL_CONFIG, "FIREWALL_CONFIG_CONTROL"]
+export const TaskToControls = new Map<Tasks, string>(
+  Object.values(Tasks)
+    .filter((task) => typeof task === "number")
+    .map((task) => [task, `${Tasks[task]}_CONTROL`]),
+);
 
 export class PlayerState extends Schema {
   @type("string") name: string;
+  @type(["string"]) controls = new ArraySchema<string>();
+  @type("string") activeTaskId: string | null = null;
 }
 
 // Limit for number of fields: 64
@@ -39,7 +50,7 @@ export class GameState extends Schema {
   @type("number") round: number = 1;
   @type("number") tasksDone: number = 0;
   @type("boolean") isGameOver: boolean = false;
-  @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
+  @type({ map: PlayerState }) players = new MapSchema<PlayerState>(); // sessionId -> PlayerState
   @type("string") hostId: string;
   @type({ map: TaskState }) activeTasks = new MapSchema<TaskState>();
 }
