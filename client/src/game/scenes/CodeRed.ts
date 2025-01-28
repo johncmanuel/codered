@@ -21,6 +21,7 @@ export class CodeRed extends Scene {
   postMatchPanel: Phaser.GameObjects.Container;
   controlBtns: Phaser.GameObjects.Text[] = [];
   activeTaskNotifications: Map<string, Phaser.GameObjects.Text> = new Map();
+  loadingText: Phaser.GameObjects.Text;
 
   constructor() {
     super("Game");
@@ -40,9 +41,6 @@ export class CodeRed extends Scene {
         throw new Error("No player ID");
       }
       this.createServerListeners();
-      this.getPlayerControls();
-
-      this.renderControlButtons();
     });
   }
 
@@ -73,6 +71,14 @@ export class CodeRed extends Scene {
           padding: { x: 20, y: 10 },
         },
       )
+      .setOrigin(0.5, 0.5);
+
+    this.loadingText = this.add
+      .text(this.cameras.main.width / 2, this.cameras.main.height / 2, "Assigning Controls...", {
+        fontFamily: "Arial",
+        fontSize: "32px",
+        color: "#ffffff",
+      })
       .setOrigin(0.5, 0.5);
 
     this.postMatchButton.setInteractive({ useHandCursor: true });
@@ -110,6 +116,13 @@ export class CodeRed extends Scene {
     this.gameStore.room?.onMessage("newTask", (task: TaskState) => {
       this.currentAssignedTask = task.id;
       this.showTaskNotificationText(this.currentAssignedTask, `New Task: ${task.type}`);
+    });
+
+    // this doesn't seem to work, might need to get it somewhere else
+    EventBus.on("controlsReady", () => {
+      this.loadingText.setVisible(false);
+      this.getPlayerControls();
+      this.renderControlButtons();
     });
 
     // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
@@ -171,24 +184,36 @@ export class CodeRed extends Scene {
     console.log("Rendering control buttons");
     const buttonWidth = 150;
     const buttonHeight = 50;
-    const padding = 50;
-    // Center buttons horizontally
-    const startX =
-      (this.cameras.main.width - this.playerControls.size * (buttonWidth + padding)) / 2;
-    // Position buttons at the bottom of the screen
-    const startY = this.cameras.main.height - buttonHeight - 20;
+    const padding = 20;
+    const columns = 2;
+
+    // get the number of rows needed based on the number of controls and columns
+    const numControls = this.playerControls.size;
+    const rows = Math.ceil(numControls / columns);
+
+    // center buttons horizontally
+    const startX = (this.cameras.main.width - columns * (buttonWidth + padding)) / 2;
+    // position buttons at the bottom of the screen
+    const startY = this.cameras.main.height - rows * (buttonHeight + padding) - 20;
 
     let index = 0;
     this.playerControls.forEach((control) => {
+      const row = Math.floor(index / columns);
+      const col = index % columns;
+
       const button = this.add
-        // TODO: work on designs for each control btn
-        .text(startX + index * (buttonWidth + padding), startY, control, {
-          fontFamily: "Arial",
-          fontSize: "16px",
-          color: "#ffffff",
-          backgroundColor: "#0000ff",
-          padding: { x: 10, y: 10 },
-        })
+        .text(
+          startX + col * (buttonWidth + padding),
+          startY + row * (buttonHeight + padding),
+          control,
+          {
+            fontFamily: "Arial",
+            fontSize: "16px",
+            color: "#ffffff",
+            backgroundColor: "#0000ff",
+            padding: { x: 10, y: 10 },
+          },
+        )
         .setOrigin(0.5, 0.5)
         .setInteractive({ useHandCursor: true });
 

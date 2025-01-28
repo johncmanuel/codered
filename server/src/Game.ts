@@ -42,14 +42,15 @@ export class CodeRedRoom extends Room<GameState> {
 
     // Handle starting the game
     this.onMessage("startGame", (client) => {
+      this.assignPlayerControls();
+
       this.dispatcher.dispatch(new OnStartGameCommand(), {
         client,
       });
 
-      this.assignPlayerControls();
-
       // Start timer immediately, but ideally should do so once everyone is properly connected
       this.startClock();
+      this.broadcast("controlsReady");
       this.gameLoop();
     });
 
@@ -120,7 +121,6 @@ export class CodeRedRoom extends Room<GameState> {
       // TODO: stop sending tasks once it reaches required num of tasks completed
       if (!this.state.isGameOver) {
         const task = this.createNewTask();
-        // sometimes players get assigned a task even if they're already assigned one
         if (task) {
           this.assignTaskToRandomPlayer(task);
         }
@@ -190,6 +190,7 @@ export class CodeRedRoom extends Room<GameState> {
     const remainingControls = shuffledControls.length % this.state.players.size;
     let index = 0;
 
+    // Ensure 1 type of each control exists and each player receives a fair amount of controls
     this.state.players.forEach((player) => {
       const controlsToAssign = controlsPerPlayer + (index < remainingControls ? 1 : 0);
       for (let i = 0; i < controlsToAssign; i++) {
