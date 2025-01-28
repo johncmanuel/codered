@@ -6,9 +6,7 @@ export class EndGameCommand extends Command<CodeRedRoom> {
     this.state.isGameOver = true;
     this.room.broadcast("gameOver");
 
-    // Clear intervals
     this.room.timerInterval?.clear();
-    this.room.taskGenerationInterval?.clear();
 
     this.clock.stop();
     this.state.activeTasks.clear();

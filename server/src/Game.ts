@@ -23,13 +23,15 @@ export class CodeRedRoom extends Room<GameState> {
   maxClients = 6;
 
   timerInterval!: Delayed;
-  taskGenerationInterval!: Delayed;
+
+  TIMER_INTERVAL_MS = 1 * 1000;
 
   // i think
   maxNumRounds = 6;
   numRequiredTasksCompleted = 15;
   roundTimeLimitSecs = initRoundTimeLimitSecs; // 30s for testing, adjust later
   lobbyControls: Set<string> = new Set(); // all controls currently assigned to players
+  numPlayersReady: number = 0;
 
   dispatcher = new Dispatcher(this);
 
@@ -44,15 +46,21 @@ export class CodeRedRoom extends Room<GameState> {
 
     // Handle starting the game
     this.onMessage("startGame", (client) => {
-      this.dispatcher.dispatch(new AssignPlayerControlsCommand());
       this.dispatcher.dispatch(new OnStartGameCommand(), {
         client,
       });
+      this.broadcast("startGame");
+    });
 
-      // Start timer immediately, but ideally should do so once everyone is properly connected
-      this.startClock();
-      this.broadcast("controlsReady");
-      this.gameLoop();
+    // handle stuff once all players are properly connected
+    this.onMessage("playerReady", () => {
+      this.numPlayersReady++;
+      // start the game once all players are in
+      if (this.numPlayersReady === this.state.players.size) {
+        this.broadcast("allPlayersReady");
+        this.startClock();
+        this.gameLoop();
+      }
     });
 
     // Handle stuff once a player finishs a task
@@ -106,8 +114,7 @@ export class CodeRedRoom extends Room<GameState> {
   }
 
   gameLoop() {
-    const TIMER_INTERVAL_MS = 1 * 1000;
-
+    this.dispatcher.dispatch(new AssignPlayerControlsCommand());
     // Keep track of the current round's timer
     this.timerInterval = this.clock.setInterval(() => {
       this.state.timer--;
@@ -117,6 +124,9 @@ export class CodeRedRoom extends Room<GameState> {
           this.dispatcher.dispatch(new EndGameCommand());
         } else {
           this.dispatcher.dispatch(new StartNewRoundCommand());
+          // assign new controls at start of each round
+          // haven't tested this yet but let's find out
+          this.dispatcher.dispatch(new AssignPlayerControlsCommand());
         }
       }
       // TODO: stop sending tasks once it reaches required num of tasks completed
@@ -126,7 +136,7 @@ export class CodeRedRoom extends Room<GameState> {
           this.dispatcher.dispatch(new AssignTaskToRandomPlayerCommand(), { task });
         }
       }
-    }, TIMER_INTERVAL_MS);
+    }, this.TIMER_INTERVAL_MS);
   }
 
   createNewTask(): TaskState | null {

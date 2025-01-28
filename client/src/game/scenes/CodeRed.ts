@@ -41,6 +41,7 @@ export class CodeRed extends Scene {
         throw new Error("No player ID");
       }
       this.createServerListeners();
+      this.gameStore.room?.send("playerReady");
     });
   }
 
@@ -110,6 +111,7 @@ export class CodeRed extends Scene {
 
     this.gameStore.room?.state.listen("round", (round: number) => {
       EventBus.emit("updateRound", round);
+      this.loadingText.setVisible(true);
     });
 
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others
@@ -118,12 +120,16 @@ export class CodeRed extends Scene {
       this.showTaskNotificationText(this.currentAssignedTask, `New Task: ${task.type}`);
     });
 
-    // this doesn't seem to work, might need to get it somewhere else
-    EventBus.on("controlsReady", () => {
+    this.gameStore.room?.onMessage("controls", (controls) => {
+      controls.forEach((control: any) => {
+        this.playerControls.add(control);
+      });
       this.loadingText.setVisible(false);
-      this.getPlayerControls();
       this.renderControlButtons();
     });
+
+    // do stuff once all players connected
+    this.gameStore.room?.onMessage("allPlayersReady", () => {});
 
     // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
 
@@ -166,18 +172,6 @@ export class CodeRed extends Scene {
         this.postMatchButton.setVisible(true);
       }
     });
-  }
-
-  getPlayerControls() {
-    const player = this.gameStore.room?.state.players.get(this.playerId);
-    if (!player) {
-      console.error("Player not found in room state");
-      return;
-    }
-    player.controls.forEach((control) => {
-      this.playerControls.add(control);
-    });
-    console.log("Player controls", this.playerControls);
   }
 
   renderControlButtons() {

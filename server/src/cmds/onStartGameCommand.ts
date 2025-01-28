@@ -14,8 +14,5 @@ export class OnStartGameCommand extends Command<CodeRedRoom, { client: Client }>
     }
 
     console.log("Starting game for lobby roomid", this.room.roomId);
-
-    // Let everyone know the game begins now!
-    this.room.broadcast("startGame");
   }
 }

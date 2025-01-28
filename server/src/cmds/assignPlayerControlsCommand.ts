@@ -15,8 +15,13 @@ export class AssignPlayerControlsCommand extends Command<CodeRedRoom> {
     let index = 0;
 
     // Ensure 1 type of each control exists and each player receives a fair amount of controls
-    this.state.players.forEach((player) => {
+    // It might be better to send the controls individually to each player, idk
+    this.state.players.forEach((player, playerId) => {
       const controlsToAssign = controlsPerPlayer + (index < remainingControls ? 1 : 0);
+      const client = this.room.clients.find((c) => c.sessionId === playerId);
+      if (!client) {
+        console.error("Client not found for player", playerId);
+      }
       for (let i = 0; i < controlsToAssign; i++) {
         if (shuffledControls.length > 0) {
           const control = shuffledControls.shift()!;
@@ -27,6 +32,7 @@ export class AssignPlayerControlsCommand extends Command<CodeRedRoom> {
         }
         console.log("Player", player.name, "assigned control", player.controls[i]);
       }
+      client.send("controls", player.controls);
       index++;
     });
   }
