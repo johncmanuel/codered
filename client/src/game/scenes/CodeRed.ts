@@ -42,6 +42,7 @@ export class CodeRed extends Scene {
       }
       this.createServerListeners();
       this.gameStore.room?.send("playerReady");
+      this.registry.set("room", this.gameStore.room);
     });
   }
 
@@ -136,6 +137,13 @@ export class CodeRed extends Scene {
 
     this.gameStore.room?.onMessage("gameOver", () => {
       this.postMatchUI.show();
+    });
+
+    // handle stuff once the player leaves the game
+    //https://docs.colyseus.io/client/#onleave
+    this.gameStore.room?.onLeave((code) => {
+      console.log("Left room with code", code);
+      this.scene.stop("Game");
     });
   }
 
