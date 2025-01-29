@@ -2,6 +2,7 @@ import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
 import { type TaskState } from "../types/room";
+import { PostMatchUI } from "../gameObjs/postMatchUI";
 
 // Order of execution in scene: init, preload, create, update
 // update runs continuously
@@ -16,12 +17,11 @@ export class CodeRed extends Scene {
   currentAssignedTask: string | null = null;
 
   // setup game objects here
-  gameOverText: Phaser.GameObjects.Text;
-  postMatchButton: Phaser.GameObjects.Text;
-  postMatchPanel: Phaser.GameObjects.Container;
   controlBtns: Phaser.GameObjects.Text[] = [];
   activeTaskNotifications: Map<string, Phaser.GameObjects.Text> = new Map();
   loadingText: Phaser.GameObjects.Text;
+
+  postMatchUI: PostMatchUI;
 
   constructor() {
     super("Game");
@@ -50,30 +50,6 @@ export class CodeRed extends Scene {
 
   // load the game objects stuff here
   create() {
-    this.gameOverText = this.add
-      .text(this.cameras.main.width / 2, this.cameras.main.height / 2, "Game Over", {
-        fontFamily: "Arial",
-        fontSize: "64px",
-        color: "#ff0000",
-        align: "center",
-      })
-      .setOrigin(0.5, 0.5);
-
-    this.postMatchButton = this.add
-      .text(
-        this.cameras.main.width / 2,
-        this.cameras.main.height / 2 + 50, // position below the "Game Over" text
-        "View Post-Match Statistics",
-        {
-          fontFamily: "Arial",
-          fontSize: "32px",
-          color: "#ffffff",
-          backgroundColor: "#0000ff",
-          padding: { x: 20, y: 10 },
-        },
-      )
-      .setOrigin(0.5, 0.5);
-
     this.loadingText = this.add
       .text(this.cameras.main.width / 2, this.cameras.main.height / 2, "Assigning Controls...", {
         fontFamily: "Arial",
@@ -82,15 +58,7 @@ export class CodeRed extends Scene {
       })
       .setOrigin(0.5, 0.5);
 
-    this.postMatchButton.setInteractive({ useHandCursor: true });
-    this.postMatchButton.on("pointerdown", () => {
-      this.showPostMatchStatistics();
-    });
-
-    // only show once game is over
-    this.postMatchPanel = this.add.container(0, 0).setVisible(false);
-    this.postMatchButton.setVisible(false);
-    this.gameOverText.setVisible(false);
+    this.postMatchUI = new PostMatchUI(this);
 
     // keep this at the end
     EventBus.emit("current-scene-ready", this);
@@ -107,6 +75,7 @@ export class CodeRed extends Scene {
 
     this.gameStore.room?.state.listen("dataHealth", (dataHealth: number) => {
       EventBus.emit("updateHealth", dataHealth);
+      this.registry.set("dataHealth", dataHealth);
     });
 
     this.gameStore.room?.state.listen("round", (round: number) => {
@@ -165,12 +134,7 @@ export class CodeRed extends Scene {
     });
 
     this.gameStore.room?.onMessage("gameOver", () => {
-      if (this.gameOverText) {
-        this.gameOverText.setVisible(true);
-      }
-      if (this.postMatchButton) {
-        this.postMatchButton.setVisible(true);
-      }
+      this.postMatchUI.show();
     });
   }
 
@@ -265,64 +229,5 @@ export class CodeRed extends Scene {
         this.activeTaskNotifications.delete(taskId);
       },
     });
-  }
-
-  showPostMatchStatistics() {
-    if (!this.postMatchPanel) return;
-
-    if (this.gameOverText) this.gameOverText.setVisible(false);
-    if (this.postMatchButton) this.postMatchButton.setVisible(false);
-
-    this.postMatchPanel.removeAll(true);
-
-    const background = this.add
-      .rectangle(this.cameras.main.width / 2, this.cameras.main.height / 2, 400, 200, 0x000000, 0.8)
-      .setOrigin(0.5, 0.5);
-
-    const title = this.add
-      .text(
-        this.cameras.main.width / 2,
-        this.cameras.main.height / 2 - 60,
-        "Post-Match Statistics",
-        {
-          fontFamily: "Arial",
-          fontSize: "32px",
-          color: "#ffffff",
-        },
-      )
-      .setOrigin(0.5, 0.5);
-
-    const healthText = this.add
-      .text(
-        this.cameras.main.width / 2,
-        this.cameras.main.height / 2,
-        `Data Health: ${this.gameStore.room?.state.dataHealth}`,
-        {
-          fontFamily: "Arial",
-          fontSize: "24px",
-          color: "#ffffff",
-        },
-      )
-      .setOrigin(0.5, 0.5);
-
-    const closeButton = this.add
-      .text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 60, "Close", {
-        fontFamily: "Arial",
-        fontSize: "24px",
-        color: "#ffffff",
-        backgroundColor: "#ff0000",
-        padding: { x: 20, y: 10 },
-      })
-      .setOrigin(0.5, 0.5);
-
-    closeButton.setInteractive({ useHandCursor: true });
-    closeButton.on("pointerdown", () => {
-      this.postMatchPanel?.setVisible(false);
-      if (this.gameOverText) this.gameOverText.setVisible(true);
-      if (this.postMatchButton) this.postMatchButton.setVisible(true);
-    });
-
-    this.postMatchPanel.add([background, title, healthText, closeButton]);
-    this.postMatchPanel.setVisible(true);
   }
 }
