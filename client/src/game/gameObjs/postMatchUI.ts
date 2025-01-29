@@ -98,6 +98,20 @@ export class PostMatchUI {
       )
       .setOrigin(0.5, 0.5);
 
+    // too lazy to fix the spacing
+    const roundText = this.scene.add
+      .text(
+        this.scene.cameras.main.width / 2,
+        this.scene.cameras.main.height / 2 + 10,
+        `Round: ${this.scene.registry.get("round")}`,
+        {
+          fontFamily: "Arial",
+          fontSize: "24px",
+          color: "#ffffff",
+        },
+      )
+      .setOrigin(0.5, 0.5);
+
     const closeButton = this.scene.add
       .text(this.scene.cameras.main.width / 2, this.scene.cameras.main.height / 2 + 60, "Close", {
         fontFamily: "Arial",
@@ -114,7 +128,7 @@ export class PostMatchUI {
       this.show();
     });
 
-    this.postMatchPanel.add([background, title, healthText, closeButton]);
+    this.postMatchPanel.add([background, title, healthText, roundText, closeButton]);
     this.postMatchPanel.setVisible(true);
   }
 }

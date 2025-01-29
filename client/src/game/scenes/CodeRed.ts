@@ -81,6 +81,7 @@ export class CodeRed extends Scene {
     this.gameStore.room?.state.listen("round", (round: number) => {
       EventBus.emit("updateRound", round);
       this.loadingText.setVisible(true);
+      this.registry.set("round", round);
     });
 
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others
