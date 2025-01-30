@@ -8,29 +8,31 @@
   import GameComponent from "$lib/components/GameComponent.svelte";
   import { BACKEND_URL } from "@/game/lib/backend";
   import HostControls from "@/lib/components/HostControls.svelte";
-  import About from "@/lib/components/about.svelte"; 
+  import About from "@/lib/components/about.svelte";
+  import { EventBus } from "@/game/EventBus";
 
   let isJoining = false;
   $: hasStarted = false;
-  let showAbout = false; 
+  let showAbout = false;
 
   onMount(() => {
-    initializeClient();
-  });
-
-  onDestroy(() => {
-    $gameStore.room?.leave();
-    // gameStore.reset();
-  });
-
-  async function initializeClient() {
     try {
       const client = new Client(BACKEND_URL);
       gameStore.setClient(client);
     } catch (error) {
       gameStore.setError("Failed to connect to server");
     }
-  }
+
+    // listen for events from phaser side
+    EventBus.on("exitGame", () => {
+      hasStarted = false;
+    });
+  });
+
+  onDestroy(() => {
+    $gameStore.room?.leave();
+    // gameStore.reset();
+  });
 
   async function handleLobbySubmit(event: CustomEvent<{ name: string; code?: string }>) {
     if (!$gameStore.client) return;
@@ -97,7 +99,6 @@
       $gameStore.room.send("startGame");
     } catch (error) {
       gameStore.setError("Failed to start game");
-      console.log("Failed to start game");
     }
   }
 
@@ -106,12 +107,14 @@
   }
 
   function copyToClipboard() {
-    navigator.clipboard.writeText($gameStore.joinCode).then(() => {
-      alert("Lobby code copied to clipboard!");
-    }).catch(err => {
-      console.error('Failed to copy: ', err);
-    }
-    );
+    navigator.clipboard
+      .writeText($gameStore.joinCode)
+      .then(() => {
+        alert("Lobby code copied to clipboard!");
+      })
+      .catch((err) => {
+        console.error("Failed to copy: ", err);
+      });
   }
 </script>
 
@@ -140,12 +143,18 @@
     </div>
   {:else}
     <div class="lobby">
-      <h2 style="font-size: 34px; font-weight: normal; letter-spacing: 2px;" class="clickable" on:click={copyToClipboard}>
+      <h2
+        style="font-size: 34px; font-weight: normal; letter-spacing: 2px;"
+        class="clickable"
+        on:click={copyToClipboard}
+      >
         Lobby Code: <span class="underline">{$gameStore.joinCode}</span>
       </h2>
 
       <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
-      <button class="leave-button" on:click={handleLeaveLobby} style="font-weight: strong;"> Leave Lobby </button>
+      <button class="leave-button" on:click={handleLeaveLobby} style="font-weight: strong;">
+        Leave Lobby
+      </button>
       {#if $gameStore.isHost}
         <HostControls players={$gameStore.players} onStart={handleStartGame} />
       {/if}
@@ -164,7 +173,7 @@
     margin-top: 20px;
     padding: 10px 20px;
     font-size: 24px;
-    font-family: 'Audiowide', sans-serif;
+    font-family: "Audiowide", sans-serif;
     border: none;
     border-radius: 5px;
     background-color: #222222;
@@ -172,7 +181,7 @@
     cursor: pointer;
     transition: background-color 0.3s;
   }
-  
+
   button:hover {
     background-color: rgb(190, 10, 10);
   }
@@ -220,25 +229,24 @@
     border-radius: 4px;
     text-align: center;
   }
-  
+
   .about-us {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: none;
-  border: none;
-  color: rgb(255, 255, 255);
-  cursor: pointer;
-  text-decoration: underline;
-  font: inherit;
-  font-size: 20px;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: none;
+    border: none;
+    color: rgb(255, 255, 255);
+    cursor: pointer;
+    text-decoration: underline;
+    font: inherit;
+    font-size: 20px;
   }
 
   .about-us:focus {
     outline: 2px solid rgb(255, 255, 255);
   }
-
 
   .clickable {
     cursor: pointer;

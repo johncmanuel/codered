@@ -1,5 +1,6 @@
 import { Scene, GameObjects } from "phaser";
 import type { GameRoom } from "../types/room";
+import { EventBus } from "../EventBus";
 
 export class PostMatchUI {
   private scene: Scene;
@@ -77,6 +78,7 @@ export class PostMatchUI {
     const room = this.scene.registry.get("room") as GameRoom;
     if (!room) return;
     room.leave();
+    EventBus.emit("exitGame");
   }
 
   public show() {
