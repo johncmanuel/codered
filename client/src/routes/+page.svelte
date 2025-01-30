@@ -22,16 +22,15 @@
     } catch (error) {
       gameStore.setError("Failed to connect to server");
     }
-
     // listen for events from phaser side
     EventBus.on("exitGame", () => {
       hasStarted = false;
+      $gameStore.room?.leave();
     });
   });
 
   onDestroy(() => {
     $gameStore.room?.leave();
-    // gameStore.reset();
   });
 
   async function handleLobbySubmit(event: CustomEvent<{ name: string; code?: string }>) {

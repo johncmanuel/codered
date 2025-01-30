@@ -74,10 +74,11 @@ export class PostMatchUI {
   }
 
   // disconnect the user from the server room and go back to the home screen
+  // the actual disconnection is done in the root +page.svelte
   private handleExitGame() {
-    const room = this.scene.registry.get("room") as GameRoom;
-    if (!room) return;
-    room.leave();
+    // const room = this.scene.registry.get("room") as GameRoom;
+    // if (!room) return;
+    // room.leave();
     EventBus.emit("exitGame");
   }
 

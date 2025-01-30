@@ -4,6 +4,8 @@ import { type GameStore } from "../stores/gameStore";
 import { type TaskState } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
 
+export const GAME_NAME = "CodeRed";
+
 // Order of execution in scene: init, preload, create, update
 // update runs continuously
 export class CodeRed extends Scene {
@@ -20,11 +22,10 @@ export class CodeRed extends Scene {
   controlBtns: Phaser.GameObjects.Text[] = [];
   activeTaskNotifications: Map<string, Phaser.GameObjects.Text> = new Map();
   loadingText: Phaser.GameObjects.Text;
-
   postMatchUI: PostMatchUI;
 
   constructor() {
-    super("Game");
+    super(GAME_NAME);
   }
 
   init() {
@@ -42,7 +43,7 @@ export class CodeRed extends Scene {
       }
       this.createServerListeners();
       this.gameStore.room?.send("playerReady");
-      this.registry.set("room", this.gameStore.room);
+      // this.registry.set("room", this.gameStore.room);
     });
   }
 
@@ -119,11 +120,9 @@ export class CodeRed extends Scene {
 
       if (this.playerControls.has(task.control)) {
         this.controlToTaskId.set(task.control, task.id);
+        // task.type or task.controls can be used by Phaser to display whatever task to the player
         console.log("Task assigned to you:", task.type);
       }
-
-      // task.type will be used by Phaser to display whatever task to the player
-      // console.log("Task type for you", task.type);
     });
 
     // Remove tasks that players have controls for
@@ -143,7 +142,7 @@ export class CodeRed extends Scene {
     //https://docs.colyseus.io/client/#onleave
     this.gameStore.room?.onLeave((code) => {
       console.log("Left room with code", code);
-      this.scene.stop("Game");
+      this.scene.stop(GAME_NAME);
     });
   }
 
