@@ -1,31 +1,27 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { Client } from "colyseus.js";
   import { gameStore } from "@/game/stores/gameStore";
   import LobbyForm from "$lib/components/LobbyForm.svelte";
   import PlayerList from "$lib/components/PlayerList.svelte";
   import type { GameRoom, Player } from "@/game/types/room";
   import GameComponent from "$lib/components/GameComponent.svelte";
-  import { BACKEND_URL } from "@/game/lib/backend";
   import HostControls from "@/lib/components/HostControls.svelte";
   import About from "@/lib/components/about.svelte";
   import { EventBus } from "@/game/EventBus";
+  import initClient from "@/lib/multiplayer/initClient";
 
   let isJoining = false;
   $: hasStarted = false;
   let showAbout = false;
 
   onMount(() => {
-    try {
-      const client = new Client(BACKEND_URL);
-      gameStore.setClient(client);
-    } catch (error) {
-      gameStore.setError("Failed to connect to server");
-    }
+    initClient();
     // listen for events from phaser side
     EventBus.on("exitGame", () => {
-      hasStarted = false;
       $gameStore.room?.leave();
+      gameStore.reset();
+      initClient(); // reinitialize client
+      hasStarted = false;
     });
   });
 
@@ -69,7 +65,7 @@
     // Start the game once Colyseus sends the signal
     room.onMessage("startGame", () => {
       console.log("Game start, apt apt apt");
-      console.log("GameStore", gameStore);
+      console.log("GameStore", $gameStore);
       hasStarted = true;
       // EventBus.emit("startGame", $gameStore);
     });

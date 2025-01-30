@@ -79,6 +79,7 @@ export class PostMatchUI {
     // const room = this.scene.registry.get("room") as GameRoom;
     // if (!room) return;
     // room.leave();
+    this.scene.scene.stop();
     EventBus.emit("exitGame");
   }
 
