@@ -18,9 +18,7 @@
     initClient();
     // listen for events from phaser side
     EventBus.on("exitGame", () => {
-      $gameStore.room?.leave();
-      gameStore.reset();
-      initClient(); // reinitialize client
+      gameStore.leaveLobby();
       hasStarted = false;
     });
   });
@@ -94,6 +92,7 @@
       $gameStore.room.send("startGame");
     } catch (error) {
       gameStore.setError("Failed to start game");
+      console.error("Failed to start game", error);
     }
   }
 
