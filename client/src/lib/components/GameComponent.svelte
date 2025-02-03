@@ -25,12 +25,23 @@
     EventBus.off("updateHealth");
     EventBus.off("updateRound");
     EventBus.off("newTask");
+    EventBus.off("test");
+    if (phaserRef.scene?.scene.isActive) {
+      phaserRef.scene?.scene.stop();
+    }
   });
 
   // Do stuff once scene is ready to go from the Phaser side
   const onCurrentActiveScene = (scene: Scene) => {
     console.log("onCurrentActiveScene triggered");
-    EventBus.emit("test", $gameStore);
+
+    // EventBus.emit("test", $gameStore);
+    if ($gameStore && $gameStore.room) {
+      console.log("Emitting gameStore to Phaser:", $gameStore);
+      EventBus.emit("test", $gameStore);
+    } else {
+      console.error("Invalid gameStore state:", $gameStore);
+    }
 
     setupEventBusListeners();
   };
