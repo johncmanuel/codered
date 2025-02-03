@@ -3,6 +3,7 @@ import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
 import { type TaskState } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
+import { ActiveTaskNotification } from "../gameObjs/activeTaskNotification";
 
 export const GAME_NAME = "CodeRed";
 
@@ -20,7 +21,7 @@ export class CodeRed extends Scene {
 
   // setup game objects here
   controlBtns: Phaser.GameObjects.Text[] = [];
-  activeTaskNotifications: Map<string, Phaser.GameObjects.Text> = new Map();
+  activeTaskNotifications: ActiveTaskNotification;
   loadingText: Phaser.GameObjects.Text;
   postMatchUI: PostMatchUI;
 
@@ -34,7 +35,7 @@ export class CodeRed extends Scene {
     this.controlToTaskId.clear();
     this.playerControls.clear();
     this.currentAssignedTask = null;
-    this.activeTaskNotifications.clear();
+    this.activeTaskNotifications = new ActiveTaskNotification(this);
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -97,7 +98,7 @@ export class CodeRed extends Scene {
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
       this.currentAssignedTask = task.id;
-      this.showTaskNotificationText(this.currentAssignedTask, `New Task: ${task.type}`);
+      this.activeTaskNotifications.show(this.currentAssignedTask, `New Task: ${task.type}`);
     });
 
     this.gameStore?.room?.onMessage("controls", (controls) => {
@@ -216,34 +217,6 @@ export class CodeRed extends Scene {
     // Show minigame or w/e here
     // Then depending if player is successful, send the results to the server
     this.gameStore?.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
-    this.fadeTaskNotification(taskId);
-  }
-
-  showTaskNotificationText(taskId: string, message: string) {
-    const notificationText = this.add
-      .text(this.cameras.main.width / 2, 50, message, {
-        fontFamily: "Arial",
-        fontSize: "24px",
-        color: "#ffffff",
-        backgroundColor: "#000000",
-        padding: { x: 10, y: 10 },
-      })
-      .setOrigin(0.5, 0.5)
-      .setVisible(true);
-    this.activeTaskNotifications.set(taskId, notificationText);
-  }
-
-  fadeTaskNotification(taskId: string) {
-    const notificationText = this.activeTaskNotifications.get(taskId);
-    if (!notificationText) return;
-    this.tweens.add({
-      targets: notificationText,
-      alpha: 0,
-      duration: 1000,
-      onComplete: () => {
-        notificationText.destroy();
-        this.activeTaskNotifications.delete(taskId);
-      },
-    });
+    this.activeTaskNotifications.fade(taskId);
   }
 }
