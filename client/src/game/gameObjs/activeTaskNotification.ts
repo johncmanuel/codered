@@ -2,12 +2,13 @@ import { Scene, GameObjects, Tweens } from "phaser";
 
 export class ActiveTaskNotification {
   private scene: Scene;
-  private notifications: Map<string, GameObjects.Text> = new Map();
+  private notifications: Map<string, GameObjects.Text>;
   private tweens: Tweens.TweenManager;
 
   constructor(scene: Scene) {
     this.scene = scene;
     this.tweens = scene.tweens;
+    this.notifications = new Map();
   }
 
   show(taskId: string, message: string) {

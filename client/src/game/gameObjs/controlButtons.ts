@@ -2,17 +2,17 @@ import { Scene, GameObjects } from "phaser";
 
 export class ControlButtons {
   private scene: Scene;
-  private buttons: GameObjects.Text[] = [];
-  private playerControls: Set<string> = new Set();
+  private buttons: GameObjects.Text[];
+  private playerControls: Set<string>;
   private buttonWidth: number = 150;
   private buttonHeight: number = 50;
   private padding: number = 20;
   private columns: number = 2;
-  private onClickCallback: (control: string) => void;
 
-  constructor(scene: Scene, onClickCallback: (control: string) => void) {
+  constructor(scene: Scene) {
     this.scene = scene;
-    this.onClickCallback = onClickCallback;
+    this.buttons = [];
+    this.playerControls = new Set();
   }
 
   setPlayerControls(controls: Set<string>) {
@@ -53,17 +53,13 @@ export class ControlButtons {
         .setInteractive({ useHandCursor: true });
 
       button.on("pointerdown", () => {
-        this.handleButtonClick(control);
+        this.scene.events.emit("controlButtonClicked", control);
       });
       button.setVisible(true);
 
       this.buttons.push(button);
       index++;
     });
-  }
-
-  private handleButtonClick(control: string) {
-    this.onClickCallback(control);
   }
 
   clear() {

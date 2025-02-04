@@ -16,9 +16,8 @@ export class CodeRed extends Scene {
 
   playerId: string | null;
   // Client side data structure for holding all of a player's active tasks
-  controlToTaskId: Map<string, string> = new Map(); // Map<control, taskId>
-  playerControls: Set<string> = new Set();
-  currentAssignedTask: string | null = null;
+  controlToTaskId: Map<string, string>; // Map<control, taskId>
+  playerControls: Set<string>;
 
   // setup game objects here
   controlBtns: ControlButtons;
@@ -33,11 +32,10 @@ export class CodeRed extends Scene {
   init() {
     this.gameStore = null;
     this.playerId = null;
-    this.controlToTaskId.clear();
-    this.playerControls.clear();
-    this.currentAssignedTask = null;
+    this.controlToTaskId = new Map();
+    this.playerControls = new Set();
     this.activeTaskNotifications = new ActiveTaskNotification(this);
-    this.controlBtns = new ControlButtons(this, this.handleControlButtonClick);
+    this.controlBtns = new ControlButtons(this);
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -52,6 +50,7 @@ export class CodeRed extends Scene {
       if (!this.playerId) {
         throw new Error("No player ID");
       }
+      this.createLocalListeners();
       this.createServerListeners();
       this.gameStore.room?.send("playerReady");
       // this.registry.set("room", this.gameStore.room);
@@ -99,8 +98,7 @@ export class CodeRed extends Scene {
 
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
-      this.currentAssignedTask = task.id;
-      this.activeTaskNotifications.show(this.currentAssignedTask, `New Task: ${task.type}`);
+      this.activeTaskNotifications.show(task.id, `New Task: ${task.type}`);
     });
 
     this.gameStore?.room?.onMessage("controls", (controls) => {
@@ -158,21 +156,35 @@ export class CodeRed extends Scene {
     });
   }
 
-  handleControlButtonClick(control: string) {
+  // Set up listeners between Phaser events
+  createLocalListeners() {
+    this.events.on("controlButtonClicked", (control: string) => {
+      const taskId = this.handleControlButtonClick(control);
+
+      // Show minigame or w/e here
+      // Then depending if player is successful, send the results to the server
+
+      if (!taskId) {
+        console.error("No task found for control", control);
+        return;
+      }
+      this.gameStore?.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
+      this.activeTaskNotifications.fade(taskId);
+    });
+  }
+
+  handleControlButtonClick(control: string): string | null {
     if (!this.playerControls.has(control)) {
       console.error("Player does not have control", control);
-      return;
+      return null;
     }
 
     const taskId = this.controlToTaskId.get(control);
     if (!taskId) {
       console.error("No task found for control", control);
-      return;
+      return null;
     }
 
-    // Show minigame or w/e here
-    // Then depending if player is successful, send the results to the server
-    this.gameStore?.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
-    this.activeTaskNotifications.fade(taskId);
+    return taskId;
   }
 }
