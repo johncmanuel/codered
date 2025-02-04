@@ -3,6 +3,8 @@ import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
 import { type TaskState } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
+import { ActiveTaskNotification } from "../gameObjs/activeTaskNotification";
+import { ControlButtons } from "../gameObjs/controlButtons";
 
 export const GAME_NAME = "CodeRed";
 
@@ -19,8 +21,8 @@ export class CodeRed extends Scene {
   currentAssignedTask: string | null = null;
 
   // setup game objects here
-  controlBtns: Phaser.GameObjects.Text[] = [];
-  activeTaskNotifications: Map<string, Phaser.GameObjects.Text> = new Map();
+  controlBtns: ControlButtons;
+  activeTaskNotifications: ActiveTaskNotification;
   loadingText: Phaser.GameObjects.Text;
   postMatchUI: PostMatchUI;
 
@@ -34,7 +36,8 @@ export class CodeRed extends Scene {
     this.controlToTaskId.clear();
     this.playerControls.clear();
     this.currentAssignedTask = null;
-    this.activeTaskNotifications.clear();
+    this.activeTaskNotifications = new ActiveTaskNotification(this);
+    this.controlBtns = new ControlButtons(this, this.handleControlButtonClick);
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -97,7 +100,7 @@ export class CodeRed extends Scene {
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
       this.currentAssignedTask = task.id;
-      this.showTaskNotificationText(this.currentAssignedTask, `New Task: ${task.type}`);
+      this.activeTaskNotifications.show(this.currentAssignedTask, `New Task: ${task.type}`);
     });
 
     this.gameStore?.room?.onMessage("controls", (controls) => {
@@ -105,7 +108,8 @@ export class CodeRed extends Scene {
         this.playerControls.add(control);
       });
       this.loadingText.setVisible(false);
-      this.renderControlButtons();
+      this.controlBtns.setPlayerControls(this.playerControls);
+      this.controlBtns.show();
     });
 
     // do stuff once all players connected
@@ -154,53 +158,6 @@ export class CodeRed extends Scene {
     });
   }
 
-  renderControlButtons() {
-    console.log("Rendering control buttons");
-    const buttonWidth = 150;
-    const buttonHeight = 50;
-    const padding = 20;
-    const columns = 2;
-
-    // get the number of rows needed based on the number of controls and columns
-    const numControls = this.playerControls.size;
-    const rows = Math.ceil(numControls / columns);
-
-    // center buttons horizontally
-    const startX = (this.cameras.main.width - columns * (buttonWidth + padding)) / 2;
-    // position buttons at the bottom of the screen
-    const startY = this.cameras.main.height - rows * (buttonHeight + padding) - 20;
-
-    let index = 0;
-    this.playerControls.forEach((control) => {
-      const row = Math.floor(index / columns);
-      const col = index % columns;
-
-      const button = this.add
-        .text(
-          startX + col * (buttonWidth + padding),
-          startY + row * (buttonHeight + padding),
-          control,
-          {
-            fontFamily: "Arial",
-            fontSize: "16px",
-            color: "#ffffff",
-            backgroundColor: "#0000ff",
-            padding: { x: 10, y: 10 },
-          },
-        )
-        .setOrigin(0.5, 0.5)
-        .setInteractive({ useHandCursor: true });
-
-      button.on("pointerdown", () => {
-        this.handleControlButtonClick(control);
-      });
-      button.setVisible(true);
-
-      this.controlBtns.push(button);
-      index++;
-    });
-  }
-
   handleControlButtonClick(control: string) {
     if (!this.playerControls.has(control)) {
       console.error("Player does not have control", control);
@@ -216,34 +173,6 @@ export class CodeRed extends Scene {
     // Show minigame or w/e here
     // Then depending if player is successful, send the results to the server
     this.gameStore?.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
-    this.fadeTaskNotification(taskId);
-  }
-
-  showTaskNotificationText(taskId: string, message: string) {
-    const notificationText = this.add
-      .text(this.cameras.main.width / 2, 50, message, {
-        fontFamily: "Arial",
-        fontSize: "24px",
-        color: "#ffffff",
-        backgroundColor: "#000000",
-        padding: { x: 10, y: 10 },
-      })
-      .setOrigin(0.5, 0.5)
-      .setVisible(true);
-    this.activeTaskNotifications.set(taskId, notificationText);
-  }
-
-  fadeTaskNotification(taskId: string) {
-    const notificationText = this.activeTaskNotifications.get(taskId);
-    if (!notificationText) return;
-    this.tweens.add({
-      targets: notificationText,
-      alpha: 0,
-      duration: 1000,
-      onComplete: () => {
-        notificationText.destroy();
-        this.activeTaskNotifications.delete(taskId);
-      },
-    });
+    this.activeTaskNotifications.fade(taskId);
   }
 }
