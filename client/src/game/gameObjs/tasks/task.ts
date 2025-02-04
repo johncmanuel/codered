@@ -2,12 +2,12 @@ import { Scene } from "phaser";
 import { type GameRoom } from "@/game/types/room";
 
 export abstract class Task {
-  protected taskId: string;
+  taskId: string;
   // isCompleted: task succesfully finished, isFailed: task failed
-  protected isCompleted: boolean;
-  protected isFailed: boolean;
-  protected scene: Scene;
-  protected room: GameRoom;
+  isCompleted: boolean;
+  isFailed: boolean;
+  scene: Scene;
+  room: GameRoom;
 
   constructor(scene: Scene, room: GameRoom, taskId: string) {
     this.scene = scene;
@@ -26,26 +26,27 @@ export abstract class Task {
   abstract update(): void;
 
   // called when the task is successfully completed
-  complete() {
+  complete(): void {
     if (this.isCompleted || this.isFailed) return;
 
     this.isCompleted = true;
     console.log(`Task ${this.taskId} completed!`);
     this.room?.send("taskCompleted", this.taskId);
+    this.cleanup();
   }
 
   // fail the task
-  fail() {
+  fail(): void {
     if (this.isCompleted || this.isFailed) return;
 
     this.isFailed = true;
     console.log(`Task ${this.taskId} failed!`);
     this.room?.send("taskFailed", this.taskId);
+    this.cleanup();
   }
 
   // clean up after task game is over
-  protected cleanup(onAdditionalCleanup?: (taskId: string) => void) {
+  cleanup(): void {
     console.log(`Cleaning up task ${this.taskId}`);
-    if (onAdditionalCleanup) onAdditionalCleanup(this.taskId);
   }
 }
