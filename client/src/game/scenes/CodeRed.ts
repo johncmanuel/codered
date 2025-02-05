@@ -5,6 +5,7 @@ import { type TaskState } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
 import { ActiveTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
+import { TaskManager } from "../gameObjs/tasks/taskManager";
 
 export const GAME_NAME = "CodeRed";
 
@@ -24,6 +25,7 @@ export class CodeRed extends Scene {
   activeTaskNotifications: ActiveTaskNotification;
   loadingText: Phaser.GameObjects.Text;
   postMatchUI: PostMatchUI;
+  taskManager: TaskManager;
 
   constructor() {
     super(GAME_NAME);
@@ -36,6 +38,7 @@ export class CodeRed extends Scene {
     this.playerControls = new Set();
     this.activeTaskNotifications = new ActiveTaskNotification(this);
     this.controlBtns = new ControlButtons(this);
+    this.taskManager = new TaskManager();
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -43,7 +46,6 @@ export class CodeRed extends Scene {
         throw new Error("No game store");
       }
       if (!this.gameStore.room) {
-        console.log(this.gameStore);
         throw new Error("No room");
       }
       this.playerId = this.gameStore.room?.sessionId!;
@@ -53,7 +55,6 @@ export class CodeRed extends Scene {
       this.createLocalListeners();
       this.createServerListeners();
       this.gameStore.room?.send("playerReady");
-      // this.registry.set("room", this.gameStore.room);
     });
   }
 
@@ -76,7 +77,9 @@ export class CodeRed extends Scene {
     EventBus.emit("current-scene-ready", this);
   }
 
-  update() {}
+  update() {
+    this.taskManager.update();
+  }
 
   // Set up listeners for events from Colyseus server
   //https://docs.colyseus.io/state/schema-callbacks/#schema-callbacks
@@ -160,16 +163,20 @@ export class CodeRed extends Scene {
   createLocalListeners() {
     this.events.on("controlButtonClicked", (control: string) => {
       const taskId = this.handleControlButtonClick(control);
-
-      // Show minigame or w/e here
-      // Then depending if player is successful, send the results to the server
-
       if (!taskId) {
         console.error("No task found for control", control);
         return;
       }
-      this.gameStore?.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
-      this.activeTaskNotifications.fade(taskId);
+
+      if (!this.taskManager.hasActiveTask()) {
+        // Show minigame or w/e here
+        // Then depending if player is successful, send the results to the server
+
+        this.gameStore?.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
+        this.activeTaskNotifications.fade(taskId);
+      } else {
+        console.log("Cannot start new task - another task is already active");
+      }
     });
   }
 

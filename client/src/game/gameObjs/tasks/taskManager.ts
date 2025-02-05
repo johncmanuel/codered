@@ -1,32 +1,45 @@
 import { Task } from "./task";
 
 export class TaskManager {
-  private activeTasks: Task[] = [];
+  private activeTask: Task | null;
+
+  constructor() {
+    this.activeTask = null;
+  }
 
   addTask(task: Task) {
-    this.activeTasks.push(task);
-    task.start(); // Start the task
+    if (this.activeTask) {
+      this.activeTask.cleanup();
+    }
+    this.activeTask = task;
+    task.start();
   }
 
   removeTask(taskId: string) {
-    const taskIndex = this.activeTasks.findIndex((task) => task.taskId === taskId);
-    if (taskIndex !== -1) {
-      const task = this.activeTasks[taskIndex];
-      task.cleanup();
-      this.activeTasks.splice(taskIndex, 1);
+    if (this.activeTask && this.activeTask.taskId === taskId) {
+      this.activeTask.cleanup();
+      this.activeTask = null;
     }
   }
 
   update() {
-    for (const task of this.activeTasks) {
-      task.update();
+    if (this.activeTask) {
+      this.activeTask.update();
     }
   }
 
-  cleanupAllTasks() {
-    for (const task of this.activeTasks) {
-      task.cleanup();
+  cleanup() {
+    if (this.activeTask) {
+      this.activeTask.cleanup();
+      this.activeTask = null;
     }
-    this.activeTasks = [];
+  }
+
+  hasActiveTask() {
+    return this.activeTask !== null;
+  }
+
+  getActiveTask(): Task | null {
+    return this.activeTask;
   }
 }
