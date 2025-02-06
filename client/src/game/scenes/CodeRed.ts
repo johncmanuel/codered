@@ -1,11 +1,12 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
-import { type TaskState } from "../types/room";
+import { type TaskState, Tasks } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
 import { ActiveTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
+import { createTask } from "../gameObjs/tasks/taskFactory";
 
 export const GAME_NAME = "CodeRed";
 
@@ -135,6 +136,9 @@ export class CodeRed extends Scene {
         this.controlToTaskId.set(task.control, task.id);
         // task.type or task.controls can be used by Phaser to display whatever task to the player
         console.log("Task assigned to you:", task.type);
+        const taskTypeNum = Tasks[task.type as keyof typeof Tasks];
+        console.log(taskTypeNum, task.type);
+        this.taskManager.addTask(createTask(this, task.id, taskTypeNum));
       }
     });
 
@@ -164,19 +168,27 @@ export class CodeRed extends Scene {
     this.events.on("controlButtonClicked", (control: string) => {
       const taskId = this.handleControlButtonClick(control);
       if (!taskId) {
-        console.error("No task found for control", control);
+        console.error("taskId", taskId, "is null for control", control);
         return;
       }
 
-      if (!this.taskManager.hasActiveTask()) {
+      if (!this.taskManager.isTaskStarted()) {
         // Show minigame or w/e here
         // Then depending if player is successful, send the results to the server
-
-        this.gameStore?.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
-        this.activeTaskNotifications.fade(taskId);
+        this.taskManager.startTask();
+        // this.gameStore?.room?.send("taskCompleted", taskId); // only if player is successful in finishgin the game
+        // this.activeTaskNotifications.fade(taskId);
       } else {
-        console.log("Cannot start new task - another task is already active");
+        console.error("Cannot start new task - another task is already active");
       }
+    });
+    this.events.on("taskCompleted", (taskId: string) => {
+      this.gameStore?.room?.send("taskCompleted", taskId);
+      this.activeTaskNotifications.fade(taskId);
+    });
+    this.events.on("taskFailed", (taskId: string) => {
+      this.gameStore?.room?.send("taskFailed", taskId);
+      this.activeTaskNotifications.fade(taskId);
     });
   }
 

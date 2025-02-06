@@ -1,5 +1,4 @@
 import { Scene } from "phaser";
-import { type GameRoom } from "@/game/types/room";
 
 export abstract class Task {
   taskId: string;
@@ -7,11 +6,9 @@ export abstract class Task {
   isCompleted: boolean;
   isFailed: boolean;
   scene: Scene;
-  room: GameRoom;
 
-  constructor(scene: Scene, room: GameRoom, taskId: string) {
+  constructor(scene: Scene, taskId: string) {
     this.scene = scene;
-    this.room = room;
     this.taskId = taskId;
     this.isCompleted = false;
     this.isFailed = false;
@@ -31,7 +28,7 @@ export abstract class Task {
 
     this.isCompleted = true;
     console.log(`Task ${this.taskId} completed!`);
-    this.room?.send("taskCompleted", this.taskId);
+    this.scene.events.emit("taskCompleted", this.taskId);
     this.cleanup();
   }
 
@@ -41,7 +38,7 @@ export abstract class Task {
 
     this.isFailed = true;
     console.log(`Task ${this.taskId} failed!`);
-    this.room?.send("taskFailed", this.taskId);
+    this.scene.events.emit("taskCompleted", this.taskId);
     this.cleanup();
   }
 
