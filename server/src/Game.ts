@@ -28,7 +28,7 @@ export class CodeRedRoom extends Room<GameState> {
 
   // i think
   maxNumRounds = 6;
-  numRequiredTasksCompleted = 15;
+  numRequiredTasksCompleted = 1; // temporary
   roundTimeLimitSecs = initRoundTimeLimitSecs; // 30s for testing, adjust later
   lobbyControls: Set<string> = new Set(); // all controls currently assigned to players
   numPlayersReady: number = 0;
@@ -120,21 +120,18 @@ export class CodeRedRoom extends Room<GameState> {
       this.state.timer--;
       if (this.state.timer === 0) {
         // If there are still active tasks by the time the round ends, the game is over
-        if (this.state.activeTasks.size > 0) {
-          this.dispatcher.dispatch(new EndGameCommand());
-        } else {
-          this.dispatcher.dispatch(new StartNewRoundCommand());
-          // assign new controls at start of each round
-          // haven't tested this yet but let's find out
-          this.dispatcher.dispatch(new AssignPlayerControlsCommand());
-        }
+        this.state.activeTasks.size > 0
+          ? this.dispatcher.dispatch(new EndGameCommand())
+          : this.dispatcher.dispatch(new StartNewRoundCommand());
       }
       // TODO: stop sending tasks once it reaches required num of tasks completed
-      if (!this.state.isGameOver) {
+      if (!this.state.isGameOver && this.lobbyControls.size > 0) {
         const task = this.createNewTask();
         if (task) {
           this.dispatcher.dispatch(new AssignTaskToRandomPlayerCommand(), { task });
         }
+      } else {
+        console.warn("Game is over or no controls available to assign tasks to.");
       }
     }, this.TIMER_INTERVAL_MS);
   }

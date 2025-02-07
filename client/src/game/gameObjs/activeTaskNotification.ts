@@ -2,6 +2,7 @@ import { Scene, GameObjects, Tweens } from "phaser";
 
 export class ActiveTaskNotification {
   private scene: Scene;
+  // TODO: since only 1 task is assigned at a time, use a variable instead
   private notifications: Map<string, GameObjects.Text>;
   private tweens: Tweens.TweenManager;
 

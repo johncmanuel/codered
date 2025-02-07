@@ -14,6 +14,8 @@ export class AssignPlayerControlsCommand extends Command<CodeRedRoom> {
     const remainingControls = shuffledControls.length % this.state.players.size;
     let index = 0;
 
+    console.log("Assigning controls to players");
+
     // Ensure 1 type of each control exists and each player receives a fair amount of controls
     // It might be better to send the controls individually to each player, idk
     this.state.players.forEach((player, playerId) => {

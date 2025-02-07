@@ -71,4 +71,13 @@ export class ControlButtons {
     this.buttons.forEach((button) => button.destroy());
     this.buttons = [];
   }
+
+  check() {
+    if (this.buttons.length < 0) console.warn("No buttons created");
+    if (this.playerControls.size < 0) console.warn("No controls assigned to player");
+    this.buttons.forEach((button) => {
+      if (!button.visible) console.warn("Button not visible");
+    });
+    console.log("Control buttons checked");
+  }
 }

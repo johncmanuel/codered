@@ -23,6 +23,6 @@ export class FirewallConfig extends Task {
 
   cleanup() {
     super.cleanup();
-    this.firewallConfigBtn.destroy();
+    if (this.firewallConfigBtn) this.firewallConfigBtn.destroy();
   }
 }

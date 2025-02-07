@@ -96,9 +96,9 @@ export class CodeRed extends Scene {
 
     // prep for start of new round
     this.gameStore?.room?.state.listen("round", (round: number) => {
+      console.log("new round", round);
       EventBus.emit("updateRound", round);
       this.loadingText.setVisible(true);
-      this.controlBtns.hide();
       this.registry.set("round", round);
       this.activeTaskNotifications.clear();
       this.taskManager.removeTask();
@@ -115,7 +115,8 @@ export class CodeRed extends Scene {
         console.error("No controls received from server");
         return;
       }
-
+      this.controlBtns.hide();
+      this.loadingText.setVisible(true);
       // check if user already has controls
       if (this.playerControls.size > 0) {
         console.log("Clearing controls");
@@ -127,9 +128,10 @@ export class CodeRed extends Scene {
         this.playerControls.add(control);
       });
       console.log("Controls received:", this.playerControls);
-      this.loadingText.setVisible(false);
       this.controlBtns.setPlayerControls(this.playerControls);
+      this.loadingText.setVisible(false);
       this.controlBtns.show();
+      this.controlBtns.check();
     });
 
     // do stuff once all players connected
@@ -174,7 +176,7 @@ export class CodeRed extends Scene {
       this.loadingText.setVisible(false);
       this.controlBtns.hide();
       this.postMatchUI.show();
-      this.taskManager.
+      this.taskManager.removeTask();
     });
 
     // handle stuff once the player leaves the game
