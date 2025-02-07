@@ -40,4 +40,17 @@ export class ActiveTaskNotification {
       },
     });
   }
+
+  hide() {
+    this.notifications.forEach((notificationText) => {
+      notificationText.setVisible(false);
+    });
+  }
+
+  clear() {
+    this.notifications.forEach((notificationText) => {
+      notificationText.destroy();
+    });
+    this.notifications.clear();
+  }
 }

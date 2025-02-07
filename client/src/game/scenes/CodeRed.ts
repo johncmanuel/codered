@@ -94,10 +94,14 @@ export class CodeRed extends Scene {
       this.registry.set("dataHealth", dataHealth);
     });
 
+    // prep for start of new round
     this.gameStore?.room?.state.listen("round", (round: number) => {
       EventBus.emit("updateRound", round);
       this.loadingText.setVisible(true);
+      this.controlBtns.hide();
       this.registry.set("round", round);
+      this.activeTaskNotifications.clear();
+      this.taskManager.removeTask();
     });
 
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others
@@ -105,10 +109,24 @@ export class CodeRed extends Scene {
       this.activeTaskNotifications.show(task.id, `New Task: ${task.type}`);
     });
 
+    // handle controls assigned to the player from server
     this.gameStore?.room?.onMessage("controls", (controls) => {
+      if (!controls) {
+        console.error("No controls received from server");
+        return;
+      }
+
+      // check if user already has controls
+      if (this.playerControls.size > 0) {
+        console.log("Clearing controls");
+        this.playerControls.clear();
+        this.controlBtns.clear();
+      }
+
       controls.forEach((control: any) => {
         this.playerControls.add(control);
       });
+      console.log("Controls received:", this.playerControls);
       this.loadingText.setVisible(false);
       this.controlBtns.setPlayerControls(this.playerControls);
       this.controlBtns.show();
@@ -152,7 +170,11 @@ export class CodeRed extends Scene {
     });
 
     this.gameStore?.room?.onMessage("gameOver", () => {
+      this.activeTaskNotifications.hide();
+      this.loadingText.setVisible(false);
+      this.controlBtns.hide();
       this.postMatchUI.show();
+      this.taskManager.
     });
 
     // handle stuff once the player leaves the game

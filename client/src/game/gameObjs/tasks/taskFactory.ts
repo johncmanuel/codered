@@ -4,11 +4,33 @@ import { Tasks } from "@/game/types/room";
 import { Task } from "./task";
 
 // factory function to create tasks based on their type
-// TODO: create all task types here
 export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task {
-  console.log(Tasks);
+  // all return firewall config for now lol
+  // rest of tasks are WIP
   switch (taskType) {
     case Tasks.FIREWALL_CONFIG:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.PHISHING_EMAIL:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.VIRUS_CONTAINMENT:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.NETWORK_MAPPING:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.SYSTEM_REBOOT:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.SOCIAL_ENGINEERING:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.RESTART_PC:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.RESET_PASSWORDS:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.MALWARE_SCAN:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.CREATE_INCIDENT_REPORT:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.UPDATE_SOFTWARE:
+      return new FirewallConfig(scene, taskId);
+    case Tasks.PATCH_SECURITY_SOFTWARE:
       return new FirewallConfig(scene, taskId);
     default:
       throw new Error(`Unknown task type: ${taskType}`);

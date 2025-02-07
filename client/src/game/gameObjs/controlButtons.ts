@@ -63,6 +63,10 @@ export class ControlButtons {
     });
   }
 
+  hide() {
+    this.buttons.forEach((button) => button.setVisible(false));
+  }
+
   clear() {
     this.buttons.forEach((button) => button.destroy());
     this.buttons = [];
