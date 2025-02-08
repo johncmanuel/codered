@@ -60,6 +60,7 @@ export class CodeRedRoom extends Room<GameState> {
         this.broadcast("allPlayersReady");
         this.startClock();
         this.gameLoop();
+        this.numPlayersReady = 0;
       }
     });
 

@@ -98,15 +98,18 @@ export class CodeRed extends Scene {
     this.gameStore?.room?.state.listen("round", (round: number) => {
       console.log("new round", round);
       EventBus.emit("updateRound", round);
-      this.loadingText.setVisible(true);
       this.registry.set("round", round);
       this.activeTaskNotifications.clear();
       this.taskManager.removeTask();
+
+      this.loadingText.setVisible(true);
+      this.controlBtns.hide();
+      this.activeTaskNotifications.hide();
     });
 
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
-      this.activeTaskNotifications.show(task.id, `New Task: ${task.type}`);
+      this.activeTaskNotifications.add(task.id, `New Task: ${task.type}`);
     });
 
     // handle controls assigned to the player from server
@@ -115,23 +118,7 @@ export class CodeRed extends Scene {
         console.error("No controls received from server");
         return;
       }
-      this.controlBtns.hide();
-      this.loadingText.setVisible(true);
-      // check if user already has controls
-      if (this.playerControls.size > 0) {
-        console.log("Clearing controls");
-        this.playerControls.clear();
-        this.controlBtns.clear();
-      }
-
-      controls.forEach((control: any) => {
-        this.playerControls.add(control);
-      });
-      console.log("Controls received:", this.playerControls);
-      this.controlBtns.setPlayerControls(this.playerControls);
-      this.loadingText.setVisible(false);
-      this.controlBtns.show();
-      this.controlBtns.check();
+      this.applyPlayerControls(controls);
     });
 
     // do stuff once all players connected
@@ -172,9 +159,9 @@ export class CodeRed extends Scene {
     });
 
     this.gameStore?.room?.onMessage("gameOver", () => {
-      this.activeTaskNotifications.hide();
       this.loadingText.setVisible(false);
       this.controlBtns.hide();
+      this.activeTaskNotifications.hide();
       this.postMatchUI.show();
       this.taskManager.removeTask();
     });
@@ -185,6 +172,26 @@ export class CodeRed extends Scene {
       console.log("Left room with code", code);
       this.scene.stop(GAME_NAME);
     });
+  }
+
+  applyPlayerControls(controls: any) {
+    // check if user already has controls
+    if (this.playerControls.size > 0) {
+      console.log("Clearing controls");
+      this.playerControls.clear();
+      this.controlBtns.clear();
+    }
+
+    controls.forEach((control: any) => {
+      this.playerControls.add(control);
+    });
+    console.log("Controls received:", this.playerControls);
+    this.controlBtns.setPlayerControls(this.playerControls);
+
+    this.loadingText.setVisible(false);
+    this.controlBtns.show();
+    this.activeTaskNotifications.show();
+    this.controlBtns.check();
   }
 
   // Set up listeners between Phaser events

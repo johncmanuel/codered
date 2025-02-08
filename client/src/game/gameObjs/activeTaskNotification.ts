@@ -12,7 +12,7 @@ export class ActiveTaskNotification {
     this.notifications = new Map();
   }
 
-  show(taskId: string, message: string) {
+  add(taskId: string, message: string) {
     const notificationText = this.scene.add
       .text(this.scene.cameras.main.width / 2, 50, message, {
         fontFamily: "Arial",
@@ -53,5 +53,11 @@ export class ActiveTaskNotification {
       notificationText.destroy();
     });
     this.notifications.clear();
+  }
+
+  show() {
+    this.notifications.forEach((notificationText) => {
+      notificationText.setVisible(true);
+    });
   }
 }
