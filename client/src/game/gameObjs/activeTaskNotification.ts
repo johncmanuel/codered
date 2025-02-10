@@ -2,18 +2,22 @@ import { Scene, GameObjects, Tweens } from "phaser";
 
 export class ActiveTaskNotification {
   private scene: Scene;
-  // TODO: since only 1 task is assigned at a time, use a variable instead
-  private notifications: Map<string, GameObjects.Text>;
+  private notificationText: GameObjects.Text | null;
   private tweens: Tweens.TweenManager;
 
   constructor(scene: Scene) {
     this.scene = scene;
     this.tweens = scene.tweens;
-    this.notifications = new Map();
+    this.notificationText = null;
   }
 
-  add(taskId: string, message: string) {
-    const notificationText = this.scene.add
+  add(message: string) {
+    // if there's an existing notification, destroy it before adding new one
+    if (this.notificationText) {
+      this.notificationText.destroy();
+    }
+
+    this.notificationText = this.scene.add
       .text(this.scene.cameras.main.width / 2, 50, message, {
         fontFamily: "Arial",
         fontSize: "24px",
@@ -23,41 +27,38 @@ export class ActiveTaskNotification {
       })
       .setOrigin(0.5, 0.5)
       .setVisible(true);
-
-    this.notifications.set(taskId, notificationText);
   }
 
-  fade(taskId: string) {
-    const notificationText = this.notifications.get(taskId);
-    if (!notificationText) return;
+  fade() {
+    if (!this.notificationText) return;
 
     this.tweens.add({
-      targets: notificationText,
+      targets: this.notificationText,
       alpha: 0,
       duration: 1000,
       onComplete: () => {
-        notificationText.destroy();
-        this.notifications.delete(taskId);
+        this.notificationText?.destroy();
+        this.notificationText = null;
       },
     });
   }
 
   hide() {
-    this.notifications.forEach((notificationText) => {
-      notificationText.setVisible(false);
-    });
+    if (this.notificationText) {
+      this.notificationText.setVisible(false);
+    }
   }
 
   clear() {
-    this.notifications.forEach((notificationText) => {
-      notificationText.destroy();
-    });
-    this.notifications.clear();
+    if (this.notificationText) {
+      this.notificationText.destroy();
+      this.notificationText = null;
+    }
   }
 
   show() {
-    this.notifications.forEach((notificationText) => {
-      notificationText.setVisible(true);
-    });
+    if (this.notificationText) {
+      this.notificationText.setVisible(true);
+    }
   }
 }

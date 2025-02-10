@@ -106,12 +106,13 @@ export class CodeRed extends Scene {
       this.loadingText.setVisible(true);
       this.controlBtns.hide();
       this.activeTaskNotifications.hide();
+
       this.gameStore?.room?.send("giveMeControlsPls");
     });
 
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
-      this.activeTaskNotifications.add(task.id, `New Task: ${task.type}`);
+      this.activeTaskNotifications.add(`New Task: ${task.type}`);
     });
 
     // handle controls assigned to the player from server
@@ -217,11 +218,11 @@ export class CodeRed extends Scene {
     });
     this.events.on("taskCompleted", (taskId: string) => {
       this.gameStore?.room?.send("taskCompleted", taskId);
-      this.activeTaskNotifications.fade(taskId);
+      this.activeTaskNotifications.fade();
     });
     this.events.on("taskFailed", (taskId: string) => {
       this.gameStore?.room?.send("taskFailed", taskId);
-      this.activeTaskNotifications.fade(taskId);
+      this.activeTaskNotifications.fade();
     });
   }
 
