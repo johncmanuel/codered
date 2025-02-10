@@ -5,6 +5,11 @@ import { TaskToControls } from "../CodeRedState";
 
 export class AssignPlayerControlsCommand extends Command<CodeRedRoom> {
   execute() {
+    // if there are already controls, clear it
+    if (this.room.lobbyControls.size > 0) {
+      console.log("Clearing controls for this round");
+      this.room.lobbyControls.clear();
+    }
     const controls = Array.from(TaskToControls.values());
     if (controls.length < this.state.players.size) {
       console.warn("there are more players than controls");
@@ -20,10 +25,10 @@ export class AssignPlayerControlsCommand extends Command<CodeRedRoom> {
     // It might be better to send the controls individually to each player, idk
     this.state.players.forEach((player, playerId) => {
       const controlsToAssign = controlsPerPlayer + (index < remainingControls ? 1 : 0);
-      const client = this.room.clients.find((c) => c.sessionId === playerId);
-      if (!client) {
-        console.error("Client not found for player", playerId);
-      }
+      // const client = this.room.clients.find((c) => c.sessionId === playerId);
+      // if (!client) {
+      //   console.error("Client not found for player", playerId);
+      // }
       for (let i = 0; i < controlsToAssign; i++) {
         if (shuffledControls.length > 0) {
           const control = shuffledControls.shift()!;
@@ -34,7 +39,8 @@ export class AssignPlayerControlsCommand extends Command<CodeRedRoom> {
         }
         console.log("Player", player.name, "assigned control", player.controls[i]);
       }
-      client.send("controls", player.controls);
+      // client.send("controls", player.controls);'
+      this.room.lobbyControlsByPlayer.set(playerId, player.controls);
       index++;
     });
   }

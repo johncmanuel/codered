@@ -56,6 +56,7 @@ export class CodeRed extends Scene {
       this.createLocalListeners();
       this.createServerListeners();
       this.gameStore.room?.send("playerReady");
+      this.gameStore.room?.send("giveMeControlsPls");
     });
   }
 
@@ -105,6 +106,7 @@ export class CodeRed extends Scene {
       this.loadingText.setVisible(true);
       this.controlBtns.hide();
       this.activeTaskNotifications.hide();
+      this.gameStore?.room?.send("giveMeControlsPls");
     });
 
     // Mainly used for notifying the players, this enables the player to verbally cooperate with others

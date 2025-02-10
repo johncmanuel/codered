@@ -17,6 +17,7 @@ import { EndGameCommand } from "./cmds/endGameCommand";
 import { generateRoomCode } from "./utils";
 import { AssignPlayerControlsCommand } from "./cmds/assignPlayerControlsCommand";
 import { AssignTaskToRandomPlayerCommand } from "./cmds/assignTaskToRandomPlayerCommand";
+import { ArraySchema } from "@colyseus/schema";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -32,6 +33,10 @@ export class CodeRedRoom extends Room<GameState> {
   roundTimeLimitSecs = initRoundTimeLimitSecs; // 30s for testing, adjust later
   lobbyControls: Set<string> = new Set(); // all controls currently assigned to players
   numPlayersReady: number = 0;
+
+  // controls assigned to each player
+  // send each client their controls when asked
+  lobbyControlsByPlayer: Map<string, ArraySchema<string>> = new Map();
 
   dispatcher = new Dispatcher(this);
 
@@ -86,6 +91,17 @@ export class CodeRedRoom extends Room<GameState> {
       // Just sending the state data for now. in the future, send relevant data listed in
       // the proposal.
       this.broadcast("gameOverStats", this.state);
+    });
+
+    this.onMessage("giveMeControlsPls", (client) => {
+      const playerId = client.sessionId;
+      const controls = this.lobbyControlsByPlayer.get(playerId)!;
+      const controlsArr = new Array<string>();
+      controls.forEach((control) => {
+        controlsArr.push(control);
+      });
+      console.log("Sending controls to player", playerId, controlsArr);
+      client.send("controls", controlsArr);
     });
   }
 
