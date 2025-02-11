@@ -97,6 +97,11 @@ export class CodeRedRoom extends Room<GameState> {
       const playerId = client.sessionId;
       const controls = this.lobbyControlsByPlayer.get(playerId)!;
       const controlsArr = new Array<string>();
+      if (!controls) {
+        console.error("Player", playerId, "does not have any controls assigned to them.");
+        console.log("controls", controls);
+        return;
+      }
       controls.forEach((control) => {
         controlsArr.push(control);
       });
@@ -133,6 +138,7 @@ export class CodeRedRoom extends Room<GameState> {
   gameLoop() {
     this.dispatcher.dispatch(new AssignPlayerControlsCommand());
     // Keep track of the current round's timer
+    this.broadcast("beforeGameLoop");
     this.timerInterval = this.clock.setInterval(() => {
       this.state.timer--;
       if (this.state.timer === 0) {

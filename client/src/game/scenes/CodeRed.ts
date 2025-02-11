@@ -56,7 +56,6 @@ export class CodeRed extends Scene {
       this.createLocalListeners();
       this.createServerListeners();
       this.gameStore.room?.send("playerReady");
-      this.gameStore.room?.send("giveMeControlsPls");
     });
   }
 
@@ -105,7 +104,6 @@ export class CodeRed extends Scene {
 
       this.loadingText.setVisible(true);
       this.controlBtns.hide();
-      this.activeTaskNotifications.hide();
 
       this.gameStore?.room?.send("giveMeControlsPls");
     });
@@ -122,11 +120,18 @@ export class CodeRed extends Scene {
         return;
       }
       this.applyPlayerControls(controls);
+      this.loadingText.setVisible(false);
+      this.controlBtns.show();
+      this.activeTaskNotifications.show();
+      this.controlBtns.check();
     });
 
     // do stuff once all players connected
     this.gameStore?.room?.onMessage("allPlayersReady", () => {});
 
+    this.gameStore?.room?.onMessage("beforeGameLoop", () => {
+      this.gameStore?.room?.send("giveMeControlsPls");
+    });
     // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
 
     // Add tasks only for the player with the appropiate controls
@@ -190,11 +195,6 @@ export class CodeRed extends Scene {
     });
     console.log("Controls received:", this.playerControls);
     this.controlBtns.setPlayerControls(this.playerControls);
-
-    this.loadingText.setVisible(false);
-    this.controlBtns.show();
-    this.activeTaskNotifications.show();
-    this.controlBtns.check();
   }
 
   // Set up listeners between Phaser events

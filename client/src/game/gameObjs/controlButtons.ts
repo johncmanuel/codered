@@ -21,6 +21,10 @@ export class ControlButtons {
 
   // TODO: make each control button unique given the task.control
   show() {
+    if (this.playerControls.size < 0) {
+      console.error("No controls assigned to player");
+      return;
+    }
     // get the number of rows needed based on the number of controls and columns
     const numControls = this.playerControls.size;
     const rows = Math.ceil(numControls / this.columns);
