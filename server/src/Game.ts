@@ -30,7 +30,7 @@ export class CodeRedRoom extends Room<GameState> {
 
   // i think
   maxNumRounds = 6;
-  numRequiredTasksCompletedPerRound = 2; // temporary
+  numRequiredTasksCompletedPerRound = 5; // temporary
   roundTimeLimitSecs = initRoundTimeLimitSecs; // 30s for testing, adjust later
   lobbyControls: Set<string> = new Set(); // all controls currently assigned to players
   numPlayersReady: number = 0;
@@ -202,7 +202,9 @@ export class CodeRedRoom extends Room<GameState> {
       if (task) {
         tasks.push(task);
       }
+      console.log("Task created", task?.type);
     }
+    console.log("Tasks created in batchCreateTasks:", tasks);
     return tasks;
   }
 

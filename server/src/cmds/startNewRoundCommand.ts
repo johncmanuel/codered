@@ -5,7 +5,7 @@ import { AssignPlayerControlsCommand } from "./assignPlayerControlsCommand";
 
 export class StartNewRoundCommand extends Command<CodeRedRoom> {
   execute() {
-    if (this.state.round > this.room.maxNumRounds) {
+    if (this.state.round >= this.room.maxNumRounds) {
       return [new EndGameCommand()];
     }
     this.state.round++;

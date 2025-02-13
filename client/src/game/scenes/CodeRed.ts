@@ -109,6 +109,7 @@ export class CodeRed extends Scene {
     // this is where the cooperative aspect of the game comes in
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
       this.assignedTaskNotifs.add(`New Task: ${task.type}`, task.id);
+      console.log("New task assigned:", task.type, task);
     });
 
     // handle controls assigned to the player from server
