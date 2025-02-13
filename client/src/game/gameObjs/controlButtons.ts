@@ -19,7 +19,12 @@ export class ControlButtons {
     this.playerControls = controls;
   }
 
+  // TODO: make each control button unique given the task.control
   show() {
+    if (this.playerControls.size < 0) {
+      console.error("No controls assigned to player");
+      return;
+    }
     // get the number of rows needed based on the number of controls and columns
     const numControls = this.playerControls.size;
     const rows = Math.ceil(numControls / this.columns);
@@ -62,8 +67,21 @@ export class ControlButtons {
     });
   }
 
+  hide() {
+    this.buttons.forEach((button) => button.setVisible(false));
+  }
+
   clear() {
     this.buttons.forEach((button) => button.destroy());
     this.buttons = [];
+  }
+
+  check() {
+    if (this.buttons.length < 0) console.warn("No buttons created");
+    if (this.playerControls.size < 0) console.warn("No controls assigned to player");
+    this.buttons.forEach((button) => {
+      if (!button.visible) console.warn("Button not visible");
+    });
+    console.log("Control buttons checked");
   }
 }
