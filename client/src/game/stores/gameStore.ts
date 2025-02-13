@@ -27,7 +27,10 @@ function createGameStore() {
     subscribe,
     setClient: (client: Client) => update((state) => ({ ...state, client })),
     setRoom: (room: GameRoom) => update((state) => ({ ...state, room })),
-    setError: (error: string) => update((state) => ({ ...state, error })),
+    setError: (error: string) => {
+      update((state) => ({ ...state, error }));
+      setTimeout(() => update((state) => ({ ...state, error: null})), 2000);
+    },
     setPlayers: (players: Player[]) => update((state) => ({ ...state, players })),
     setIsHost: (isHost: boolean) => update((state) => ({ ...state, isHost })),
     setJoinCode: (joinCode: string) => update((state) => ({ ...state, joinCode })),

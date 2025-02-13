@@ -245,7 +245,24 @@
   .clickable {
     cursor: pointer;
   }
+
   .underline {
     text-decoration: underline;
   }
+
+  .error, .error-message {
+    transition: width 2s ease-out, height 2s ease-out, opacity 2s ease-out;
+    opacity: 1;
+    color: red;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    /* background: #ffebee; */
+    /* border-radius: 4px; */
+    text-align: center;
+  }
+
+  .error:empty, .error-message:empty {
+    opacity: 0;
+  }
+  
 </style>
