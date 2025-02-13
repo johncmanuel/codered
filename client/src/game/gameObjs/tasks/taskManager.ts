@@ -1,54 +1,87 @@
 import { Task } from "./task";
 
 export class TaskManager {
-  private activeTask: Task | null;
+  private tasks: Map<string, Task>; // maps task ID to task
+  private activeTaskId: string | null; // ID of the currently active task
   private isStarted: boolean;
 
   constructor() {
-    this.activeTask = null;
+    this.tasks = new Map();
+    this.activeTaskId = null;
     this.isStarted = false;
   }
 
-  addTask(task: Task) {
-    if (this.activeTask) {
-      console.error("Cannot add task - another task is already active");
+  addTask(taskId: string, task: Task) {
+    if (this.tasks.has(taskId)) {
+      console.error(`Task with ID ${taskId} already exists`);
       return;
     }
-    this.activeTask = task;
+    this.tasks.set(taskId, task);
   }
 
-  startTask() {
-    if (this.activeTask) {
+  startTask(taskId: string) {
+    if (this.activeTaskId !== null) {
+      console.error("Cannot start task - another task is already active");
+      return;
+    }
+
+    const task = this.tasks.get(taskId);
+    if (task) {
+      this.activeTaskId = taskId;
       this.isStarted = true;
-      this.activeTask.start();
+      task.start();
+    } else {
+      console.error(`Task with ID ${taskId} not found`);
     }
   }
 
-  removeTask() {
-    if (this.activeTask) {
-      this.activeTask.cleanup();
-      this.activeTask = null;
+  stopActiveTask() {
+    if (this.activeTaskId !== null) {
+      const task = this.tasks.get(this.activeTaskId);
+      if (task) {
+        task.cleanup();
+      }
+      this.activeTaskId = null;
+      this.isStarted = false;
     }
+  }
+
+  removeTask(taskId: string) {
+    if (this.activeTaskId === taskId) {
+      this.stopActiveTask();
+    }
+    this.tasks.delete(taskId);
   }
 
   update() {
-    if (this.activeTask) {
-      this.activeTask.update();
+    if (this.activeTaskId !== null) {
+      const task = this.tasks.get(this.activeTaskId);
+      if (task) {
+        task.update();
+      }
     }
   }
 
   cleanup() {
-    if (this.activeTask) {
-      this.activeTask.cleanup();
-      this.activeTask = null;
-    }
+    this.stopActiveTask();
+    this.tasks.forEach((task) => {
+      task.cleanup();
+    });
+    this.tasks.clear();
   }
 
   getActiveTask(): Task | null {
-    return this.activeTask;
+    if (this.activeTaskId !== null) {
+      return this.tasks.get(this.activeTaskId) || null;
+    }
+    return null;
   }
 
-  isTaskStarted() {
+  isTaskStarted(): boolean {
     return this.isStarted;
+  }
+
+  getAllTasks(): Map<string, Task> {
+    return this.tasks;
   }
 }

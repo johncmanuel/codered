@@ -30,7 +30,14 @@ export class AssignTaskToRandomPlayerCommand extends Command<CodeRedRoom, { task
 
     this.state.players.get(sessionId)!.activeTaskId = task.id;
     this.state.activeTasks.set(task.id, task);
+
+    // send the assigned task to the player
+    // remember: they won't know if they have the task or not,
+    // so other players will have to verbally tell them if they're
+    // sent one.
     playerClient.send("newTask", task);
+    this.room.actualTasks.push(task);
+
     console.log("Task sent to player:", sessionId, "task type:", task.type);
   }
 }
