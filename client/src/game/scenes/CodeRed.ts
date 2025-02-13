@@ -17,8 +17,6 @@ export class CodeRed extends Scene {
   gameStore: GameStore | null;
 
   playerId: string | null;
-  // Client side data structure for holding all of a player's active tasks
-  controlToTaskId: Map<string, string>; // Map<control, taskId>
   playerControls: Set<string>;
 
   // setup game objects here
@@ -35,7 +33,6 @@ export class CodeRed extends Scene {
   init() {
     this.gameStore = null;
     this.playerId = null;
-    this.controlToTaskId = new Map();
     this.playerControls = new Set();
     this.assignedTaskNotifs = new AssignedTaskNotif(this);
     this.controlBtns = new ControlButtons(this);
@@ -101,7 +98,6 @@ export class CodeRed extends Scene {
       this.registry.set("round", round);
       this.assignedTaskNotifs.clear();
       this.taskManager.cleanup();
-      this.controlToTaskId.clear();
 
       this.loadingText.setVisible(true);
       this.controlBtns.hide();
@@ -139,41 +135,6 @@ export class CodeRed extends Scene {
     });
 
     // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
-
-    // Add tasks only for the player with the appropiate controls
-    // They won't know if they have the task or not, so other players will have to verbally tell them if they're
-    // sent one. It's just like Space Team!
-    this.gameStore?.room?.state.activeTasks.onAdd((task: TaskState, key: string) => {
-      // if (
-      //   task.control === "" ||
-      //   !task.control ||
-      //   !this.playerControls.has(task.control) ||
-      //   this.controlToTaskId.has(task.control)
-      // ) {
-      //   console.log("Task not meant for you:", task.type);
-      //   console.log(
-      //     task.control,
-      //     this.playerControls.has(task.control),
-      //     this.controlToTaskId.has(task.control),
-      //   );
-      //   return;
-      // }
-      //
-      // this.controlToTaskId.set(task.control, task.id);
-      // // task.type or task.controls can be used by Phaser to display whatever task to the player
-      // console.log("Task that's meant for you:", task.type);
-      // const taskTypeNum = Tasks[task.type as keyof typeof Tasks];
-      // console.log(taskTypeNum, task.type);
-      // this.taskManager.addTask(task.id, createTask(this, task.id, taskTypeNum));
-    });
-
-    // Remove tasks that players have controls for
-    this.gameStore?.room?.state.activeTasks.onRemove((task: TaskState, key: string) => {
-      // if (this.controlToTaskId.get(task.control) === task.id) {
-      //   this.controlToTaskId.delete(task.control);
-      //   console.log("Task removed from you:", task.type);
-      // }
-    });
 
     this.gameStore?.room?.onMessage("hasTaskForControl", (task: TaskState) => {
       console.log("Task assigned:", task.type, task);
@@ -233,20 +194,6 @@ export class CodeRed extends Scene {
     this.events.on("controlButtonClicked", (control: string) => {
       // send to server to validate if player can do the task
       this.gameStore?.room?.send("taskForControl", control);
-
-      // const taskId = this.handleControlButtonClick(control);
-      // if (!taskId) {
-      //   console.error("taskId", taskId, "is null for control", control);
-      //   return;
-      // }
-      //
-      // if (!this.taskManager.isTaskStarted()) {
-      //   // Show minigame or w/e here
-      //   // Then depending if player is successful, send the results to the server
-      //   this.taskManager.startTask(taskId);
-      // } else {
-      //   console.error("Cannot start new task - another task is already active");
-      // }
     });
     this.events.on("taskCompleted", (taskId: string) => {
       this.gameStore?.room?.send("taskCompleted", taskId);
@@ -259,19 +206,4 @@ export class CodeRed extends Scene {
       this.taskManager.removeTask(taskId);
     });
   }
-
-  // handleControlButtonClick(control: string): string | null {
-  //   if (!this.playerControls.has(control)) {
-  //     console.error("Player does not have control", control);
-  //     return null;
-  //   }
-  //
-  //   // const taskId = this.controlToTaskId.get(control);
-  //   // if (!taskId) {
-  //   //   console.error("No task found for control", control);
-  //   //   return null;
-  //   // }
-  //
-  //   return taskId;
-  // }
 }
