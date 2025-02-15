@@ -239,7 +239,8 @@
   }
 
   .error-message {
-    animation: fade-inout 4s infinite; 
+    animation-delay: 5s;
+    animation: fade-inout 10s infinite; 
     opacity: 1;
     color: red;
     margin-top: 1rem;
