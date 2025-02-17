@@ -132,7 +132,9 @@
       <LobbyForm {isJoining} on:submit={handleLobbySubmit} />
 
       {#if $gameStore.error}
-        <p class="error">{$gameStore.error}</p>
+        <div class="error-message">
+          {$gameStore.error}
+        </div>
       {/if}
     </div>
   {:else}
@@ -190,11 +192,6 @@
     margin-bottom: 1rem;
   }
 
-  .error {
-    color: red;
-    margin-top: 1rem;
-  }
-
   .lobby {
     max-width: 600px;
     margin: 0 auto;
@@ -213,15 +210,6 @@
 
   .ready-button:hover {
     background: #1976d2;
-  }
-
-  .error-message {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    background: #ffebee;
-    color: #c62828;
-    border-radius: 4px;
-    text-align: center;
   }
 
   .about-us {
@@ -250,19 +238,23 @@
     text-decoration: underline;
   }
 
-  .error, .error-message {
-    transition: width 2s ease-out, height 2s ease-out, opacity 2s ease-out;
+  .error-message {
+    animation-delay: 5s;
+    animation: fade-inout 10s infinite; 
     opacity: 1;
     color: red;
     margin-top: 1rem;
     padding: 0.75rem;
-    /* background: #ffebee; */
-    /* border-radius: 4px; */
     text-align: center;
+    font-size: 25px;
   }
 
-  .error:empty, .error-message:empty {
+  .error-message:empty {
     opacity: 0;
   }
   
+  @keyframes fade-inout {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
 </style>
