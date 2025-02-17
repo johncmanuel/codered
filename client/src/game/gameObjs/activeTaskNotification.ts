@@ -1,18 +1,26 @@
 import { Scene, GameObjects, Tweens } from "phaser";
 
-export class ActiveTaskNotification {
+export class AssignedTaskNotif {
   private scene: Scene;
-  private notifications: Map<string, GameObjects.Text>;
+  private notificationText: GameObjects.Text | null;
   private tweens: Tweens.TweenManager;
+  private assignedTaskId: string | null;
 
   constructor(scene: Scene) {
     this.scene = scene;
     this.tweens = scene.tweens;
-    this.notifications = new Map();
+    this.notificationText = null;
+    this.assignedTaskId = null;
   }
 
-  show(taskId: string, message: string) {
-    const notificationText = this.scene.add
+  add(message: string, taskId: string) {
+    // if there's an existing notification, destroy it before adding new one
+    if (this.notificationText) {
+      console.warn("Notification already exists, destroying it");
+      this.notificationText.destroy();
+    }
+
+    this.notificationText = this.scene.add
       .text(this.scene.cameras.main.width / 2, 50, message, {
         fontFamily: "Arial",
         fontSize: "24px",
@@ -22,22 +30,43 @@ export class ActiveTaskNotification {
       })
       .setOrigin(0.5, 0.5)
       .setVisible(true);
-
-    this.notifications.set(taskId, notificationText);
+    this.assignedTaskId = taskId;
   }
 
-  fade(taskId: string) {
-    const notificationText = this.notifications.get(taskId);
-    if (!notificationText) return;
+  fade() {
+    if (!this.notificationText) return;
 
     this.tweens.add({
-      targets: notificationText,
+      targets: this.notificationText,
       alpha: 0,
       duration: 1000,
       onComplete: () => {
-        notificationText.destroy();
-        this.notifications.delete(taskId);
+        this.notificationText?.destroy();
+        this.notificationText = null;
       },
     });
+  }
+
+  hide() {
+    if (this.notificationText) {
+      this.notificationText.setVisible(false);
+    }
+  }
+
+  clear() {
+    if (this.notificationText) {
+      this.notificationText.destroy();
+      this.notificationText = null;
+    }
+  }
+
+  show() {
+    if (this.notificationText) {
+      this.notificationText.setVisible(true);
+    }
+  }
+
+  getTaskId() {
+    return this.assignedTaskId;
   }
 }

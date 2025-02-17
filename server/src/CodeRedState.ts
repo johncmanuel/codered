@@ -54,4 +54,4 @@ export class GameState extends Schema {
   @type({ map: TaskState }) activeTasks = new MapSchema<TaskState>();
 }
 
-export const initRoundTimeLimitSecs = 30;
+export const initRoundTimeLimitSecs = 120;
