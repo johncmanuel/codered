@@ -14,7 +14,6 @@
   import { onMount } from "svelte";
   import StartGame from "./main";
   import { EventBus } from "./EventBus";
-  // import { type GameStore } from "./stores/gameStore";
 
   export let phaserRef: TPhaserRef = {
     game: null,
@@ -22,8 +21,6 @@
   };
 
   export let currentActiveScene: (scene: Scene) => void | undefined;
-
-  // export let gameStore: GameStore | undefined;
 
   onMount(() => {
     phaserRef.game = StartGame("game-container");

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Sandbox from "@/lib/components/Sandbox.svelte";
+  import { PUBLIC_NODE_ENV } from "$env/static/public";
   import { onMount, onDestroy } from "svelte";
   import { gameStore } from "@/game/stores/gameStore";
   import LobbyForm from "$lib/components/LobbyForm.svelte";
@@ -162,6 +164,9 @@
       {/if}
     </div>
   {/if}
+  {#if PUBLIC_NODE_ENV === "development"}
+    <Sandbox />
+  {/if}
 </main>
 
 <style>
@@ -240,7 +245,7 @@
 
   .error-message {
     animation-delay: 5s;
-    animation: fade-inout 10s infinite; 
+    animation: fade-inout 10s infinite;
     opacity: 1;
     color: red;
     margin-top: 1rem;
@@ -252,9 +257,14 @@
   .error-message:empty {
     opacity: 0;
   }
-  
+
   @keyframes fade-inout {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
   }
 </style>
