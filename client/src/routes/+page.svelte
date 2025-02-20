@@ -164,7 +164,7 @@
       {/if}
     </div>
   {/if}
-  {#if PUBLIC_NODE_ENV === "development"}
+  {#if PUBLIC_NODE_ENV === "development" && !hasStarted}
     <Sandbox />
   {/if}
 </main>
