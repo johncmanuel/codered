@@ -3,6 +3,7 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { createTask } from "../gameObjs/tasks/taskFactory";
+import { Tasks } from "../types/room";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
 
 export const GAME_NAME = "Sandbox";
@@ -23,7 +24,11 @@ export class Sandbox extends Scene {
   preload() {}
 
   create() {
-    this.add.text(100, 100, "Hello World", {});
+    // this.add.text(100, 100, "Hello World", {});
+    const testId = "testId";
+    this.taskManager.addTask(testId, createTask(this, testId, Tasks.FIREWALL_CONFIG));
+    console.log("Added task");
+    this.taskManager.startTask(testId);
     EventBus.emit("current-active-scene");
   }
   update() {
