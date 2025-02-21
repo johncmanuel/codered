@@ -24,9 +24,8 @@ export class Sandbox extends Scene {
   preload() {}
 
   create() {
-    // this.add.text(100, 100, "Hello World", {});
     const testId = "testId";
-    this.taskManager.addTask(testId, createTask(this, testId, Tasks.FIREWALL_CONFIG));
+    this.taskManager.addTask(testId, createTask(this, testId, Tasks.SYSTEM_REBOOT));
     console.log("Added task");
     this.taskManager.startTask(testId);
     EventBus.emit("current-active-scene");
