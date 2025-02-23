@@ -33,7 +33,7 @@ export class SystemRebootSequence extends Task {
   }
 
   private createTiles() {
-    const tileSize = 100;
+    const tileSize = 200;
     const startX = this.scene.cameras.main.centerX - tileSize / 2;
     const startY = this.scene.cameras.main.centerY - tileSize / 2;
 
@@ -104,7 +104,7 @@ export class SystemRebootSequence extends Task {
         const tile = this.tiles[this.colors.indexOf(color)];
         this.flashTile(tile);
       });
-      delay += 500;
+      delay += 700;
     });
 
     this.scene.time.delayedCall(delay, () => {
@@ -118,7 +118,7 @@ export class SystemRebootSequence extends Task {
     this.scene.tweens.add({
       targets: tile,
       alpha: 0.5,
-      duration: 200,
+      duration: 300,
       yoyo: true,
       onComplete: () => {
         tile.setAlpha(1);
@@ -128,7 +128,8 @@ export class SystemRebootSequence extends Task {
 
   private handleTileClick(tile: Phaser.GameObjects.Rectangle) {
     if (!this.isPlayerInputEnabled || this.isShowingSequence) return;
-
+    
+    this.flashTile(tile);
     const clickedColor = this.colors[this.tiles.indexOf(tile)];
 
     this.playerSequence.push(clickedColor);
@@ -155,7 +156,9 @@ export class SystemRebootSequence extends Task {
     if (this.currentRound > this.maxRounds) {
       this.complete();
     } else {
-      this.startRound();
+      this.scene.time.delayedCall(1000, () => {
+        this.startRound();
+      });
     }
   }
 
