@@ -23,7 +23,7 @@ export class TaskState extends Schema {
   @type("string") id: string;
   @type("string") type: string;
   @type("boolean") completed: boolean = false;
-  @type("number") timeLimit: number;
+  // @type("number") timeLimit: number;
   @type("string") control: string;
 }
 

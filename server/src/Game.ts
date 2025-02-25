@@ -224,7 +224,7 @@ export class CodeRedRoom extends Room<GameState> {
 
     task.id = Math.random().toString(36).substring(2, 9);
     task.type = Tasks[taskType];
-    task.timeLimit = 30; // Can be adjusted as players get further in the rounds
+    // task.timeLimit = 30; // Can be adjusted as players get further in the rounds
     task.control = TaskToControls.get(taskType) || "";
     return task;
   }
