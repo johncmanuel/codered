@@ -17,6 +17,7 @@ export class FirewallConfig extends Task {
   private ipCountText: Phaser.GameObjects.Text;
   private currentIPText: Phaser.GameObjects.Text;
   private trustedIPsText: Phaser.GameObjects.Text;
+  private instructionsText: Phaser.GameObjects.Text; 
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
@@ -32,6 +33,7 @@ export class FirewallConfig extends Task {
   start() {
     console.log("Starting FIREWALL_CONFIG task");
     this.showTrustedIPs();
+    this.showInstructions(); 
     this.nextIP();
   }
 
@@ -45,6 +47,7 @@ export class FirewallConfig extends Task {
     if (this.ipCountText) this.ipCountText.destroy();
     if (this.currentIPText) this.currentIPText.destroy();
     if (this.trustedIPsText) this.trustedIPsText.destroy();
+    if (this.instructionsText) this.instructionsText.destroy(); 
   }
 
   private showTrustedIPs() {
@@ -58,6 +61,19 @@ export class FirewallConfig extends Task {
         align: "left",
       },
     );
+  }
+
+  private showInstructions() {
+    this.instructionsText = this.scene.add.text(
+      this.scene.cameras.main.width / 2,
+      this.scene.cameras.main.height / 2 - 300, 
+      "Instructions: Determine if the IP address is in the trust IPs list",
+      {
+        fontSize: "24px",
+        color: "#ffffff",
+        align: "center",
+      },
+    ).setOrigin(0.5); 
   }
 
   private nextIP() {
