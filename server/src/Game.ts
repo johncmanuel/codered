@@ -19,6 +19,8 @@ import { AssignPlayerControlsCommand } from "./cmds/assignPlayerControlsCommand"
 import { AssignTaskToRandomPlayerCommand } from "./cmds/assignTaskToRandomPlayerCommand";
 import { ArraySchema } from "@colyseus/schema";
 import { AssignTaskToPlayerCommand } from "./cmds/assignTaskToPlayer";
+import { SendControlsToClient } from "./cmds/sendControlsToClient";
+import { SendTaskToClient } from "./cmds/sendTaskToClient";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -103,43 +105,12 @@ export class CodeRedRoom extends Room<GameState> {
     });
 
     this.onMessage("giveMeControlsPls", (client) => {
-      const playerId = client.sessionId;
-      const controls = this.lobbyControlsByPlayer.get(playerId)!;
-      const controlsArr = new Array<string>();
-      if (!controls) {
-        console.error("Player", playerId, "does not have any controls assigned to them.");
-        console.log("controls", controls);
-        return;
-      }
-      controls.forEach((control) => {
-        controlsArr.push(control);
-      });
-      console.log("Sending controls to player", playerId, controlsArr);
-      client.send("controls", controlsArr);
-      // then send tasks? if sync issues still exist
+      this.dispatcher.dispatch(new SendControlsToClient(), { client });
     });
 
     // check if player can do it, if so, let them perform the task
     this.onMessage("taskForControl", (client, control: string) => {
-      const playerId = client.sessionId;
-      const playerControls = this.lobbyControlsByPlayer.get(playerId);
-
-      // Check if the player has the control
-      if (!playerControls || !playerControls.includes(control)) {
-        console.log("Player", playerId, "does not have control", control);
-        client.send("noTaskForControl", { control });
-        return;
-      }
-
-      // Find a task that matches the control
-      const task = this.actualTasks.find((t) => t.control === control);
-
-      if (task) {
-        client.send("hasTaskForControl", task);
-      } else {
-        console.log("No task found for control", control);
-        client.send("noTaskForControl", control);
-      }
+      this.dispatcher.dispatch(new SendTaskToClient(), { client, control });
     });
   }
 
