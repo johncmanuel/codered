@@ -39,7 +39,12 @@ export class CodeRedRoom extends Room<GameState> {
 
   // controls assigned to each player
   // send each client their controls when asked
+  // maps: playerId -> control
   lobbyControlsByPlayer: Map<string, ArraySchema<string>> = new Map();
+
+  // track which players are currently doing a multiplayer task
+  // maps: taskId -> playerIds
+  multiplayerTasksByPlayers: Map<string, Array<string>> = new Map();
 
   // stores the tasks for the current round
   tasksArrCurrRound: TaskState[] = [];
@@ -175,10 +180,24 @@ export class CodeRedRoom extends Room<GameState> {
       }
       console.log("Task created", task?.type);
     }
+    // testing social engineering task real quick
+    if (process.env.NODE_ENV === "development") {
+      const socialEngTask = new TaskState();
+      socialEngTask.id = Math.random().toString(36).substring(2, 9);
+      socialEngTask.type = "SOCIAL_ENGINEERING";
+      socialEngTask.control = TaskToControls.get(Tasks.SOCIAL_ENGINEERING) || "";
+      tasks.shift();
+      tasks.unshift(socialEngTask);
+    }
     console.log("Tasks created in batchCreateTasks:", tasks);
     return tasks;
   }
 
+  // Example task output
+  // {"id": "dd4yosr",
+  // "type": "PHISHING_EMAIL",
+  // "completed": false,
+  // "control": "PHISHING_EMAIL_CONTROL"}
   createNewTask(): TaskState | null {
     const taskTypes = Object.values(Tasks).filter((t) => {
       const control = TaskToControls.get(t as Tasks);
@@ -195,7 +214,6 @@ export class CodeRedRoom extends Room<GameState> {
 
     task.id = Math.random().toString(36).substring(2, 9);
     task.type = Tasks[taskType];
-    // task.timeLimit = 30; // Can be adjusted as players get further in the rounds
     task.control = TaskToControls.get(taskType) || "";
     return task;
   }
