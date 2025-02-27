@@ -55,4 +55,6 @@ export class GameState extends Schema {
   @type({ map: TaskState }) activeTasks = new MapSchema<TaskState>();
 }
 
+export const MULTIPLAYER_TASKS = new Set([Tasks.SOCIAL_ENGINEERING]);
+
 export const initRoundTimeLimitSecs = 120;
