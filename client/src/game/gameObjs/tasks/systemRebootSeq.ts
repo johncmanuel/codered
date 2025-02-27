@@ -13,7 +13,8 @@ export class SystemRebootSequence extends Task {
   private isShowingSequence: boolean = false;
   private isPlayerInputEnabled: boolean = false;
   private numColorsPerSequence: number = 4;
-
+  private instructionsText: Phaser.GameObjects.Text;
+  private sequenceText: Phaser.GameObjects.Text; 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
     this.tiles = [];
@@ -21,6 +22,8 @@ export class SystemRebootSequence extends Task {
 
   start() {
     console.log("Starting SYSTEM_REBOOT_SEQUENCE task");
+    this.createInstructions();
+    this.createSequenceText(); 
     this.createTiles();
     this.startRound();
   }
@@ -30,6 +33,42 @@ export class SystemRebootSequence extends Task {
   cleanup() {
     super.cleanup();
     this.tiles.forEach((tile) => tile.destroy());
+    this.instructionsText.destroy();
+    this.sequenceText.destroy(); 
+  }
+
+  private createInstructions() {
+    this.instructionsText = this.scene.add.text(
+      this.scene.cameras.main.centerX, 
+      50, 
+      "Instructions: Memorize the given pattern and repeat it back in order to reboot the company's system!",
+      {
+        fontFamily: "Audiowide", 
+        fontSize: "22px",
+        color: "#ffffff",
+        align: "center",
+        backgroundColor: "#000000",
+        padding: { x: 10, y: 5 },
+      }
+    ).setOrigin(0.5, 0); 
+  }
+
+  private createSequenceText() {
+    this.sequenceText = this.scene.add.text(
+      this.scene.cameras.main.centerX, 
+      120, 
+      `Sequence ${this.currentRound}/${this.maxRounds}`, 
+      {
+        fontFamily: "Audiowide", 
+        fontSize: "24px",
+        color: "#ffffff",
+        align: "center",
+      }
+    ).setOrigin(0.5, 0); 
+  }
+
+  private updateSequenceText() {
+    this.sequenceText.setText(`Sequence ${this.currentRound}/${this.maxRounds}`);
   }
 
   private createTiles() {
@@ -81,6 +120,7 @@ export class SystemRebootSequence extends Task {
 
   private startRound() {
     console.log(`Starting Round ${this.currentRound}`);
+    this.updateSequenceText(); 
     this.generateSequence();
     this.showSequence();
   }
