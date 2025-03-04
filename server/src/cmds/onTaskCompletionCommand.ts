@@ -33,6 +33,7 @@ export class OnTaskCompletionCommand extends Command<
     this.state.activeTasks.delete(taskId);
     this.room.actualTasks = this.room.actualTasks.filter((t) => t.id !== taskId);
     playerClientWithTask.send("taskCompleted", taskId);
+    this.state.tasksDone++;
 
     console.log("Task completed by", client.sessionId, "Task type:", task.type);
     console.log("Player that task", task.type, "was assigned to:", playerClientWithTask.sessionId);
@@ -42,8 +43,6 @@ export class OnTaskCompletionCommand extends Command<
       "/",
       this.room.numRequiredTasksCompletedPerRound,
     );
-
-    this.state.tasksDone++;
 
     // assign new task to player who was assigned that task
     // if (this.room.tasksArrCurrRound.length > 0) {
@@ -57,8 +56,8 @@ export class OnTaskCompletionCommand extends Command<
     //   console.error("No more tasks to assign!", this.room.tasksArrCurrRound, this.room.actualTasks);
     // }
 
-    if (this.state.tasksDone >= this.room.numRequiredTasksCompletedPerRound) {
-      return [new StartNewRoundCommand()];
-    }
+    // if (this.state.tasksDone >= this.room.numRequiredTasksCompletedPerRound) {
+    //   return [new StartNewRoundCommand()];
+    // }
   }
 }
