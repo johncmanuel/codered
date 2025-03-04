@@ -112,6 +112,18 @@ export class CodeRedRoom extends Room<GameState> {
     this.onMessage("taskForControl", (client, control: string) => {
       this.dispatcher.dispatch(new SendTaskToClient(), { client, control });
     });
+
+    this.onMessage("giveMeTaskPls", (client) => {
+      const newTask = this.tasksArrCurrRound.shift()!;
+      if (!newTask) {
+        console.error("No more tasks to assign!", this.tasksArrCurrRound, this.actualTasks);
+        return;
+      }
+      this.dispatcher.dispatch(new AssignTaskToPlayerCommand(), {
+        client,
+        task: newTask,
+      });
+    });
   }
 
   onJoin(client: Client, options: any) {
