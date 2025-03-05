@@ -161,8 +161,6 @@ export class CodeRedRoom extends Room<GameState> {
   assignInitialTasks() {
     console.log("Assigning initial tasks to players...");
     console.log("Total players size as of round", this.state.round, ":", this.state.players.size);
-    // sometimes, the loop below would iterate for the same player multiple times, so track
-    // their player ids when iterating
     this.state.players.forEach((player, sessionId) => {
       console.log(
         "Checking player",
