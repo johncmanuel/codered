@@ -1,27 +1,42 @@
 import { Scene, GameObjects, Tweens } from "phaser";
 
-export class AssignedTaskNotif {
+interface TaskNotification {
+  message: string;
+  taskId: string;
+}
+
+export class AssignedTaskNotification {
   private scene: Scene;
   private notificationText: GameObjects.Text | null;
   private tweens: Tweens.TweenManager;
-  private assignedTaskId: string | null;
+  private notificationQueue: TaskNotification[];
+  private currentTaskId: string | null;
 
   constructor(scene: Scene) {
     this.scene = scene;
     this.tweens = scene.tweens;
     this.notificationText = null;
-    this.assignedTaskId = null;
+    this.notificationQueue = [];
+    this.currentTaskId = null;
   }
 
   add(message: string, taskId: string) {
-    // if there's an existing notification, destroy it before adding new one
-    if (this.notificationText) {
-      console.warn("Notification already exists, destroying it");
-      this.notificationText.destroy();
+    this.notificationQueue.push({ message, taskId });
+
+    if (!this.notificationText) {
+      this.showNextNotification();
     }
+  }
+
+  private showNextNotification() {
+    if (this.notificationQueue.length === 0) return;
+
+    const nextNotification = this.notificationQueue.shift()!;
+    this.currentTaskId = nextNotification.taskId;
+    if (!nextNotification) return;
 
     this.notificationText = this.scene.add
-      .text(this.scene.cameras.main.width / 2, 50, message, {
+      .text(this.scene.cameras.main.width / 2, 50, nextNotification.message, {
         fontFamily: "Arial",
         fontSize: "24px",
         color: "#ffffff",
@@ -30,7 +45,6 @@ export class AssignedTaskNotif {
       })
       .setOrigin(0.5, 0.5)
       .setVisible(true);
-    this.assignedTaskId = taskId;
   }
 
   fade() {
@@ -43,6 +57,8 @@ export class AssignedTaskNotif {
       onComplete: () => {
         this.notificationText?.destroy();
         this.notificationText = null;
+
+        this.showNextNotification();
       },
     });
   }
@@ -58,6 +74,7 @@ export class AssignedTaskNotif {
       this.notificationText.destroy();
       this.notificationText = null;
     }
+    this.notificationQueue = [];
   }
 
   show() {
@@ -66,7 +83,7 @@ export class AssignedTaskNotif {
     }
   }
 
-  getTaskId() {
-    return this.assignedTaskId;
+  getCurrentTaskId() {
+    return this.currentTaskId;
   }
 }

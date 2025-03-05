@@ -13,7 +13,6 @@ export class OnTaskCompletionCommand extends Command<
   }
   execute({ client, taskId } = this.payload) {
     const task = this.room.actualTasks.find((t) => t.id === taskId);
-    this.state.tasksDone++;
 
     let playerClientWithTask: Client = null;
 
@@ -33,6 +32,8 @@ export class OnTaskCompletionCommand extends Command<
 
     this.state.activeTasks.delete(taskId);
     this.room.actualTasks = this.room.actualTasks.filter((t) => t.id !== taskId);
+    playerClientWithTask.send("taskCompleted", taskId);
+    this.state.tasksDone++;
 
     console.log("Task completed by", client.sessionId, "Task type:", task.type);
     console.log("Player that task", task.type, "was assigned to:", playerClientWithTask.sessionId);
@@ -44,19 +45,19 @@ export class OnTaskCompletionCommand extends Command<
     );
 
     // assign new task to player who was assigned that task
-    if (this.room.tasksArrCurrRound.length > 0) {
-      console.log("begin to assign new task to player with task ", task.type);
-      const newTask = this.room.tasksArrCurrRound.shift()!;
-      this.room.dispatcher.dispatch(new AssignTaskToPlayerCommand(), {
-        client: playerClientWithTask,
-        task: newTask,
-      });
-    } else {
-      console.error("No more tasks to assign!", this.room.tasksArrCurrRound, this.room.actualTasks);
-    }
+    // if (this.room.tasksArrCurrRound.length > 0) {
+    //   console.log("begin to assign new task to player with task ", task.type);
+    //   const newTask = this.room.tasksArrCurrRound.shift()!;
+    //   this.room.dispatcher.dispatch(new AssignTaskToPlayerCommand(), {
+    //     client: playerClientWithTask,
+    //     task: newTask,
+    //   });
+    // } else {
+    //   console.error("No more tasks to assign!", this.room.tasksArrCurrRound, this.room.actualTasks);
+    // }
 
-    if (this.state.tasksDone >= this.room.numRequiredTasksCompletedPerRound) {
-      return [new StartNewRoundCommand()];
-    }
+    // if (this.state.tasksDone >= this.room.numRequiredTasksCompletedPerRound) {
+    //   return [new StartNewRoundCommand()];
+    // }
   }
 }

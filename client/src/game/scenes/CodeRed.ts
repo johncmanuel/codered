@@ -3,7 +3,7 @@ import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
 import { type TaskState, Tasks } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
-import { AssignedTaskNotif } from "../gameObjs/activeTaskNotification";
+import { AssignedTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
 import { createTask } from "../gameObjs/tasks/taskFactory";
@@ -21,7 +21,7 @@ export class CodeRed extends Scene {
 
   // setup game objects here
   controlBtns: ControlButtons;
-  assignedTaskNotifs: AssignedTaskNotif;
+  assignedTaskNotifs: AssignedTaskNotification;
   loadingText: Phaser.GameObjects.Text;
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
@@ -34,7 +34,7 @@ export class CodeRed extends Scene {
     this.gameStore = null;
     this.playerId = null;
     this.playerControls = new Set();
-    this.assignedTaskNotifs = new AssignedTaskNotif(this);
+    this.assignedTaskNotifs = new AssignedTaskNotification(this);
     this.controlBtns = new ControlButtons(this);
     this.taskManager = new TaskManager();
 
@@ -96,7 +96,7 @@ export class CodeRed extends Scene {
       console.log("new round", round);
       EventBus.emit("updateRound", round);
       this.registry.set("round", round);
-      this.assignedTaskNotifs.clear();
+      // this.assignedTaskNotifs.clear();
       this.taskManager.cleanup();
 
       this.loadingText.setVisible(true);
@@ -135,8 +135,6 @@ export class CodeRed extends Scene {
       this.gameStore?.room?.send("giveMeControlsPls");
     });
 
-    // https://docs.colyseus.io/state/schema-callbacks/#on-collections-of-items
-
     this.gameStore?.room?.onMessage("hasTaskForControl", (task: TaskState) => {
       console.log("Task assigned:", task.type, task);
       const taskTypeNum = Tasks[task.type as keyof typeof Tasks];
@@ -150,13 +148,21 @@ export class CodeRed extends Scene {
     });
 
     this.gameStore?.room?.onMessage("taskCompleted", (taskId: string) => {
-      if (this.assignedTaskNotifs.getTaskId() === taskId) this.assignedTaskNotifs.fade();
-      else console.warn("Task completed but the notification is still there");
+      console.log(
+        "taskId",
+        taskId,
+        "this.assignedTaskNotifs.getCurrentTaskId()",
+        this.assignedTaskNotifs.getCurrentTaskId(),
+      );
+      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
+      else console.error("Task completed but the notification is still there");
+      this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
     this.gameStore?.room?.onMessage("taskFailed", (taskId: string) => {
-      if (this.assignedTaskNotifs.getTaskId() === taskId) this.assignedTaskNotifs.fade();
-      else console.warn("Task completed but the notification is still there");
+      // if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
+      // else console.warn("Task completed but the notification is still there");
+      console.log("taskFailed:", taskId);
     });
 
     this.gameStore?.room?.onMessage("gameOver", () => {
@@ -198,12 +204,11 @@ export class CodeRed extends Scene {
     });
     this.events.on("taskCompleted", (taskId: string) => {
       this.gameStore?.room?.send("taskCompleted", taskId);
-      if (this.assignedTaskNotifs.getTaskId() === taskId) this.assignedTaskNotifs.fade();
       this.taskManager.removeTask(taskId);
     });
     this.events.on("taskFailed", (taskId: string) => {
       this.gameStore?.room?.send("taskFailed", taskId);
-      if (this.assignedTaskNotifs.getTaskId() === taskId) this.assignedTaskNotifs.fade();
+      // if (this.assignedTaskNotifs.getTaskId() === taskId) this.assignedTaskNotifs.fade();
       this.taskManager.removeTask(taskId);
     });
   }

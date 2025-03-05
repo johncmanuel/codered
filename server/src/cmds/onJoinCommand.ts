@@ -16,5 +16,6 @@ export class OnJoinCommand extends Command<CodeRedRoom, { client: Client; option
     if (lenClients === 1) this.state.hostId = sessionId;
 
     console.log(sessionId, "joined lobby roomId:", this.room.roomId);
+    console.log("Total players in lobby:", this.state.players.size);
   }
 }

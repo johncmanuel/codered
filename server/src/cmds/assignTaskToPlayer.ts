@@ -9,14 +9,20 @@ export class AssignTaskToPlayerCommand extends Command<
 > {
   execute({ client, task } = this.payload) {
     const player = this.state.players.get(client.sessionId);
+    console.log("running AssignTaskToPlayerCommand for player:", client.sessionId, player.name);
+
+    // if player not found or active task id still not null, send the task back into the task queue
 
     if (!player) {
       console.error("Player not found for sessionId:", client.sessionId);
+      this.room.tasksArrCurrRound.push(task);
       return;
     }
 
     if (player.activeTaskId !== null) {
       console.warn("Player already has an active task:", client.sessionId);
+      console.log("Player activeTaskId:", player.activeTaskId, "task:", task.id);
+      this.room.tasksArrCurrRound.push(task);
       return;
     }
 

@@ -86,6 +86,9 @@ export class CodeRedRoom extends Room<GameState> {
         client,
         taskId,
       });
+      if (this.state.tasksDone >= this.numRequiredTasksCompletedPerRound) {
+        this.dispatcher.dispatch(new StartNewRoundCommand());
+      }
     });
 
     // Handle stuff once a player fails a task
@@ -95,6 +98,9 @@ export class CodeRedRoom extends Room<GameState> {
         taskId,
         healthDiff: 5,
       });
+      if (this.state.tasksDone >= this.numRequiredTasksCompletedPerRound) {
+        this.dispatcher.dispatch(new StartNewRoundCommand());
+      }
     });
 
     // Send the game over stats to the clients
@@ -111,6 +117,22 @@ export class CodeRedRoom extends Room<GameState> {
     // check if player can do it, if so, let them perform the task
     this.onMessage("taskForControl", (client, control: string) => {
       this.dispatcher.dispatch(new SendTaskToClient(), { client, control });
+    });
+
+    this.onMessage("giveMeTaskPls", (client) => {
+      if (this.tasksArrCurrRound.length === 0) {
+        console.log("tasksArrCurrRound is empty", this.tasksArrCurrRound, this.actualTasks);
+        return;
+      }
+      const newTask = this.tasksArrCurrRound.shift()!;
+      if (!newTask) {
+        console.log("No more tasks to assign!", this.tasksArrCurrRound, this.actualTasks);
+        return;
+      }
+      this.dispatcher.dispatch(new AssignTaskToPlayerCommand(), {
+        client,
+        task: newTask,
+      });
     });
   }
 
@@ -138,11 +160,25 @@ export class CodeRedRoom extends Room<GameState> {
   // This will only be called once at the start of each round
   assignInitialTasks() {
     console.log("Assigning initial tasks to players...");
+    console.log("Total players size as of round", this.state.round, ":", this.state.players.size);
+    // sometimes, the loop below would iterate for the same player multiple times, so track
+    // their player ids when iterating
     this.state.players.forEach((player, sessionId) => {
+      console.log(
+        "Checking player",
+        player.name,
+        sessionId,
+        "for initial task assignment",
+        "- activeTaskId:",
+        player.activeTaskId,
+      );
       if (player.activeTaskId === null && this.tasksArrCurrRound.length > 0) {
         const task = this.tasksArrCurrRound.shift()!;
         const client = this.clients.find((c) => c.sessionId === sessionId);
-        this.dispatcher.dispatch(new AssignTaskToPlayerCommand(), { client, task });
+        this.dispatcher.dispatch(new AssignTaskToPlayerCommand(), {
+          client,
+          task,
+        });
       }
     });
   }
