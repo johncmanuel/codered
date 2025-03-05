@@ -16,6 +16,10 @@
   $: hasStarted = false;
   let showAbout = false;
 
+  const mainMenuSong = new Audio('/assets/mainmenu.wav');
+  let isMuted = false;
+  let isPlaying = false;
+
   onMount(() => {
     initClient();
     // listen for events from phaser side
@@ -23,10 +27,27 @@
       gameStore.leaveLobby();
       hasStarted = false;
     });
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        mainMenuSong.loop = true;
+        mainMenuSong.volume = 0.5;
+        mainMenuSong.play()
+          .then(() => {
+            isPlaying = true;
+          })
+          .catch(err => {
+            console.log('Audio autoplay blocked - waiting for user interaction');
+            isPlaying = false;
+          });
+      }, 1000); // delay to prevent audio autoplay blocking
+    });
   });
 
   onDestroy(() => {
     $gameStore.room?.leave();
+    mainMenuSong.pause();
+    mainMenuSong.currentTime = 0;
   });
 
   async function handleLobbySubmit(event: CustomEvent<{ name: string; code?: string }>) {
@@ -112,9 +133,36 @@
         console.error("Failed to copy: ", err);
       });
   }
+
+  function toggleMute() {
+    if (!isPlaying) {
+      mainMenuSong.play()
+      .then(() => {
+        isPlaying = true;
+        isMuted = false;
+      })
+      .catch(err => console.log('Audio autoplay blocked', err));
+    } 
+    else {
+      isMuted = !isMuted;
+      mainMenuSong.muted = isMuted;
+    }
+  }
 </script>
 
 <main>
+  <div class="audio-controls">
+    <button on:click={toggleMute} class="mute-button">
+      {#if !isPlaying}
+        ▶️
+      {:else if isMuted}
+        🔇
+      {:else}
+        🔊
+      {/if}
+    </button>
+  </div>
+
   <!-- <button class="about-us" on:click={toggleAbout}>About Us</button> -->
   <!-- {#if showAbout}
     <About closePopup={toggleAbout} />
@@ -266,5 +314,27 @@
     50% {
       opacity: 0;
     }
+  }
+
+  .audio-controls {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 100;
+  }
+
+  .mute-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+  }
+
+  .mute-button:hover {
+    background-color: rgba(0, 0, 0, 0.7);
   }
 </style>
