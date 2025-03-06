@@ -3,6 +3,7 @@ import { Scene } from "phaser";
 import { Tasks } from "@/game/types/room";
 import { Task } from "./task";
 import { SystemRebootSequence } from "./systemRebootSeq";
+import { EncryptionDecryption } from "./encryptionDecryption";
 
 // factory function to create tasks based on their type
 export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task {
@@ -33,6 +34,8 @@ export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task 
       return new FirewallConfig(scene, taskId);
     case Tasks.PATCH_SECURITY_SOFTWARE:
       return new FirewallConfig(scene, taskId);
+    case Tasks.ENCRYPYTION_DECRYPTION:
+      return new EncryptionDecryption(scene, taskId);
     default:
       throw new Error(`Unknown task type: ${taskType}`);
   }
