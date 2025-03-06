@@ -22,33 +22,41 @@
 
   onMount(() => {
     initClient();
-    // listen for events from phaser side
+
+    // Listen for events from Phaser side
     EventBus.on("exitGame", () => {
       gameStore.leaveLobby();
       hasStarted = false;
     });
 
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        mainMenuSong.loop = true;
-        mainMenuSong.volume = 0.5;
-        mainMenuSong.play()
-          .then(() => {
-            isPlaying = true;
-          })
-          .catch(err => {
-            console.log('Audio autoplay blocked - waiting for user interaction');
-            isPlaying = false;
-          });
-      }, 1000); // delay to prevent audio autoplay blocking
-    });
+    // Start music after user interaction
+    const startMusic = () => {
+      mainMenuSong.loop = true;
+      mainMenuSong.volume = 0.5;
+      mainMenuSong.play()
+        .then(() => {
+          isPlaying = true;
+        })
+        .catch(err => {
+          console.log('Audio autoplay blocked - waiting for user interaction');
+          isPlaying = false;
+        });
+    };
+
+    document.addEventListener('click', startMusic, { once: true });
   });
 
   onDestroy(() => {
     $gameStore.room?.leave();
     mainMenuSong.pause();
     mainMenuSong.currentTime = 0;
+    mainMenuSong.removeEventListener('ended', () => {}); // Clean up event listeners
   });
+
+  function toggleMute() {
+    isMuted = !isMuted;
+    mainMenuSong.muted = isMuted;
+  }
 
   async function handleLobbySubmit(event: CustomEvent<{ name: string; code?: string }>) {
     if (!$gameStore.client) return;
@@ -133,21 +141,6 @@
         console.error("Failed to copy: ", err);
       });
   }
-
-  function toggleMute() {
-    if (!isPlaying) {
-      mainMenuSong.play()
-      .then(() => {
-        isPlaying = true;
-        isMuted = false;
-      })
-      .catch(err => console.log('Audio autoplay blocked', err));
-    } 
-    else {
-      isMuted = !isMuted;
-      mainMenuSong.muted = isMuted;
-    }
-  }
 </script>
 
 <main>
@@ -155,18 +148,13 @@
     <button on:click={toggleMute} class="mute-button">
       {#if !isPlaying}
         ▶️
-      {:else if isMuted}
-        🔇
-      {:else}
+      {:else if !isMuted}
         🔊
+      {:else}
+        🔇
       {/if}
     </button>
   </div>
-
-  <!-- <button class="about-us" on:click={toggleAbout}>About Us</button> -->
-  <!-- {#if showAbout}
-    <About closePopup={toggleAbout} />
-  {/if} -->
 
   {#if $gameStore.room && hasStarted}
     <GameComponent />
@@ -218,6 +206,7 @@
 </main>
 
 <style>
+  /* Your existing styles remain unchanged */
   button {
     margin-top: 20px;
     padding: 10px 20px;
