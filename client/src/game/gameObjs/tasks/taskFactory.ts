@@ -2,6 +2,7 @@ import { FirewallConfig } from "./firewallConfig";
 import { Scene } from "phaser";
 import { Tasks } from "@/game/types/room";
 import { Task } from "./task";
+import { SystemRebootSequence } from "./systemRebootSeq";
 
 // factory function to create tasks based on their type
 export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task {
@@ -17,7 +18,7 @@ export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task 
     case Tasks.NETWORK_MAPPING:
       return new FirewallConfig(scene, taskId);
     case Tasks.SYSTEM_REBOOT:
-      return new FirewallConfig(scene, taskId);
+      return new SystemRebootSequence(scene, taskId);
     case Tasks.SOCIAL_ENGINEERING:
       return new FirewallConfig(scene, taskId);
     case Tasks.RESTART_PC:
