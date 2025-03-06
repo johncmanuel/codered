@@ -123,8 +123,6 @@ export class CodeRed extends Scene {
       this.controlBtns.show();
       this.assignedTaskNotifs.show();
       this.controlBtns.check();
-      // request server for tasks they can do
-      // this.gameStore?.room?.send("giveMeTasksPls");
     });
 
     // do stuff once all players connected
@@ -135,6 +133,7 @@ export class CodeRed extends Scene {
       this.gameStore?.room?.send("giveMeControlsPls");
     });
 
+    // start the task
     this.gameStore?.room?.onMessage("hasTaskForControl", (task: TaskState) => {
       console.log("Task assigned:", task.type, task);
       const taskTypeNum = Tasks[task.type as keyof typeof Tasks];
@@ -142,6 +141,7 @@ export class CodeRed extends Scene {
       this.taskManager.startTask(task.id);
     });
 
+    // handle things if there isn't a task for the player's specific control
     this.gameStore?.room?.onMessage("noTaskForControl", (control: string) => {
       console.log("No task available for control:", control);
       // do something else like notify the player (e.g., display a message or play a sound)
@@ -160,9 +160,15 @@ export class CodeRed extends Scene {
     });
 
     this.gameStore?.room?.onMessage("taskFailed", (taskId: string) => {
-      // if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
-      // else console.warn("Task completed but the notification is still there");
-      console.log("taskFailed:", taskId);
+      console.log(
+        "taskId",
+        taskId,
+        "this.assignedTaskNotifs.getCurrentTaskId()",
+        this.assignedTaskNotifs.getCurrentTaskId(),
+      );
+      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
+      else console.error("Task failed but the notification is still there");
+      this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
     this.gameStore?.room?.onMessage("gameOver", () => {
@@ -198,8 +204,8 @@ export class CodeRed extends Scene {
 
   // Set up listeners between Phaser events
   createLocalListeners() {
+    // send to server to validate if player can do the task
     this.events.on("controlButtonClicked", (control: string) => {
-      // send to server to validate if player can do the task
       this.gameStore?.room?.send("taskForControl", control);
     });
     this.events.on("taskCompleted", (taskId: string) => {
@@ -208,7 +214,6 @@ export class CodeRed extends Scene {
     });
     this.events.on("taskFailed", (taskId: string) => {
       this.gameStore?.room?.send("taskFailed", taskId);
-      // if (this.assignedTaskNotifs.getTaskId() === taskId) this.assignedTaskNotifs.fade();
       this.taskManager.removeTask(taskId);
     });
   }

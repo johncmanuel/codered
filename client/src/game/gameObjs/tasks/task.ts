@@ -38,7 +38,7 @@ export abstract class Task {
 
     this.isFailed = true;
     console.log(`Task ${this.taskId} failed!`);
-    this.scene.events.emit("taskCompleted", this.taskId);
+    this.scene.events.emit("taskFailed", this.taskId);
     this.cleanup();
   }
 

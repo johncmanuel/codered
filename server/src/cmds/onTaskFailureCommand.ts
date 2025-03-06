@@ -12,15 +12,30 @@ export class OnTaskFailureCommand extends Command<
   }
 
   execute({ client, taskId, healthDiff } = this.payload) {
-    this.room.clients.forEach((client) => {
-      const player = this.room.state.players.get(client.sessionId);
+    const task = this.room.actualTasks.find((t) => t.id === taskId);
+
+    let playerClientWithTask: Client = null;
+
+    // set activeTaskId to null for player who was assigned that task
+    this.state.players.forEach((player, sessionId) => {
       if (player.activeTaskId === taskId) {
-        this.room.state.players.get(client.sessionId).activeTaskId = null;
+        player.activeTaskId = null;
+        playerClientWithTask = this.room.clients.find((c) => c.sessionId === sessionId);
         return;
       }
     });
 
+    if (!playerClientWithTask) {
+      console.error("Client not found for player with task ID:", taskId);
+      return;
+    }
+
     this.state.activeTasks.delete(taskId);
+    this.room.actualTasks = this.room.actualTasks.filter((t) => t.id !== taskId);
+
+    console.log("Task failed by", client.sessionId, "Task type:", task.type);
+    console.log("Player that task", task.type, "was assigned to:", playerClientWithTask.sessionId);
+
     return [
       new SubtractHealthCommand().setPayload({
         healthDiff,

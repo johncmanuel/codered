@@ -96,7 +96,8 @@ export class CodeRedRoom extends Room<GameState> {
       this.dispatcher.dispatch(new OnTaskFailureCommand(), {
         client,
         taskId,
-        healthDiff: 5,
+        // TODO: change this dynamically as the game progresses
+        healthDiff: 20,
       });
       if (this.state.tasksDone >= this.numRequiredTasksCompletedPerRound) {
         this.dispatcher.dispatch(new StartNewRoundCommand());
