@@ -2,7 +2,6 @@ import { Scene } from "phaser";
 
 export abstract class Task {
   taskId: string;
-  // isCompleted: task succesfully finished, isFailed: task failed
   isCompleted: boolean;
   isFailed: boolean;
   scene: Scene;
