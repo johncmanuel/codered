@@ -5,6 +5,7 @@ import { Task } from "./task";
 import { SystemRebootSequence } from "./systemRebootSeq";
 import { EncryptionDecryption } from "./encryptionDecryption";
 import { PhishingEmail } from "./phishingEmail";
+import { VirusContainment } from "./virusContainment";
 
 // factory function to create tasks based on their type
 export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task {
@@ -16,7 +17,7 @@ export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task 
     case Tasks.PHISHING_EMAIL:
       return new PhishingEmail(scene, taskId);
     case Tasks.VIRUS_CONTAINMENT:
-      return new FirewallConfig(scene, taskId);
+      return new VirusContainment(scene, taskId);
     case Tasks.NETWORK_MAPPING:
       return new FirewallConfig(scene, taskId);
     case Tasks.SYSTEM_REBOOT:
