@@ -206,7 +206,6 @@
 </main>
 
 <style>
-  /* Your existing styles remain unchanged */
   button {
     margin-top: 20px;
     padding: 10px 20px;
