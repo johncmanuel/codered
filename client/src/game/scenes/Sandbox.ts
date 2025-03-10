@@ -25,7 +25,7 @@ export class Sandbox extends Scene {
 
   create() {
     const testId = "testId";
-    this.taskManager.addTask(testId, createTask(this, testId, Tasks.PHISHING_EMAIL));
+    this.taskManager.addTask(testId, createTask(this, testId, Tasks.VIRUS_CONTAINMENT));
     console.log("Added task");
     this.taskManager.startTask(testId);
     EventBus.emit("current-active-scene");
