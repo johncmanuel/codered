@@ -7,6 +7,7 @@ export abstract class Task {
   scene: Scene;
 
   // stop game objects from outside the task from being interacted with while task is running
+  // idea from: https://phaser.discourse.group/t/phaser-buttons-still-clickable-under-other-objects/8606
   blockingOverlay: Phaser.GameObjects.Rectangle | null;
 
   constructor(scene: Scene, taskId: string) {
