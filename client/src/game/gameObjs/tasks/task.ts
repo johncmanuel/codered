@@ -1,4 +1,4 @@
-import { Scene } from "phaser";
+import { Scene, Display } from "phaser";
 
 export abstract class Task {
   taskId: string;
@@ -53,13 +53,13 @@ export abstract class Task {
   }
 
   protected createBlockingOverlay(): void {
-    const alpha = 0;
-    const color = 0x000000;
+    const alpha = 1;
+    const color = new Display.Color(0, 0, 200, 1).color;
     this.blockingOverlay = this.scene.add.rectangle(
       this.scene.cameras.main.centerX,
       this.scene.cameras.main.centerY,
-      this.scene.cameras.main.width,
-      this.scene.cameras.main.height,
+      this.scene.cameras.main.width - 20,
+      this.scene.cameras.main.height - 20,
       color,
       alpha,
     );
