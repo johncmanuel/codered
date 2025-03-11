@@ -25,6 +25,14 @@ export class Sandbox extends Scene {
 
   create() {
     const testId = "testId";
+    const rect1 = this.add.rectangle(500, 500, 100, 100, 0xff0000).setInteractive();
+    const rect2 = this.add.rectangle(500, 600, 100, 100, 0x00ff00).setInteractive();
+    rect1.on("pointerdown", () => {
+      console.log("Rect1 clicked");
+    });
+    rect2.on("pointerdown", () => {
+      console.log("Rect2 clicked");
+    });
     this.taskManager.addTask(testId, createTask(this, testId, Tasks.VIRUS_CONTAINMENT));
     console.log("Added task");
     this.taskManager.startTask(testId);

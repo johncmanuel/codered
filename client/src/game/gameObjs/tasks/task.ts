@@ -6,11 +6,16 @@ export abstract class Task {
   isFailed: boolean;
   scene: Scene;
 
+  // stop game objects from outside the task from being interacted with while task is running
+  blockingOverlay: Phaser.GameObjects.Rectangle | null;
+
   constructor(scene: Scene, taskId: string) {
     this.scene = scene;
     this.taskId = taskId;
     this.isCompleted = false;
     this.isFailed = false;
+
+    this.createBlockingOverlay();
   }
 
   // should be called once when the task is started
@@ -44,5 +49,31 @@ export abstract class Task {
   // clean up after task game is over
   cleanup(): void {
     console.log(`Cleaning up task ${this.taskId}`);
+    this.destroyBlockingOverlay();
+  }
+
+  protected createBlockingOverlay(): void {
+    const alpha = 0;
+    const color = 0x000000;
+    this.blockingOverlay = this.scene.add.rectangle(
+      this.scene.cameras.main.centerX,
+      this.scene.cameras.main.centerY,
+      this.scene.cameras.main.width,
+      this.scene.cameras.main.height,
+      color,
+      alpha,
+    );
+    this.blockingOverlay.setInteractive();
+
+    // ensure it's above other game objects but below game objects in tasks
+    // this.blockingOverlay.depth = 9998;
+    // this.scene.children.sendToBack(this.blockingOverlay);
+  }
+
+  protected destroyBlockingOverlay(): void {
+    if (this.blockingOverlay) {
+      this.blockingOverlay.destroy();
+      this.blockingOverlay = null;
+    }
   }
 }
