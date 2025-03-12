@@ -62,25 +62,50 @@ export class VirusContainment extends Task {
     ];
   }
 
-  preload() {
-    // Fix file path
-    this.scene.load.image("fileIcon", "/assets/file.png");
+  async preload(): Promise<void> {
+    return new Promise((resolve) => {
+        if (this.scene.textures.exists("fileIcon")) {
+            resolve();
+            return;
+        }
+        // Still need to find better file image
+        this.scene.load.image("fileIcon", "/assets/file.png");
+        this.scene.load.on("complete", () => {
+            console.log("File icon loaded successfully");
+            resolve();
+        });
+        this.scene.load.on("loaderror", (fileObj: any) => {
+            console.error("Error loading file:", fileObj.src);
+            resolve();
+        });
+        this.scene.load.start();
+    });
   }
 
-  start(): void {
-    const blackBox = this.scene.add.rectangle(600, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
+  async start(): Promise<void> {
+    await this.preload();
+    this.preload();
+    const blackBox = this.scene.add.rectangle(650, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
 
-    this.scene.add.text(600, 25, "Your Task: Virus Containment", { 
+    this.scene.add.text(650, 25, "Your Task: Virus Containment", { 
       color: "#ffffff",
       fontSize: "30px",
       fontStyle: "bold", 
     }).setOrigin(0.5, 0);  
 
-    this.quarantineBox = this.scene.add.rectangle(100, 300, 150, 100, 0xff0000).setInteractive();
-    this.safeArea = this.scene.add.rectangle(400, 300, 150, 100, 0x00ff00).setInteractive();
+    this.quarantineBox = this.scene.add.rectangle(400, 600, 150, 100, 0xff0000).setInteractive();
+    this.safeArea = this.scene.add.rectangle(900, 600, 150, 100, 0x00ff00).setInteractive();
 
-    this.quarantineBoxText = this.scene.add.text(50, 250, "Quarantine", { color: "#ffffff" });
-    this.safeAreaText = this.scene.add.text(350, 250, "Safe Area", { color: "#ffffff" });
+    this.quarantineBoxText = this.scene.add.text(340, 580, "Quarantine", { 
+      color: "#ffffff",
+      fontSize: "20px",
+      fontStyle: "bold", 
+    });
+    this.safeAreaText = this.scene.add.text(845, 580, "Safe Area", { 
+      color: "#ffffff",
+      fontSize: "20px",
+      fontStyle: "bold", 
+    });
 
     this.currentFileIndex = Math.floor(Math.random() * this.files.length);
     this.spawnFile(this.currentFileIndex);
@@ -88,19 +113,28 @@ export class VirusContainment extends Task {
 
   spawnFile(fileIdx: number): void {
     const currentFile = this.files[fileIdx];
+    const centerX = this.scene.cameras.main.centerX;
+    const centerY = this.scene.cameras.main.centerY;
 
     if (this.scene.textures.exists("fileIcon")) {
-      // TODO: find a good file icon image lol
       this.fileObject = this.scene.add
-        .sprite(this.fileObjectStartingPos.x, this.fileObjectStartingPos.y, "fileIcon")
-        .setInteractive({ draggable: true });
+        .sprite(centerX, centerY - 50, "fileIcon")
+        .setInteractive({ draggable: true })
+        .setScale(0.2) 
+        .setDepth(1);  
     } else {
       // Use a rectangle as a placeholder
       this.fileObject = this.scene.add
-        .sprite(this.fileObjectStartingPos.x, this.fileObjectStartingPos.y, 'fileIcon')
-        .setInteractive({ draggable: true });
+        .sprite(centerX, centerY - 50, 'fileIcon')
+        .setInteractive({ draggable: true })
+        .setScale(0.2)
+        .setDepth(1);
     }
-    this.fileText = this.scene.add.text(200, 150, currentFile.description, { color: "#000000" });
+    
+    this.fileText = this.scene.add.text(centerX, centerY + 50, currentFile.description, { 
+      color: "#000000",
+      align: 'center'
+    }).setOrigin(0.5); 
 
     this.fileObject.on("drag", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       this.fileObject.x = dragX;
