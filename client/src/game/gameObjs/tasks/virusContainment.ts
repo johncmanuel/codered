@@ -7,7 +7,7 @@ export class VirusContainment extends Task {
   private quarantineBox: Phaser.GameObjects.Rectangle;
   private safeArea: Phaser.GameObjects.Rectangle;
   private fileObject: Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle;
-  private fileObjectStartingPos = { x: 250, y: 100 };
+  private fileObjectStartingPos = { x: 650, y: 310 };
   private errorCount: number = 0;
   private maxErrors: number = 2;
   private score: number = 0;
