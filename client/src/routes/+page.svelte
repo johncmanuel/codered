@@ -19,6 +19,7 @@
   const mainMenuSong = new Audio('/assets/mainmenu.wav');
   let isMuted = false;
   let isPlaying = false;
+  let showVolumeSlider = false;
 
   onMount(() => {
     initClient();
@@ -32,7 +33,7 @@
     // Start music after user interaction
     const startMusic = () => {
       mainMenuSong.loop = true;
-      mainMenuSong.volume = 0.5;
+      mainMenuSong.volume = 0.3;
       mainMenuSong.play()
         .then(() => {
           isPlaying = true;
@@ -141,10 +142,17 @@
         console.error("Failed to copy: ", err);
       });
   }
+
+  function handleVolumeChange(event: InputEvent) {
+    const target = event.target as HTMLInputElement;
+    mainMenuSong.volume = parseFloat(target.value);
+  }
 </script>
 
 <main>
-  <div class="audio-controls">
+  <div class="audio-controls" 
+       on:mouseenter={() => showVolumeSlider = true}
+       on:mouseleave={() => showVolumeSlider = false}>
     <button on:click={toggleMute} class="mute-button">
       {#if !isPlaying}
         ▶️
@@ -154,6 +162,17 @@
         🔇
       {/if}
     </button>
+    {#if showVolumeSlider && isPlaying}
+      <input 
+        type="range" 
+        min="0" 
+        max="1" 
+        step="0.1" 
+        value={mainMenuSong.volume}
+        on:input={handleVolumeChange}
+        class="volume-slider"
+      />
+    {/if}
   </div>
 
   {#if $gameStore.room && hasStarted}
@@ -306,9 +325,15 @@
 
   .audio-controls {
     position: fixed;
-    top: 1rem;
-    right: 1rem;
+    top: .25rem;
+    right: 2rem;
     z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    /* border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.5); */
   }
 
   .mute-button {
@@ -324,5 +349,32 @@
 
   .mute-button:hover {
     background-color: rgba(0, 0, 0, 0.7);
+  }
+  
+  .volume-slider {
+    width: 100px;
+    height: 5px;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+  }
+
+  .volume-slider::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
   }
 </style>
