@@ -23,6 +23,7 @@ export class NetworkMapping extends Task {
   private wires: Wire[];
   private mistakes: number = 0;
   private maxMistakes: number = 2;
+  private instructionText: GameObjects.Text;
 
   // Default thickness for the wires
   private wireThickness: number = 4;
@@ -36,6 +37,22 @@ export class NetworkMapping extends Task {
   start(): void {
     this.initializeDevices();
     this.initializeWires();
+
+    this.instructionText = this.scene.add
+      .text(
+        this.scene.cameras.main.width / 2,
+        20, // 20 pixels from the top
+        "Drag the wires to connect them to the correct devices.",
+        {
+          fontFamily: "Arial",
+          fontSize: "24px",
+          color: "#ffffff",
+          align: "center",
+          backgroundColor: "#000000",
+          padding: { x: 10, y: 5 },
+        },
+      )
+      .setOrigin(0.5, 0);
 
     this.wires.forEach((wire) => {
       wire.rect.setInteractive();
@@ -79,6 +96,12 @@ export class NetworkMapping extends Task {
 
   cleanup(): void {
     super.cleanup();
+    this.devices.forEach((device) => device.graphic.destroy());
+    this.wires.forEach((wire) => {
+      wire.rect.destroy();
+      if (wire.line) wire.line.destroy();
+    });
+    this.instructionText.destroy();
   }
 
   private initializeDevices(): void {
