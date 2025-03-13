@@ -11,6 +11,7 @@ export class EncryptionDecryption extends Task {
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
+    this.createBlockingOverlay();
     this.questions = this.generateQuestions();
   }
 

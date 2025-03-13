@@ -33,7 +33,7 @@ export class Sandbox extends Scene {
     rect2.on("pointerdown", () => {
       console.log("Rect2 clicked");
     });
-    this.taskManager.addTask(testId, createTask(this, testId, Tasks.NETWORK_MAPPING));
+    this.taskManager.addTask(testId, createTask(this, testId, Tasks.RESTART_PC));
     console.log("Added task");
     this.taskManager.startTask(testId);
     EventBus.emit("current-active-scene");

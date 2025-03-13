@@ -18,6 +18,7 @@ export class VirusContainment extends Task {
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
+    this.createBlockingOverlay();
     this.files = [
       { name: "File1", description: "High CPU usage detected.", isInfected: true },
       { name: "File2", description: "Routine system log file.", isInfected: false },

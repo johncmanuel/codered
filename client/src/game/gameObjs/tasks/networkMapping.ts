@@ -30,6 +30,7 @@ export class NetworkMapping extends Task {
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
+    this.createBlockingOverlay();
     this.devices = [];
     this.wires = [];
   }

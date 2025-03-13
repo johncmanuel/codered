@@ -15,8 +15,6 @@ export abstract class Task {
     this.taskId = taskId;
     this.isCompleted = false;
     this.isFailed = false;
-
-    this.createBlockingOverlay();
   }
 
   // should be called once when the task is started

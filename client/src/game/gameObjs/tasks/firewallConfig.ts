@@ -20,6 +20,7 @@ export class FirewallConfig extends Task {
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
+    this.createBlockingOverlay();
     // TODO: adjust number of IPs to generate based on number of rounds
     // or through something that makes the game harder
     this.trustedIPs = this.generateRandomIPs(5);
