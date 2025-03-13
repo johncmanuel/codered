@@ -62,13 +62,8 @@ export class NetworkMapping extends Task {
 
     this.scene.input.on("dragend", (pointer: Input.Pointer, gameObject: GameObjects.Rectangle) => {
       const wire = this.wires.find((w) => w.rect === gameObject);
-      if (!wire) return;
-      // Remove the line when dragging ends
-      if (wire.line) {
-        wire.line.destroy();
-        wire.line = null;
-      }
-      this.handleDrop(gameObject, pointer);
+      if (!wire || !wire.line) return;
+      this.handleDrop(wire, pointer);
     });
   }
 
@@ -89,7 +84,7 @@ export class NetworkMapping extends Task {
   private initializeDevices(): void {
     this.devices = [
       this.createDevice("Router", 0xff0000, 100, 100, "router"),
-      this.createDevice("Server", 0x00ff00, 300, 100, "server"),
+      this.createDevice("Server", 0x00ff00, 600, 100, "server"),
       this.createDevice("Computer", 0x0000ff, 500, 100, "computer"),
     ];
   }
@@ -144,37 +139,46 @@ export class NetworkMapping extends Task {
   }
 
   private createWireRectangle(x: number, y: number, color: number): GameObjects.Rectangle {
+    const width = 40;
+    const height = 40;
     const rect = this.scene.add
-      .rectangle(x, y, 80, 40, color)
+      .rectangle(x, y, width, height, color)
       .setInteractive()
       .setData("color", color);
     return rect;
   }
 
-  private handleDrop(
-    wireRect: GameObjects.Rectangle | GameObjects.Line,
-    mousePtr: Input.Pointer,
-  ): void {
-    const wire = this.wires.find((w) => w.rect === wireRect);
-    if (!wire) return;
-
+  // check if wire and device are overlapping
+  private handleDrop(wire: Wire, mousePtr: Input.Pointer): void {
     const device = this.devices.find((d) => this.isPointerOverDevice(mousePtr, d.graphic));
     console.log("device", device);
     console.log("this.devices", this.devices);
-    if (!device) return;
+    if (!device) {
+      if (wire.line) {
+        wire.line.destroy();
+        wire.line = null;
+      }
+      return;
+    }
     if (wire.color === device.color) {
       wire.isConnected = true;
-      wireRect.disableInteractive();
-      // Snap to device
-      // TODO: Fix the silly placement
-      wireRect.setPosition(device.x, device.y);
+      wire.rect.disableInteractive();
 
-      // draw permanent line to represent connected wire
-      const line = this.scene.add.line(0, 0, wire.x, wire.y, device.x, device.y, wire.color);
-      line.setLineWidth(this.wireThickness);
+      // wireRect.setPosition(device.x, device.y);
+      // then snap to device
+      const snappedPoint = this.getSnappedPoint(wire, device);
+      if (wire.line) {
+        // draw permanent line to represent connected wire
+        wire.line.setTo(wire.x, wire.y, snappedPoint.x, snappedPoint.y);
+      }
+      // const line = this.scene.add.line(0, 0, wire.x, wire.y, device.x, device.y, wire.color);
+      // line.setLineWidth(this.wireThickness);
     } else {
       this.mistakes++;
       console.log(`Mistake ${this.mistakes}/${this.maxMistakes}`);
+      if (!wire.line) return;
+      wire.line.destroy();
+      wire.line = null;
     }
   }
 
@@ -184,5 +188,30 @@ export class NetworkMapping extends Task {
   ): boolean {
     const deviceBounds = deviceGraphic.getBounds();
     return deviceBounds.contains(pointer.x, pointer.y);
+  }
+
+  private getSnappedPoint(wire: Wire, device: Device): { x: number; y: number } {
+    const deviceBounds = device.graphic.getBounds();
+
+    // get the midpoint of the device's sides
+    const left = { x: deviceBounds.left, y: deviceBounds.centerY };
+    const right = { x: deviceBounds.right, y: deviceBounds.centerY };
+    const top = { x: deviceBounds.centerX, y: deviceBounds.top };
+    const bottom = { x: deviceBounds.centerX, y: deviceBounds.bottom };
+
+    // compute distances from the wire's origin to each side of the device
+    const distances = [
+      { point: left, distance: Phaser.Math.Distance.Between(wire.x, wire.y, left.x, left.y) },
+      { point: right, distance: Phaser.Math.Distance.Between(wire.x, wire.y, right.x, right.y) },
+      { point: top, distance: Phaser.Math.Distance.Between(wire.x, wire.y, top.x, top.y) },
+      { point: bottom, distance: Phaser.Math.Distance.Between(wire.x, wire.y, bottom.x, bottom.y) },
+    ];
+
+    // then compute the closest side of the device when the wire is snapped
+    const closestSide = distances.reduce((prev, curr) =>
+      curr.distance < prev.distance ? curr : prev,
+    );
+
+    return closestSide.point;
   }
 }
