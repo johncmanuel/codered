@@ -67,6 +67,24 @@ export class ControlButtons {
     });
   }
 
+  disableBtn(btnIdx: number) {
+    if (btnIdx < 0 || btnIdx >= this.buttons.length) {
+      console.error("Button index out of range");
+      return;
+    }
+    const button = this.buttons[btnIdx];
+    button.setInteractive(false);
+  }
+
+  enableBtn(btnIdx: number) {
+    if (btnIdx < 0 || btnIdx >= this.buttons.length) {
+      console.error("Button index out of range");
+      return;
+    }
+    const button = this.buttons[btnIdx];
+    button.setInteractive({ useHandCursor: true });
+  }
+
   hide() {
     this.buttons.forEach((button) => button.setVisible(false));
   }
