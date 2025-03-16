@@ -7,6 +7,7 @@ import { AssignedTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
 import { createTask } from "../gameObjs/tasks/taskFactory";
+import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
 
 export const GAME_NAME = "CodeRed";
 
@@ -26,7 +27,7 @@ export class CodeRed extends Scene {
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
 
-  disableCtrlBtnEvent: Phaser.Time.TimerEvent | null;
+  controlBtnDisabler: ControlButtonDisabler;
 
   constructor() {
     super(GAME_NAME);
@@ -39,7 +40,6 @@ export class CodeRed extends Scene {
     this.assignedTaskNotifs = new AssignedTaskNotification(this);
     this.controlBtns = new ControlButtons(this);
     this.taskManager = new TaskManager();
-    this.disableCtrlBtnEvent = null;
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -73,6 +73,7 @@ export class CodeRed extends Scene {
       .setOrigin(0.5, 0.5);
 
     this.postMatchUI = new PostMatchUI(this);
+    this.controlBtnDisabler = new ControlButtonDisabler(this, this.controlBtns);
 
     // keep this at the end
     EventBus.emit("current-scene-ready", this);
@@ -102,10 +103,10 @@ export class CodeRed extends Scene {
       this.registry.set("round", round);
 
       // only enable after the first round
-      if (round > 1) {
-        this.stopRandomButtonDisableEvent();
-        this.scheduleRandomBtnDisable();
-      }
+      // if (round > 1) {
+      //   this.stopRandomButtonDisableEvent();
+      //   this.scheduleRandomBtnDisable();
+      // }
 
       // this.assignedTaskNotifs.clear();
       this.taskManager.cleanup();
@@ -134,6 +135,7 @@ export class CodeRed extends Scene {
       this.controlBtns.show();
       this.assignedTaskNotifs.show();
       this.controlBtns.check();
+      this.events.emit("newRound");
     });
 
     // do stuff once all players connected
@@ -187,7 +189,7 @@ export class CodeRed extends Scene {
       this.controlBtns.clear();
       this.assignedTaskNotifs.hide();
       this.taskManager.cleanup();
-      this.stopRandomButtonDisableEvent();
+      this.controlBtnDisabler.stop();
 
       this.postMatchUI.show();
     });
@@ -213,6 +215,7 @@ export class CodeRed extends Scene {
     });
     console.log("Controls received:", this.playerControls);
     this.controlBtns.setPlayerControls(this.playerControls);
+    this.controlBtnDisabler.setControlButtons(this.controlBtns);
   }
 
   // Set up listeners between Phaser events
@@ -229,53 +232,11 @@ export class CodeRed extends Scene {
       this.gameStore?.room?.send("taskFailed", taskId);
       this.taskManager.removeTask(taskId);
     });
-  }
-
-  private scheduleRandomBtnDisable() {
-    const baseDelay = Phaser.Math.Between(20000, 40000);
-    // reduce delay by 1 second per round
-    // this dynamically changes the delay based on the round number
-    const roundFactor = (this.registry.get("round") as number) * 1000;
-    // clamp between 5-40 seconds
-    const delay = Phaser.Math.Clamp(baseDelay - roundFactor, 5000, 40000);
-
-    this.time.delayedCall(delay, () => {
-      this.disableRandomCtrlBtn();
-      this.scheduleRandomBtnDisable();
-    });
-  }
-
-  private stopRandomButtonDisableEvent() {
-    if (!this.disableCtrlBtnEvent) return;
-    this.disableCtrlBtnEvent.destroy();
-    this.disableCtrlBtnEvent = null;
-  }
-
-  disableRandomCtrlBtn() {
-    if (!this.controlBtns) {
-      console.error("Control buttons is null");
-      return;
-    }
-    const controlBtns = this.controlBtns.getButtons();
-    if (controlBtns.length === 0) {
-      console.error("No control buttons created");
-      return;
-    }
-    const randomIdx = Math.floor(Math.random() * controlBtns.length);
-    this.controlBtns.disableBtn(randomIdx);
-    // can play a sound or show a visual effect here to indicate the button is disabled
-    // for now ima just change the alpha value of the button
-    this.controlBtns.getButtons()[randomIdx].setAlpha(0.5);
-
-    console.log(`Disabling control button at index ${randomIdx}:`, controlBtns[randomIdx].text);
-
-    // then re-enable after random short delay
-    const reEnableDelayMs = 5000;
-    this.time.delayedCall(reEnableDelayMs, () => {
-      // can play a sound or show a visual effect here to indicate the button is re-enabled
-      console.log(`Re-enabling control button at index ${randomIdx}:`, controlBtns[randomIdx].text);
-      this.controlBtns.getButtons()[randomIdx].setAlpha(1);
-      this.controlBtns.enableBtn(randomIdx);
+    this.events.on("newRound", () => {
+      const round = this.registry.get("round") as number;
+      // stop any ongoing events and start a new one
+      this.controlBtnDisabler.stop();
+      this.controlBtnDisabler.start();
     });
   }
 }
