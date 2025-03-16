@@ -26,6 +26,8 @@ export class CodeRed extends Scene {
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
 
+  disableCtrlBtnEvent: Phaser.Time.TimerEvent | null;
+
   constructor() {
     super(GAME_NAME);
   }
@@ -37,6 +39,7 @@ export class CodeRed extends Scene {
     this.assignedTaskNotifs = new AssignedTaskNotification(this);
     this.controlBtns = new ControlButtons(this);
     this.taskManager = new TaskManager();
+    this.disableCtrlBtnEvent = null;
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -75,7 +78,7 @@ export class CodeRed extends Scene {
     EventBus.emit("current-scene-ready", this);
   }
 
-  update() {
+  update(time: number, delta: number): void {
     this.taskManager.update();
   }
 
@@ -84,6 +87,7 @@ export class CodeRed extends Scene {
   createServerListeners() {
     this.gameStore?.room?.state.listen("timer", (timer: number) => {
       EventBus.emit("updateTimer", timer);
+      this.registry.set("timer", timer);
     });
 
     this.gameStore?.room?.state.listen("dataHealth", (dataHealth: number) => {
@@ -96,6 +100,13 @@ export class CodeRed extends Scene {
       console.log("new round", round);
       EventBus.emit("updateRound", round);
       this.registry.set("round", round);
+
+      // only enable after the first round
+      if (round > 1) {
+        this.stopRandomButtonDisableEvent();
+        this.scheduleRandomBtnDisable();
+      }
+
       // this.assignedTaskNotifs.clear();
       this.taskManager.cleanup();
 
@@ -173,10 +184,12 @@ export class CodeRed extends Scene {
 
     this.gameStore?.room?.onMessage("gameOver", () => {
       this.loadingText.setVisible(false);
-      this.controlBtns.hide();
+      this.controlBtns.clear();
       this.assignedTaskNotifs.hide();
-      this.postMatchUI.show();
       this.taskManager.cleanup();
+      this.stopRandomButtonDisableEvent();
+
+      this.postMatchUI.show();
     });
 
     // handle stuff once the player leaves the game
@@ -215,6 +228,54 @@ export class CodeRed extends Scene {
     this.events.on("taskFailed", (taskId: string) => {
       this.gameStore?.room?.send("taskFailed", taskId);
       this.taskManager.removeTask(taskId);
+    });
+  }
+
+  private scheduleRandomBtnDisable() {
+    const baseDelay = Phaser.Math.Between(20000, 40000);
+    // reduce delay by 1 second per round
+    // this dynamically changes the delay based on the round number
+    const roundFactor = (this.registry.get("round") as number) * 1000;
+    // clamp between 5-40 seconds
+    const delay = Phaser.Math.Clamp(baseDelay - roundFactor, 5000, 40000);
+
+    this.time.delayedCall(delay, () => {
+      this.disableRandomCtrlBtn();
+      this.scheduleRandomBtnDisable();
+    });
+  }
+
+  private stopRandomButtonDisableEvent() {
+    if (!this.disableCtrlBtnEvent) return;
+    this.disableCtrlBtnEvent.destroy();
+    this.disableCtrlBtnEvent = null;
+  }
+
+  disableRandomCtrlBtn() {
+    if (!this.controlBtns) {
+      console.error("Control buttons is null");
+      return;
+    }
+    const controlBtns = this.controlBtns.getButtons();
+    if (controlBtns.length === 0) {
+      console.error("No control buttons created");
+      return;
+    }
+    const randomIdx = Math.floor(Math.random() * controlBtns.length);
+    this.controlBtns.disableBtn(randomIdx);
+    // can play a sound or show a visual effect here to indicate the button is disabled
+    // for now ima just change the alpha value of the button
+    this.controlBtns.getButtons()[randomIdx].setAlpha(0.5);
+
+    console.log(`Disabling control button at index ${randomIdx}:`, controlBtns[randomIdx].text);
+
+    // then re-enable after random short delay
+    const reEnableDelayMs = 5000;
+    this.time.delayedCall(reEnableDelayMs, () => {
+      // can play a sound or show a visual effect here to indicate the button is re-enabled
+      console.log(`Re-enabling control button at index ${randomIdx}:`, controlBtns[randomIdx].text);
+      this.controlBtns.getButtons()[randomIdx].setAlpha(1);
+      this.controlBtns.enableBtn(randomIdx);
     });
   }
 }
