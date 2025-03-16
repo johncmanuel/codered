@@ -15,6 +15,10 @@ export class ControlButtons {
     this.playerControls = new Set();
   }
 
+  getButtons() {
+    return this.buttons;
+  }
+
   setPlayerControls(controls: Set<string>) {
     this.playerControls = controls;
   }
@@ -55,10 +59,11 @@ export class ControlButtons {
           },
         )
         .setOrigin(0.5, 0.5)
-        .setInteractive({ useHandCursor: true });
+        .setInteractive({ useHandCursor: true })
+        .setData("control", control);
 
       button.on("pointerdown", () => {
-        this.scene.events.emit("controlButtonClicked", control);
+        this.handleClickOnBtn(control);
       });
       button.setVisible(true);
 
@@ -74,6 +79,7 @@ export class ControlButtons {
     }
     const button = this.buttons[btnIdx];
     button.setInteractive(false);
+    button.off("pointerdown");
   }
 
   enableBtn(btnIdx: number) {
@@ -83,6 +89,9 @@ export class ControlButtons {
     }
     const button = this.buttons[btnIdx];
     button.setInteractive({ useHandCursor: true });
+    button.on("pointerdown", () => {
+      this.handleClickOnBtn(button.getData("control"));
+    });
   }
 
   hide() {
@@ -101,5 +110,9 @@ export class ControlButtons {
       if (!button.visible) console.warn("Button not visible");
     });
     console.log("Control buttons checked");
+  }
+
+  handleClickOnBtn(control: any) {
+    this.scene.events.emit("controlButtonClicked", control);
   }
 }
