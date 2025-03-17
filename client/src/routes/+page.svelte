@@ -163,7 +163,8 @@
       {/if}
     </button>
     {#if showVolumeSlider && isPlaying}
-      <input type="range" 
+      <input 
+        type="range" 
         min="0" 
         max="1" 
         step="0.1" 
