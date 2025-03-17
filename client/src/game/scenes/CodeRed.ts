@@ -7,6 +7,7 @@ import { AssignedTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
 import { createTask } from "../gameObjs/tasks/taskFactory";
+import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
 
 export const GAME_NAME = "CodeRed";
 
@@ -25,6 +26,8 @@ export class CodeRed extends Scene {
   loadingText: Phaser.GameObjects.Text;
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
+
+  controlBtnDisabler: ControlButtonDisabler;
 
   constructor() {
     super(GAME_NAME);
@@ -70,12 +73,13 @@ export class CodeRed extends Scene {
       .setOrigin(0.5, 0.5);
 
     this.postMatchUI = new PostMatchUI(this);
+    this.controlBtnDisabler = new ControlButtonDisabler(this, this.controlBtns);
 
     // keep this at the end
     EventBus.emit("current-scene-ready", this);
   }
 
-  update() {
+  update(time: number, delta: number): void {
     this.taskManager.update();
   }
 
@@ -84,6 +88,7 @@ export class CodeRed extends Scene {
   createServerListeners() {
     this.gameStore?.room?.state.listen("timer", (timer: number) => {
       EventBus.emit("updateTimer", timer);
+      this.registry.set("timer", timer);
     });
 
     this.gameStore?.room?.state.listen("dataHealth", (dataHealth: number) => {
@@ -96,6 +101,13 @@ export class CodeRed extends Scene {
       console.log("new round", round);
       EventBus.emit("updateRound", round);
       this.registry.set("round", round);
+
+      // only enable after the first round
+      // if (round > 1) {
+      //   this.stopRandomButtonDisableEvent();
+      //   this.scheduleRandomBtnDisable();
+      // }
+
       // this.assignedTaskNotifs.clear();
       this.taskManager.cleanup();
 
@@ -123,6 +135,7 @@ export class CodeRed extends Scene {
       this.controlBtns.show();
       this.assignedTaskNotifs.show();
       this.controlBtns.check();
+      this.events.emit("newRound");
     });
 
     // do stuff once all players connected
@@ -173,10 +186,12 @@ export class CodeRed extends Scene {
 
     this.gameStore?.room?.onMessage("gameOver", () => {
       this.loadingText.setVisible(false);
-      this.controlBtns.hide();
+      this.controlBtns.clear();
       this.assignedTaskNotifs.hide();
-      this.postMatchUI.show();
       this.taskManager.cleanup();
+      this.controlBtnDisabler.stop();
+
+      this.postMatchUI.show();
     });
 
     // handle stuff once the player leaves the game
@@ -200,6 +215,7 @@ export class CodeRed extends Scene {
     });
     console.log("Controls received:", this.playerControls);
     this.controlBtns.setPlayerControls(this.playerControls);
+    this.controlBtnDisabler.setControlButtons(this.controlBtns);
   }
 
   // Set up listeners between Phaser events
@@ -215,6 +231,14 @@ export class CodeRed extends Scene {
     this.events.on("taskFailed", (taskId: string) => {
       this.gameStore?.room?.send("taskFailed", taskId);
       this.taskManager.removeTask(taskId);
+    });
+    this.events.on("newRound", () => {
+      const round = this.registry.get("round") as number;
+      // stop any ongoing events and start a new one
+      if (round > 1) {
+        this.controlBtnDisabler.stop();
+        this.controlBtnDisabler.start();
+      }
     });
   }
 }
