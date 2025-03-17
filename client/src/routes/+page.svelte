@@ -154,6 +154,20 @@
         🔇
       {/if}
     </button>
+<<<<<<< HEAD
+=======
+    {#if showVolumeSlider && isPlaying}
+      <input 
+        type="range" 
+        min="0" 
+        max="1" 
+        step="0.1" 
+        value={mainMenuSong.volume}
+        on:input={handleVolumeChange}
+        class="volume-slider"
+      />
+    {/if}
+>>>>>>> parent of c276e8b (Change main menu music and add ingame music)
   </div>
 
   {#if $gameStore.room && hasStarted}
@@ -325,4 +339,34 @@
   .mute-button:hover {
     background-color: rgba(0, 0, 0, 0.7);
   }
+<<<<<<< HEAD
+=======
+  
+  .volume-slider {
+    width: 100px;
+    height: 5px;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+  }
+
+  .volume-slider::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+  }
+>>>>>>> parent of c276e8b (Change main menu music and add ingame music)
 </style>
