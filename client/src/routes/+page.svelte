@@ -353,14 +353,14 @@
   .volume-slider {
     width: 100px;
     height: 5px;
-    -webkit-appearance: none;
+    /* -webkit-appearance: none; */
     background: rgba(255, 255, 255, 0.3);
     border-radius: 5px;
     transition: all 0.3s ease;
   }
 
   .volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
+    /* -webkit-appearance: none; */
     width: 15px;
     height: 15px;
     border-radius: 50%;
