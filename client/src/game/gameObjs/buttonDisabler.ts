@@ -29,14 +29,14 @@ export class ControlButtonDisabler {
   }
 
   private scheduleRandomBtnDisable() {
-    const baseDelay = Phaser.Math.Between(20000, 40000);
+    const baseDelayMs = Phaser.Math.Between(20000, 40000);
     // reduce delay by 1 second per round
     // this dynamically changes the delay based on the round number
-    const roundFactor = (this.scene.registry.get("round") as number) * 1000;
+    const roundFactorMs = (this.scene.registry.get("round") as number) * 1000;
     // clamp between 5-40 seconds
-    const delay = Phaser.Math.Clamp(baseDelay - roundFactor, 5000, 40000);
+    const delayMs = Phaser.Math.Clamp(baseDelayMs - roundFactorMs, 5000, 40000);
 
-    this.disableButtonEvent = this.scene.time.delayedCall(5000, () => {
+    this.disableButtonEvent = this.scene.time.delayedCall(delayMs, () => {
       this.disableRandomCtrlBtn();
       this.scheduleRandomBtnDisable();
     });
