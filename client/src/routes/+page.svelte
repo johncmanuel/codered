@@ -163,8 +163,7 @@
       {/if}
     </button>
     {#if showVolumeSlider && isPlaying}
-      <input 
-        type="range" 
+      <input type="range" 
         min="0" 
         max="1" 
         step="0.1" 
@@ -371,7 +370,7 @@
 
   .volume-slider::-moz-range-thumb {
     width: 15px;
-    height: 15px;
+    height: 10px;
     border-radius: 50%;
     background: white;
     cursor: pointer;
