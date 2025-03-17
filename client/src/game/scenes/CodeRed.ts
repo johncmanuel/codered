@@ -235,8 +235,10 @@ export class CodeRed extends Scene {
     this.events.on("newRound", () => {
       const round = this.registry.get("round") as number;
       // stop any ongoing events and start a new one
-      this.controlBtnDisabler.stop();
-      this.controlBtnDisabler.start();
+      if (round > 1) {
+        this.controlBtnDisabler.stop();
+        this.controlBtnDisabler.start();
+      }
     });
   }
 }
