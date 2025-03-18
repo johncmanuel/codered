@@ -2,26 +2,36 @@ import { Scene } from "phaser";
 
 export class SpamAds {
   private scene: Scene;
-  private ads: Phaser.GameObjects.Rectangle[];
-  private maxAds: number;
+  private ads: Array<any>;
+  private maxAdsShowed: number;
+  private maxAdsSpawned: number;
+  private minAdsSpawned: number;
 
-  constructor(scene: Scene) {
+  constructor(
+    scene: Scene,
+    minAdsSpawned: number = 4,
+    maxAdsSpawned: number = 5,
+    maxAdsShowed: number = 10,
+  ) {
     this.scene = scene;
     this.ads = [];
-    this.maxAds = 10;
+    this.minAdsSpawned = minAdsSpawned;
+    this.maxAdsSpawned = maxAdsSpawned;
+    this.maxAdsShowed = maxAdsShowed;
   }
 
   private createAd() {
-    const adWidth = 300;
-    const adHeight = 200;
+    const adWidthPx = 300;
+    const adHeightPx = 200;
     const canvasWidth = this.scene.sys.game.config.width as number;
     const canvasHeight = this.scene.sys.game.config.height as number;
 
-    const x = Phaser.Math.Between(0, canvasWidth - adWidth);
-    const y = Phaser.Math.Between(0, canvasHeight - adHeight);
+    // ensure ads don't spawn outside of the canvas
+    const x = Phaser.Math.Between(0, canvasWidth - adWidthPx);
+    const y = Phaser.Math.Between(0, canvasHeight - adHeightPx);
 
     const adBackground = this.scene.add
-      .rectangle(x + adWidth / 2, y + adHeight / 2, adWidth, adHeight, 0xffffff)
+      .rectangle(x + adWidthPx / 2, y + adHeightPx / 2, adWidthPx, adHeightPx, 0xffffff)
       .setStrokeStyle(2, 0x000000)
       .setInteractive();
 
@@ -31,7 +41,7 @@ export class SpamAds {
     });
 
     const closeButton = this.scene.add
-      .circle(x + adWidth - 20, y + 20, 10, 0xff0000)
+      .circle(x + adWidthPx - 20, y + 20, 10, 0xff0000)
       .setInteractive();
     const closeText = this.scene.add.text(closeButton.x - 5, closeButton.y - 10, "X", {
       font: "16px Arial",
@@ -46,16 +56,19 @@ export class SpamAds {
       this.ads = this.ads.filter((ad) => ad !== adBackground);
     });
 
-    // track mainly the background rectangle
-    this.ads.push(adBackground);
+    const ad = [adBackground, title, closeButton, closeText];
+    this.ads.push(ad);
   }
 
   public spawnAds() {
-    if (this.ads.length > this.maxAds) {
-      console.warn("Max ads reached, current length of ads", this.ads.length);
+    // this isn't realistic but def don't want to overflood the player with ads
+    // for sake of gameplay
+    if (this.ads.length > this.maxAdsShowed) {
+      console.warn("Max ads reached, current length of ads, stopping now", this.ads.length);
+      return;
     }
     // spawn ads in a burst
-    const numAds = Phaser.Math.Between(7, 8);
+    const numAds = Phaser.Math.Between(this.minAdsSpawned, this.maxAdsSpawned);
     const spawnDelayMs = 100;
     for (let i = 0; i < numAds; i++) {
       this.scene.time.delayedCall(i * spawnDelayMs, () => {
@@ -70,8 +83,10 @@ export class SpamAds {
 
   public clearAds() {
     for (const ad of this.ads) {
-      ad.destroy();
+      // @ts-ignore
+      ad.forEach((obj) => obj.destroy());
     }
+    console.log("Ads cleared");
     this.ads = [];
   }
 }

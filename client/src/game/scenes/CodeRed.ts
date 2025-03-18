@@ -8,6 +8,7 @@ import { ControlButtons } from "../gameObjs/controlButtons";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
 import { createTask } from "../gameObjs/tasks/taskFactory";
 import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
+import { SpamAds } from "../gameObjs/spamAds";
 
 export const GAME_NAME = "CodeRed";
 
@@ -26,6 +27,8 @@ export class CodeRed extends Scene {
   loadingText: Phaser.GameObjects.Text;
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
+  adSpawnTimer: Phaser.Time.TimerEvent | null;
+  adsSpammer: SpamAds;
 
   controlBtnDisabler: ControlButtonDisabler;
 
@@ -40,6 +43,8 @@ export class CodeRed extends Scene {
     this.assignedTaskNotifs = new AssignedTaskNotification(this);
     this.controlBtns = new ControlButtons(this);
     this.taskManager = new TaskManager();
+    this.adsSpammer = new SpamAds(this);
+    this.adSpawnTimer = null;
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -101,12 +106,6 @@ export class CodeRed extends Scene {
       console.log("new round", round);
       EventBus.emit("updateRound", round);
       this.registry.set("round", round);
-
-      // only enable after the first round
-      // if (round > 1) {
-      //   this.stopRandomButtonDisableEvent();
-      //   this.scheduleRandomBtnDisable();
-      // }
 
       // this.assignedTaskNotifs.clear();
       this.taskManager.cleanup();
@@ -190,6 +189,11 @@ export class CodeRed extends Scene {
       this.assignedTaskNotifs.hide();
       this.taskManager.cleanup();
       this.controlBtnDisabler.stop();
+      if (this.adSpawnTimer) {
+        this.time.removeEvent(this.adSpawnTimer);
+        this.adSpawnTimer = null;
+      }
+      this.adsSpammer.clearAds();
 
       this.postMatchUI.show();
     });
@@ -232,13 +236,45 @@ export class CodeRed extends Scene {
       this.gameStore?.room?.send("taskFailed", taskId);
       this.taskManager.removeTask(taskId);
     });
+    // triggers after controls are assigned, which is a must need before anything else
     this.events.on("newRound", () => {
       const round = this.registry.get("round") as number;
       // stop any ongoing events and start a new one
       if (round > 1) {
         this.controlBtnDisabler.stop();
         this.controlBtnDisabler.start();
+        this.adsSpammer.clearAds();
+        if (this.adSpawnTimer) {
+          this.time.removeEvent(this.adSpawnTimer);
+          this.adSpawnTimer = null;
+        }
+        this.startAdSpawning();
       }
     });
+  }
+
+  private startAdSpawning(
+    baseProbability: number = 0.1,
+    roundMultiplier: number = 0.03,
+    maxProbability: number = 0.8,
+  ) {
+    // calculate the current probability based on the round number
+    const currProbability = Math.min(
+      ((baseProbability + this.registry.get("round")) as number) * roundMultiplier,
+      maxProbability,
+    );
+
+    const spawnAdsWithProbability = () => {
+      const randomProb = Math.random();
+      console.log("Spawning ads with probability", currProbability);
+      console.log("Math.random()", randomProb);
+      if (randomProb < currProbability) {
+        this.adsSpammer.spawnAds();
+      }
+      // schedule the next ad spawn check after a short delay
+      this.adSpawnTimer = this.time.delayedCall(1000, spawnAdsWithProbability);
+    };
+
+    spawnAdsWithProbability();
   }
 }
