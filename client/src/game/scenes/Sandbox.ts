@@ -5,6 +5,7 @@ import { EventBus } from "../EventBus";
 import { createTask } from "../gameObjs/tasks/taskFactory";
 import { Tasks } from "../types/room";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
+import { SpamAds } from "../gameObjs/spamAds";
 
 export const GAME_NAME = "Sandbox";
 
@@ -12,6 +13,7 @@ export const GAME_NAME = "Sandbox";
 
 export class Sandbox extends Scene {
   taskManager: TaskManager;
+  spamAds: SpamAds;
 
   constructor() {
     super(GAME_NAME);
@@ -33,6 +35,10 @@ export class Sandbox extends Scene {
     rect2.on("pointerdown", () => {
       console.log("Rect2 clicked");
     });
+
+    this.spamAds = new SpamAds(this);
+    this.spamAds.spawnAds();
+
     this.taskManager.addTask(testId, createTask(this, testId, Tasks.RESTART_PC));
     console.log("Added task");
     this.taskManager.startTask(testId);
