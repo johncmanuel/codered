@@ -32,6 +32,8 @@ export class CodeRed extends Scene {
 
   controlBtnDisabler: ControlButtonDisabler;
 
+  hideInformation: boolean;
+
   constructor() {
     super(GAME_NAME);
   }
@@ -45,6 +47,7 @@ export class CodeRed extends Scene {
     this.taskManager = new TaskManager();
     this.adsSpammer = new SpamAds(this);
     this.adSpawnTimer = null;
+    this.hideInformation = false;
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -240,6 +243,7 @@ export class CodeRed extends Scene {
       const round = this.registry.get("round") as number;
       // stop any ongoing events and start a new one
       if (round > 1) {
+        this.hideInformation = this.canHideInformation();
         this.controlBtnDisabler.stop();
         this.controlBtnDisabler.start();
         this.adsSpammer.clearAds();
@@ -275,5 +279,10 @@ export class CodeRed extends Scene {
     };
 
     spawnAdsWithProbability();
+  }
+
+  // hide information from the player, forcing them to rely on other players
+  private canHideInformation(hideProb: number = 0.3): boolean {
+    return Math.random() < hideProb;
   }
 }
