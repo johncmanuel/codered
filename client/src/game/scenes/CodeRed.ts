@@ -32,8 +32,6 @@ export class CodeRed extends Scene {
 
   controlBtnDisabler: ControlButtonDisabler;
 
-  controlBtnDisabler: ControlButtonDisabler;
-
   constructor() {
     super(GAME_NAME);
   }
@@ -108,7 +106,7 @@ export class CodeRed extends Scene {
       console.log("new round", round);
       EventBus.emit("updateRound", round);
       this.registry.set("round", round);
-     
+
       // this.assignedTaskNotifs.clear();
       this.taskManager.cleanup();
 
@@ -277,7 +275,5 @@ export class CodeRed extends Scene {
     };
 
     spawnAdsWithProbability();
-      }
-    });
   }
 }
