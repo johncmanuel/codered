@@ -26,8 +26,8 @@ export class FirewallConfig extends Task {
   private whitelistGlow: Phaser.GameObjects.Graphics;
   private blacklistGlow: Phaser.GameObjects.Graphics;
 
-  // private correctSound: Phaser.Sound.BaseSound;
-  // private incorrectSound: Phaser.Sound.BaseSound;
+  private correctSound: Phaser.Sound.BaseSound;
+  private incorrectSound: Phaser.Sound.BaseSound;
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
@@ -51,8 +51,8 @@ export class FirewallConfig extends Task {
 
       this.scene.load.image("folder", "/assets/folder.png");
       this.scene.load.image("cloudImage", "/assets/cloud2.png");
-      // this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
-      // this.scene.load.audio("incorrect", "/assets/incorrectsoundeffect.mp3");
+      this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
+      this.scene.load.audio("incorrect", "/assets/wrongsoundeffect.mp3");
 
       this.scene.load.on("complete", () => {
         console.log("All images loaded successfully");
@@ -71,8 +71,8 @@ export class FirewallConfig extends Task {
   async start() {
     console.log("Starting FIREWALL_CONFIG task");
     await this.preload();
-    // this.correctSound = this.scene.sound.add("correctSound");
-    // this.incorrectSound = this.scene.sound.add("incorrectSound");
+    this.correctSound = this.scene.sound.add("correct");
+    this.incorrectSound = this.scene.sound.add("incorrect");
     this.showTrustedIPs();
     this.showInstructions();
     this.nextIP();
@@ -197,17 +197,17 @@ export class FirewallConfig extends Task {
     if (!isCorrect) {
       this.mistakes++;
       console.log("Mistake made! Mistakes: ", this.mistakes);
-      // if (this.incorrectSound) {
-      //   this.incorrectSound.play();
-      // }
+      if (this.incorrectSound) {
+        this.incorrectSound.play();
+      }
       if (this.mistakes >= this.mistakesAllowed) {
         this.fail();
         return;
       }
     } else {
-      // if (this.correctSound) {
-      //   this.correctSound.play();
-      // }
+      if (this.correctSound) {
+        this.correctSound.play();
+      }
       console.log("Correct decision!");
     }
   
