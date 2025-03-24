@@ -9,16 +9,16 @@
   import DataHealth from "./DataHealth.svelte";
   import CurrentRound from "./CurrentRound.svelte";
   import { type TaskState } from "@/game/types/room";
-  import DebugTaskButtons from "./DebugTaskButtons.svelte";
   import { taskStore } from "@/game/stores/taskStore";
+  import { type IRoundTimer, type IDataHealth } from "@/game/types/eventBusTypes";
 
   let phaserRef: TPhaserRef = { game: null, scene: null };
 
   $: timer = $gameStore.room?.state.timer ?? 0;
+  $: hideInfo = false;
   $: health = $gameStore.room?.state.dataHealth ?? 100;
   $: currRound = $gameStore.room?.state.round ?? 0;
-  $: maxRounds = 6; // hard code for now, get it from server later
-  $: tasksArray = Array.from($taskStore.entries());
+  $: maxRounds = 6; // TODO: hard code for now, get it from server later
 
   onDestroy(() => {
     EventBus.off("updateTimer");
@@ -48,11 +48,13 @@
 
   // Listen for events from the Phaser side
   function setupEventBusListeners() {
-    EventBus.on("updateTimer", (newTimer: number) => {
-      timer = newTimer;
+    EventBus.on("updateTimer", (roundTimer: IRoundTimer) => {
+      timer = roundTimer.timer;
+      hideInfo = roundTimer.hideInfo;
     });
-    EventBus.on("updateHealth", (newHealth: number) => {
-      health = newHealth;
+    EventBus.on("updateHealth", (dataHealth: IDataHealth) => {
+      health = dataHealth.health;
+      hideInfo = dataHealth.hideInfo;
     });
     EventBus.on("updateRound", (newRound: number) => {
       currRound = newRound;
@@ -68,15 +70,10 @@
 
 <div id="app">
   {#if $gameStore.room}
-    <Timer {timer} />
+    <Timer {timer} {hideInfo} />
     <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
-    <DataHealth {health} />
+    <DataHealth {health} {hideInfo} />
     <CurrentRound currentRound={currRound} {maxRounds} />
-    <!-- Display debug buttons for each active task -->
-    <!-- TODO: render debug buttons if it's a debug build -->
-    <!-- {#each tasksArray as [id, task]} -->
-    <!--   <DebugTaskButtons {task} /> -->
-    <!-- {/each} -->
     <PhaserGame bind:phaserRef currentActiveScene={onCurrentActiveScene} />
   {/if}
 </div>
