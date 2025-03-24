@@ -9,6 +9,7 @@ import { TaskManager } from "../gameObjs/tasks/taskManager";
 import { createTask } from "../gameObjs/tasks/taskFactory";
 import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
 import { SpamAds } from "../gameObjs/spamAds";
+import { type IRoundTimer, type IDataHealth } from "../types/eventBusTypes";
 
 export const GAME_NAME = "CodeRed";
 
@@ -95,12 +96,16 @@ export class CodeRed extends Scene {
   //https://docs.colyseus.io/state/schema-callbacks/#schema-callbacks
   createServerListeners() {
     this.gameStore?.room?.state.listen("timer", (timer: number) => {
-      EventBus.emit("updateTimer", timer);
+      const roundTimer: IRoundTimer = { timer, hideInfo: this.hideInformation };
+      EventBus.emit("updateTimer", roundTimer);
+      // ensure registry keeps actual timer
       this.registry.set("timer", timer);
     });
 
     this.gameStore?.room?.state.listen("dataHealth", (dataHealth: number) => {
-      EventBus.emit("updateHealth", dataHealth);
+      const dataHealthObj: IDataHealth = { health: dataHealth, hideInfo: this.hideInformation };
+      EventBus.emit("updateHealth", dataHealthObj);
+      // ensure registry keeps actual data health
       this.registry.set("dataHealth", dataHealth);
     });
 
@@ -282,6 +287,8 @@ export class CodeRed extends Scene {
   }
 
   // hide information from the player, forcing them to rely on other players
+  // NOTE: probabily of all players having hidden information is (0.3)^n,
+  // so it's not likely that all players will have hidden information
   private canHideInformation(hideProb: number = 0.3): boolean {
     return Math.random() < hideProb;
   }
