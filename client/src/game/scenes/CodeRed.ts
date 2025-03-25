@@ -37,7 +37,7 @@ export class CodeRed extends Scene {
   hideInformation: boolean;
 
   flipControlBtnsTimer: Phaser.Time.TimerEvent | null;
-
+  
   constructor() {
     super(GAME_NAME);
   }
