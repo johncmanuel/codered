@@ -293,8 +293,9 @@ export class CodeRed extends Scene {
       if (randomProb < currProbability) {
         this.adsSpammer.spawnAds();
       }
-      // schedule the next ad spawn check after a short delay
-      this.adSpawnTimer = this.time.delayedCall(1000, spawnAdsWithProbability);
+      // schedule the next ad spawn check after delay
+      const delayMs = Phaser.Math.Between(3000, 5000);
+      this.adSpawnTimer = this.time.delayedCall(delayMs, spawnAdsWithProbability);
     };
 
     spawnAdsWithProbability();

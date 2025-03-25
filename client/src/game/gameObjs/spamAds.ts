@@ -1,8 +1,15 @@
 import { Scene } from "phaser";
 
+export interface Ad {
+  adBackground: Phaser.GameObjects.Rectangle;
+  title: Phaser.GameObjects.Text;
+  closeButton: Phaser.GameObjects.Arc;
+  closeText: Phaser.GameObjects.Text;
+}
+
 export class SpamAds {
   private scene: Scene;
-  private ads: Array<any>;
+  private ads: Array<Ad>;
   private maxAdsShowed: number;
   private maxAdsSpawned: number;
   private minAdsSpawned: number;
@@ -53,10 +60,16 @@ export class SpamAds {
       title.destroy();
       closeButton.destroy();
       closeText.destroy();
-      this.ads = this.ads.filter((ad) => ad !== adBackground);
+      this.ads = this.ads.filter((ad) => ad.adBackground !== adBackground);
+      console.log("current ads length", this.ads.length);
     });
 
-    const ad = [adBackground, title, closeButton, closeText];
+    const ad: Ad = {
+      adBackground,
+      title,
+      closeButton,
+      closeText,
+    };
     this.ads.push(ad);
   }
 
