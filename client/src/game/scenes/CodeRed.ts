@@ -28,12 +28,15 @@ export class CodeRed extends Scene {
   loadingText: Phaser.GameObjects.Text;
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
+
   adSpawnTimer: Phaser.Time.TimerEvent | null;
   adsSpammer: SpamAds;
 
   controlBtnDisabler: ControlButtonDisabler;
 
   hideInformation: boolean;
+
+  flipControlBtnsTimer: Phaser.Time.TimerEvent | null;
 
   constructor() {
     super(GAME_NAME);
@@ -201,6 +204,11 @@ export class CodeRed extends Scene {
         this.time.removeEvent(this.adSpawnTimer);
         this.adSpawnTimer = null;
       }
+      if (this.flipControlBtnsTimer) {
+        this.time.removeEvent(this.flipControlBtnsTimer);
+        this.flipControlBtnsTimer = null;
+      }
+
       this.adsSpammer.clearAds();
       this.postMatchUI.show();
     });
@@ -246,17 +254,23 @@ export class CodeRed extends Scene {
     // triggers after controls are assigned, which is a must need before anything else
     this.events.on("newRound", () => {
       const round = this.registry.get("round") as number;
+      if (this.adSpawnTimer) {
+        this.time.removeEvent(this.adSpawnTimer);
+        this.adSpawnTimer = null;
+      }
+      if (this.flipControlBtnsTimer) {
+        this.time.removeEvent(this.flipControlBtnsTimer);
+        this.flipControlBtnsTimer = null;
+      }
       // stop any ongoing events and start a new one
       if (round > 1) {
         this.hideInformation = this.canHideInformation();
         this.controlBtnDisabler.stop();
         this.controlBtnDisabler.start();
         this.adsSpammer.clearAds();
-        if (this.adSpawnTimer) {
-          this.time.removeEvent(this.adSpawnTimer);
-          this.adSpawnTimer = null;
-        }
+
         this.startAdSpawning();
+        this.startFlipControlBtns();
       }
     });
   }
@@ -284,6 +298,29 @@ export class CodeRed extends Scene {
     };
 
     spawnAdsWithProbability();
+  }
+
+  private startFlipControlBtns(
+    baseDurationMs: number = 4000,
+    durationVarianceMs: number = 1000,
+    initialDelayMs: number = 5000,
+  ) {
+    this.time.delayedCall(initialDelayMs, () => {
+      const flipButtons = () => {
+        this.controlBtns.flipAllBtns();
+
+        // Schedule unflip after random duration
+        const duration = baseDurationMs + Math.random() * durationVarianceMs;
+        this.time.delayedCall(duration, () => {
+          this.controlBtns.unflipAllBtns();
+
+          // Schedule next flip after another random delay
+          const nextFlipDelayMs = 5000 + Math.random() * 20000;
+          this.flipControlBtnsTimer = this.time.delayedCall(nextFlipDelayMs, flipButtons);
+        });
+      };
+      flipButtons();
+    });
   }
 
   // hide information from the player, forcing them to rely on other players

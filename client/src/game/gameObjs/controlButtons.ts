@@ -4,8 +4,8 @@ export class ControlButtons {
   private scene: Scene;
   private buttons: GameObjects.Text[];
   private playerControls: Set<string>;
-  private buttonWidth: number = 150;
-  private buttonHeight: number = 50;
+  private buttonWidthPx: number = 150;
+  private buttonHeightPx: number = 50;
   private padding: number = 20;
   private columns: number = 2;
 
@@ -35,10 +35,11 @@ export class ControlButtons {
 
     // center buttons horizontally
     const startX =
-      (this.scene.cameras.main.width - this.columns * (this.buttonWidth + this.padding)) / 2;
+      (this.scene.cameras.main.width - this.columns * (this.buttonWidthPx + this.padding)) / 2;
 
     // position buttons at the bottom of the screen
-    const startY = this.scene.cameras.main.height - rows * (this.buttonHeight + this.padding) - 20;
+    const startY =
+      this.scene.cameras.main.height - rows * (this.buttonHeightPx + this.padding) - 20;
 
     let index = 0;
     this.playerControls.forEach((control) => {
@@ -47,8 +48,8 @@ export class ControlButtons {
 
       const button = this.scene.add
         .text(
-          startX + col * (this.buttonWidth + this.padding),
-          startY + row * (this.buttonHeight + this.padding),
+          startX + col * (this.buttonWidthPx + this.padding),
+          startY + row * (this.buttonHeightPx + this.padding),
           control,
           {
             fontFamily: "Arial",
@@ -114,5 +115,19 @@ export class ControlButtons {
 
   handleClickOnBtn(control: any) {
     this.scene.events.emit("controlButtonClicked", control);
+  }
+
+  flipAllBtns() {
+    this.buttons.forEach((button) => {
+      button.setFlip(true, true);
+    });
+    console.log("Control buttons flipped");
+  }
+
+  unflipAllBtns() {
+    this.buttons.forEach((button) => {
+      button.setFlip(false, false);
+    });
+    console.log("Control buttons unflipped");
   }
 }
