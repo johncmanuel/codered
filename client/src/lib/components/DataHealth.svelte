@@ -5,9 +5,8 @@
 
 <div class="health">
   {#if hideInfo}
-    <span>Health status: {health}%</span>
+    <span>Health status: ERROR! FAILED TO RETRIEVE HEALTH STATUS, PLEASE WAIT FOR A FIX!</span>
   {:else}
-    <span>Health status: Time: ERROR! FAILED TO RETRIEVE HEALTH STATUS, PLEASE WAIT FOR A FIX!</span
-    >
+    <span>Health status: {health}%</span>
   {/if}
 </div>
