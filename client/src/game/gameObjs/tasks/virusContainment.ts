@@ -69,7 +69,7 @@ export class VirusContainment extends Task {
             return;
         }
         // Still need to find better file image
-        this.scene.load.image("fileIcon", "/assets/file.png");
+        this.scene.load.image("fileIcon", "/assets/file2.png");
         this.scene.load.on("complete", () => {
             console.log("File icon loaded successfully");
             resolve();
@@ -120,14 +120,14 @@ export class VirusContainment extends Task {
       this.fileObject = this.scene.add
         .sprite(centerX, centerY - 50, "fileIcon")
         .setInteractive({ draggable: true })
-        .setScale(0.2) 
+        .setScale(0.4) 
         .setDepth(1);  
     } else {
       // Use a rectangle as a placeholder
       this.fileObject = this.scene.add
         .sprite(centerX, centerY - 50, 'fileIcon')
         .setInteractive({ draggable: true })
-        .setScale(0.2)
+        .setScale(0.4)
         .setDepth(1);
     }
     
