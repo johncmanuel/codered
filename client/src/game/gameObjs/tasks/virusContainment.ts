@@ -15,6 +15,8 @@ export class VirusContainment extends Task {
   private fileText: Phaser.GameObjects.Text;
   private quarantineBoxText: Phaser.GameObjects.Text;
   private safeAreaText: Phaser.GameObjects.Text;
+  private correctSound: Phaser.Sound.BaseSound;
+  private incorrectSound: Phaser.Sound.BaseSound;
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
@@ -78,6 +80,9 @@ export class VirusContainment extends Task {
             console.error("Error loading file:", fileObj.src);
             resolve();
         });
+
+        this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
+        this.scene.load.audio("incorrect", "/assets/wrongsoundeffect.mp3");
         this.scene.load.start();
     });
   }
@@ -85,6 +90,8 @@ export class VirusContainment extends Task {
   async start(): Promise<void> {
     await this.preload();
     this.preload();
+    this.correctSound = this.scene.sound.add("correct");
+    this.incorrectSound = this.scene.sound.add("incorrect");
     const blackBox = this.scene.add.rectangle(650, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
 
     this.scene.add.text(650, 25, "Your Task: Virus Containment", { 
@@ -175,6 +182,10 @@ export class VirusContainment extends Task {
     if ((file.isInfected && droppedInQuarantine) || (!file.isInfected && !droppedInQuarantine)) {
       // Correct choice
       console.log("Correct choice");
+      if (this.correctSound) {
+        this.correctSound.play();
+        console.log("Playing correct sound");
+      } 
       this.score++;
       if (this.score >= this.maxScore) {
         this.complete();
@@ -188,6 +199,10 @@ export class VirusContainment extends Task {
       // Incorrect choice
       this.errorCount++;
       console.log("Incorrect choice");
+      if (this.incorrectSound) {
+        this.incorrectSound.play();
+        console.log("Playing incorrect sound");
+      }
       if (this.errorCount >= this.maxErrors) {
         this.fail();
         return;
