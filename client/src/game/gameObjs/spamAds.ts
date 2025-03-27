@@ -61,6 +61,7 @@ export class SpamAds {
       closeButton.destroy();
       closeText.destroy();
       this.ads = this.ads.filter((ad) => ad.adBackground !== adBackground);
+      this.scene.events.emit("adClicked");
       console.log("current ads length", this.ads.length);
     });
 

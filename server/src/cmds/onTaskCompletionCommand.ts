@@ -32,6 +32,7 @@ export class OnTaskCompletionCommand extends Command<
     this.room.actualTasks = this.room.actualTasks.filter((t) => t.id !== taskId);
     playerClientWithTask.send("taskCompleted", taskId);
     this.state.tasksDone++;
+    this.state.totalTasksDone++;
 
     console.log("Task completed by", client.sessionId, "Task type:", task.type);
     console.log("Player that task", task.type, "was assigned to:", playerClientWithTask.sessionId);
