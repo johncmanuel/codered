@@ -49,6 +49,13 @@ export class GameState extends Schema {
   @type("number") dataHealth: number = 100;
   @type("number") round: number = 1;
   @type("number") tasksDone: number = 0;
+
+  // statistics to track for at the end of the game
+  @type("number") totalTasksDone: number = 0;
+  @type("number") totalTimeSecs: number = 0;
+  @type("number") totalTasksFailed: number = 0;
+  @type("number") totalAdsClicked: number = 0;
+
   @type("boolean") isGameOver: boolean = false;
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>(); // sessionId -> PlayerState
   @type("string") hostId: string;

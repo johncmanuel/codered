@@ -273,6 +273,11 @@ export class CodeRed extends Scene {
         this.startFlipControlBtns();
       }
     });
+
+    this.events.on("adClicked", () => {
+      this.gameStore?.room?.send("trackAdsClicked");
+      console.log("Ad clicked, sending to server");
+    });
   }
 
   private startAdSpawning(

@@ -135,6 +135,10 @@ export class CodeRedRoom extends Room<GameState> {
         task: newTask,
       });
     });
+
+    this.onMessage("trackAdsClicked", (client) => {
+      this.state.totalAdsClicked++;
+    });
   }
 
   onJoin(client: Client, options: any) {
@@ -192,6 +196,7 @@ export class CodeRedRoom extends Room<GameState> {
     this.gameInterval = this.clock.setInterval(() => {
       // Keep track of the current round's timer
       this.state.timer--;
+      this.state.totalTimeSecs++;
       if (this.state.timer === 0) {
         // If there are still active tasks by the time the round ends, the game is over
         this.state.activeTasks.size > 0

@@ -34,6 +34,7 @@ export class OnTaskFailureCommand extends Command<
     this.room.actualTasks = this.room.actualTasks.filter((t) => t.id !== taskId);
     playerClientWithTask.send("taskFailed", taskId);
     this.state.tasksDone++;
+    this.state.totalTasksFailed++;
 
     console.log("Task failed by", client.sessionId, "Task type:", task.type);
     console.log("Player that task", task.type, "was assigned to:", playerClientWithTask.sessionId);
