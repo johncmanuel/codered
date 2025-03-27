@@ -37,7 +37,7 @@ export class CodeRed extends Scene {
   hideInformation: boolean;
 
   flipControlBtnsTimer: Phaser.Time.TimerEvent | null;
-  
+
   constructor() {
     super(GAME_NAME);
   }
@@ -272,6 +272,11 @@ export class CodeRed extends Scene {
         this.startAdSpawning();
         this.startFlipControlBtns();
       }
+    });
+
+    this.events.on("adClicked", () => {
+      this.gameStore?.room?.send("trackAdsClicked");
+      console.log("Ad clicked, sending to server");
     });
   }
 
