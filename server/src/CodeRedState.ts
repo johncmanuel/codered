@@ -24,7 +24,9 @@ export class TaskState extends Schema {
   @type("string") id: string;
   @type("string") type: string;
   @type("boolean") completed: boolean = false;
-  // @type("number") timeLimit: number;
+  // time limit only applies to tasks not clicked on yet with the right controls
+  // if player doesn't click right controls in time, task automatically fails
+  @type("number") timeLimit: number;
   @type("string") control: string;
 }
 
