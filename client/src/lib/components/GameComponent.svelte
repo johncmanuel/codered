@@ -70,8 +70,8 @@
 
 <div id="app">
   {#if $gameStore.room}
-    <Timer {timer} {hideInfo} />
     <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
+    <Timer {timer} {hideInfo} />
     <DataHealth {health} {hideInfo} />
     <CurrentRound currentRound={currRound} {maxRounds} />
     <PhaserGame bind:phaserRef currentActiveScene={onCurrentActiveScene} />
