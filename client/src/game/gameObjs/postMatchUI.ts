@@ -127,6 +127,7 @@ export class PostMatchUI {
           color: "#ffffff",
         },
       )
+      .setDepth(1)
       .setOrigin(0.5, 0.5);
 
     const stats = [
