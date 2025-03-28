@@ -37,7 +37,7 @@ export class CodeRed extends Scene {
   hideInformation: boolean;
 
   flipControlBtnsTimer: Phaser.Time.TimerEvent | null;
-  
+
   constructor() {
     super(GAME_NAME);
   }
@@ -294,7 +294,7 @@ export class CodeRed extends Scene {
         this.adsSpammer.spawnAds();
       }
       // schedule the next ad spawn check after delay
-      const delayMs = Phaser.Math.Between(3000, 5000);
+      const delayMs = Phaser.Math.Between(2000, 4000);
       this.adSpawnTimer = this.time.delayedCall(delayMs, spawnAdsWithProbability);
     };
 
