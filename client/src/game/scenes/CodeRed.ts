@@ -1,7 +1,7 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
-import { type TaskState, Tasks } from "../types/room";
+import { type TaskState, Tasks, type GameState } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
 import { AssignedTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
@@ -194,7 +194,8 @@ export class CodeRed extends Scene {
       this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
-    this.gameStore?.room?.onMessage("gameOver", () => {
+    this.gameStore?.room?.onMessage("gameOverStats", (gameState: GameState) => {
+      this.postMatchUI.setGameState(gameState);
       this.loadingText.setVisible(false);
       this.controlBtns.clear();
       this.assignedTaskNotifs.hide();

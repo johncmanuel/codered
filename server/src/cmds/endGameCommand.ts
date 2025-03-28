@@ -5,7 +5,7 @@ export class EndGameCommand extends Command<CodeRedRoom> {
   execute() {
     console.log("Game over");
     this.state.isGameOver = true;
-    this.room.broadcast("gameOver");
+    this.room.broadcast("gameOverStats", this.room.state);
 
     this.room.gameInterval?.clear();
     // this.room.taskSendInterval?.clear();
