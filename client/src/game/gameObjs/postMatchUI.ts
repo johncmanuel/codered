@@ -1,6 +1,6 @@
 import { Scene, GameObjects } from "phaser";
-import type { GameRoom } from "../types/room";
 import { EventBus } from "../EventBus";
+import { type GameState } from "../types/room";
 
 export class PostMatchUI {
   private scene: Scene;
@@ -8,6 +8,7 @@ export class PostMatchUI {
   private gameOverText: GameObjects.Text;
   private postMatchButton: GameObjects.Text;
   private exitButton: GameObjects.Text;
+  private gameState: GameState | null;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -15,13 +16,18 @@ export class PostMatchUI {
     this.gameOverText = this.createGameOverText();
     this.postMatchButton = this.createPostMatchButton();
     this.exitButton = this.createExitButton();
+    this.gameState = null;
+  }
+
+  public setGameState(gameState: GameState) {
+    this.gameState = gameState;
   }
 
   private createExitButton(): GameObjects.Text {
     const button = this.scene.add
       .text(
         this.scene.cameras.main.width / 2,
-        this.scene.cameras.main.height / 2 + 120,
+        this.scene.cameras.main.height / 2 + 160,
         "Exit Game",
         {
           fontFamily: "Arial",
@@ -41,12 +47,17 @@ export class PostMatchUI {
 
   private createGameOverText(): GameObjects.Text {
     return this.scene.add
-      .text(this.scene.cameras.main.width / 2, this.scene.cameras.main.height / 2, "Game Over", {
-        fontFamily: "Arial",
-        fontSize: "64px",
-        color: "#ff0000",
-        align: "center",
-      })
+      .text(
+        this.scene.cameras.main.width / 2,
+        this.scene.cameras.main.height / 2 - 100,
+        "Game Over",
+        {
+          fontFamily: "Arial",
+          fontSize: "64px",
+          color: "#ff0000",
+          align: "center",
+        },
+      )
       .setOrigin(0.5, 0.5)
       .setVisible(false);
   }
@@ -55,7 +66,7 @@ export class PostMatchUI {
     const button = this.scene.add
       .text(
         this.scene.cameras.main.width / 2,
-        this.scene.cameras.main.height / 2 + 50,
+        this.scene.cameras.main.height / 2 + 80,
         "View Post-Match Statistics",
         {
           fontFamily: "Arial",
@@ -73,12 +84,7 @@ export class PostMatchUI {
     return button;
   }
 
-  // disconnect the user from the server room and go back to the home screen
-  // the actual disconnection is done in the root +page.svelte
   private handleExitGame() {
-    // const room = this.scene.registry.get("room") as GameRoom;
-    // if (!room) return;
-    // room.leave();
     this.scene.scene.stop();
     EventBus.emit("exitGame");
   }
@@ -103,8 +109,8 @@ export class PostMatchUI {
       .rectangle(
         this.scene.cameras.main.width / 2,
         this.scene.cameras.main.height / 2,
-        400,
-        200,
+        450,
+        300,
         0x000000,
         0.8,
       )
@@ -113,7 +119,7 @@ export class PostMatchUI {
     const title = this.scene.add
       .text(
         this.scene.cameras.main.width / 2,
-        this.scene.cameras.main.height / 2 - 60,
+        this.scene.cameras.main.height / 2 - 120,
         "Post-Match Statistics",
         {
           fontFamily: "Arial",
@@ -123,35 +129,33 @@ export class PostMatchUI {
       )
       .setOrigin(0.5, 0.5);
 
-    const healthText = this.scene.add
-      .text(
-        this.scene.cameras.main.width / 2,
-        this.scene.cameras.main.height / 2,
-        `Data Health: ${this.scene.registry.get("dataHealth")}`,
-        {
-          fontFamily: "Arial",
-          fontSize: "24px",
-          color: "#ffffff",
-        },
-      )
-      .setOrigin(0.5, 0.5);
+    const stats = [
+      `Remaining Health: ${this.scene.registry.get("dataHealth")}`,
+      `Highest Round Reached: ${this.scene.registry.get("round")}`,
+      `Total Tasks Completed: ${this.gameState?.totalTasksDone}`,
+      `Total Time Spent: ${this.gameState?.totalTimeSecs} sec`,
+      `Total Tasks Failed: ${this.gameState?.totalTasksFailed}`,
+      `Total Ads Clicked: ${this.gameState?.totalAdsClicked}`,
+    ];
 
-    // TODO: too lazy to fix the spacing
-    const roundText = this.scene.add
-      .text(
-        this.scene.cameras.main.width / 2,
-        this.scene.cameras.main.height / 2 + 10,
-        `Round: ${this.scene.registry.get("round")}`,
-        {
-          fontFamily: "Arial",
-          fontSize: "24px",
-          color: "#ffffff",
-        },
-      )
-      .setOrigin(0.5, 0.5);
+    stats.forEach((text, index) => {
+      const statTextItem = this.scene.add
+        .text(
+          this.scene.cameras.main.width / 2,
+          this.scene.cameras.main.height / 2 - 60 + index * 30,
+          text,
+          {
+            fontFamily: "Arial",
+            fontSize: "24px",
+            color: "#ffffff",
+          },
+        )
+        .setOrigin(0.5, 0.5);
+      this.postMatchPanel.add(statTextItem);
+    });
 
     const closeButton = this.scene.add
-      .text(this.scene.cameras.main.width / 2, this.scene.cameras.main.height / 2 + 60, "Close", {
+      .text(this.scene.cameras.main.width / 2, this.scene.cameras.main.height / 2 + 120, "Close", {
         fontFamily: "Arial",
         fontSize: "24px",
         color: "#ffffff",
@@ -166,7 +170,7 @@ export class PostMatchUI {
       this.show();
     });
 
-    this.postMatchPanel.add([background, title, healthText, roundText, closeButton]);
+    this.postMatchPanel.add([background, title, closeButton]);
     this.postMatchPanel.setVisible(true);
   }
 }
