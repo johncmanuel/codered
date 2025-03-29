@@ -122,7 +122,7 @@ export class FirewallConfig extends Task {
       }
     ).setOrigin(0.5);
   }
-
+  
   private nextIP() {
     if (this.whitelistBtn) this.whitelistBtn.destroy();
     if (this.blacklistBtn) this.blacklistBtn.destroy();

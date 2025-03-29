@@ -9,6 +9,7 @@ export enum Tasks {
   NETWORK_MAPPING,
   SYSTEM_REBOOT,
   SOCIAL_ENGINEERING,
+  ENCRYPYTION_DECRYPTION,
   // New ones not mentioned in the doc
   // These are the filler tasks, tasks that are meant to be done easily and should take like 1-2 clicks at most
   RESTART_PC,
@@ -23,7 +24,7 @@ export class TaskState extends Schema {
   @type("string") id: string;
   @type("string") type: string;
   @type("boolean") completed: boolean = false;
-  @type("number") timeLimit: number;
+  // @type("number") timeLimit: number;
   @type("string") control: string;
 }
 
@@ -48,6 +49,13 @@ export class GameState extends Schema {
   @type("number") dataHealth: number = 100;
   @type("number") round: number = 1;
   @type("number") tasksDone: number = 0;
+
+  // statistics to track for at the end of the game
+  @type("number") totalTasksDone: number = 0;
+  @type("number") totalTimeSecs: number = 0;
+  @type("number") totalTasksFailed: number = 0;
+  @type("number") totalAdsClicked: number = 0;
+
   @type("boolean") isGameOver: boolean = false;
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>(); // sessionId -> PlayerState
   @type("string") hostId: string;

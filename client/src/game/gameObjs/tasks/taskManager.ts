@@ -16,6 +16,7 @@ export class TaskManager {
       console.error(`Task with ID ${taskId} already exists`);
       return;
     }
+    console.log("Task added:", task);
     this.tasks.set(taskId, task);
   }
 
@@ -50,6 +51,7 @@ export class TaskManager {
     if (this.activeTaskId === taskId) {
       this.stopActiveTask();
     }
+    console.log("Task removed:", taskId);
     this.tasks.delete(taskId);
   }
 

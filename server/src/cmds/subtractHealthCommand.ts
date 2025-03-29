@@ -10,6 +10,7 @@ export class SubtractHealthCommand extends Command<
 > {
   execute({ healthDiff } = this.payload) {
     this.room.state.dataHealth -= healthDiff;
+    console.log("Health subtracted by", healthDiff, "New health:", this.room.state.dataHealth);
     if (this.room.state.dataHealth <= 0) {
       return [new EndGameCommand()];
     }

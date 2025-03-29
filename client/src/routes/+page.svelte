@@ -16,18 +16,48 @@
   $: hasStarted = false;
   let showAbout = false;
 
+  const mainMenuSong = new Audio('/assets/mainmenu.wav');
+  let isMuted = false;
+  let isPlaying = false;
+  let showVolumeSlider = false;
+
   onMount(() => {
     initClient();
-    // listen for events from phaser side
+
+    // Listen for events from Phaser side
     EventBus.on("exitGame", () => {
       gameStore.leaveLobby();
       hasStarted = false;
     });
+
+    // Start music after user interaction
+    const startMusic = () => {
+      mainMenuSong.loop = true;
+      mainMenuSong.volume = 0.3;
+      mainMenuSong.play()
+        .then(() => {
+          isPlaying = true;
+        })
+        .catch(err => {
+          console.log('Audio autoplay blocked - waiting for user interaction');
+          isPlaying = false;
+        });
+    };
+
+    document.addEventListener('click', startMusic, { once: true });
   });
 
   onDestroy(() => {
     $gameStore.room?.leave();
+    mainMenuSong.pause();
+    mainMenuSong.currentTime = 0;
+    mainMenuSong.removeEventListener('ended', () => {}); // Clean up event listeners
   });
+
+  function toggleMute() {
+    isMuted = !isMuted;
+    mainMenuSong.muted = isMuted;
+  }
 
   async function handleLobbySubmit(event: CustomEvent<{ name: string; code?: string }>) {
     if (!$gameStore.client) return;
@@ -112,13 +142,37 @@
         console.error("Failed to copy: ", err);
       });
   }
+
+  function handleVolumeChange(event: InputEvent) {
+    const target = event.target as HTMLInputElement;
+    mainMenuSong.volume = parseFloat(target.value);
+  }
 </script>
 
 <main>
-  <!-- <button class="about-us" on:click={toggleAbout}>About Us</button> -->
-  <!-- {#if showAbout}
-    <About closePopup={toggleAbout} />
-  {/if} -->
+  <div class="audio-controls" 
+       on:mouseenter={() => showVolumeSlider = true}
+       on:mouseleave={() => showVolumeSlider = false}>
+    <button on:click={toggleMute} class="mute-button">
+      {#if !isPlaying}
+        ▶️
+      {:else if !isMuted}
+        🔊
+      {:else}
+        🔇
+      {/if}
+    </button>
+    {#if showVolumeSlider && isPlaying}
+      <input type="range" 
+        min="0" 
+        max="1" 
+        step="0.1" 
+        value={mainMenuSong.volume}
+        on:input={handleVolumeChange}
+        class="volume-slider"
+      />
+    {/if}
+  </div>
 
   {#if $gameStore.room && hasStarted}
     <GameComponent />
@@ -266,5 +320,58 @@
     50% {
       opacity: 0;
     }
+  }
+
+  .audio-controls {
+    position: fixed;
+    top: .25rem;
+    right: 2rem;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+  }
+
+  .mute-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+  }
+
+  .mute-button:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+
+  .volume-slider {
+    width: 100px;
+    height: 5px;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+  }
+
+  .volume-slider::-moz-range-thumb {
+    width: 15px;
+    height: 10px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
   }
 </style>

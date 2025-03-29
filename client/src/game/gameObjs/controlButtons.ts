@@ -4,8 +4,8 @@ export class ControlButtons {
   private scene: Scene;
   private buttons: GameObjects.Text[];
   private playerControls: Set<string>;
-  private buttonWidth: number = 150;
-  private buttonHeight: number = 50;
+  private buttonWidthPx: number = 150;
+  private buttonHeightPx: number = 50;
   private padding: number = 20;
   private columns: number = 2;
 
@@ -13,6 +13,10 @@ export class ControlButtons {
     this.scene = scene;
     this.buttons = [];
     this.playerControls = new Set();
+  }
+
+  getButtons() {
+    return this.buttons;
   }
 
   setPlayerControls(controls: Set<string>) {
@@ -31,10 +35,11 @@ export class ControlButtons {
 
     // center buttons horizontally
     const startX =
-      (this.scene.cameras.main.width - this.columns * (this.buttonWidth + this.padding)) / 2;
+      (this.scene.cameras.main.width - this.columns * (this.buttonWidthPx + this.padding)) / 2;
 
     // position buttons at the bottom of the screen
-    const startY = this.scene.cameras.main.height - rows * (this.buttonHeight + this.padding) - 20;
+    const startY =
+      this.scene.cameras.main.height - rows * (this.buttonHeightPx + this.padding) - 20;
 
     let index = 0;
     this.playerControls.forEach((control) => {
@@ -43,8 +48,8 @@ export class ControlButtons {
 
       const button = this.scene.add
         .text(
-          startX + col * (this.buttonWidth + this.padding),
-          startY + row * (this.buttonHeight + this.padding),
+          startX + col * (this.buttonWidthPx + this.padding),
+          startY + row * (this.buttonHeightPx + this.padding),
           control,
           {
             fontFamily: "Arial",
@@ -55,15 +60,38 @@ export class ControlButtons {
           },
         )
         .setOrigin(0.5, 0.5)
-        .setInteractive({ useHandCursor: true });
+        .setInteractive({ useHandCursor: true })
+        .setData("control", control);
 
       button.on("pointerdown", () => {
-        this.scene.events.emit("controlButtonClicked", control);
+        this.handleClickOnBtn(control);
       });
       button.setVisible(true);
 
       this.buttons.push(button);
       index++;
+    });
+  }
+
+  disableBtn(btnIdx: number) {
+    if (btnIdx < 0 || btnIdx >= this.buttons.length) {
+      console.error("Button index out of range");
+      return;
+    }
+    const button = this.buttons[btnIdx];
+    button.setInteractive(false);
+    button.off("pointerdown");
+  }
+
+  enableBtn(btnIdx: number) {
+    if (btnIdx < 0 || btnIdx >= this.buttons.length) {
+      console.error("Button index out of range");
+      return;
+    }
+    const button = this.buttons[btnIdx];
+    button.setInteractive({ useHandCursor: true });
+    button.on("pointerdown", () => {
+      this.handleClickOnBtn(button.getData("control"));
     });
   }
 
@@ -83,5 +111,23 @@ export class ControlButtons {
       if (!button.visible) console.warn("Button not visible");
     });
     console.log("Control buttons checked");
+  }
+
+  handleClickOnBtn(control: any) {
+    this.scene.events.emit("controlButtonClicked", control);
+  }
+
+  flipAllBtns() {
+    this.buttons.forEach((button) => {
+      button.setFlip(true, true);
+    });
+    console.log("Control buttons flipped");
+  }
+
+  unflipAllBtns() {
+    this.buttons.forEach((button) => {
+      button.setFlip(false, false);
+    });
+    console.log("Control buttons unflipped");
   }
 }

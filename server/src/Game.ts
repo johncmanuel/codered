@@ -19,6 +19,8 @@ import { AssignPlayerControlsCommand } from "./cmds/assignPlayerControlsCommand"
 import { AssignTaskToRandomPlayerCommand } from "./cmds/assignTaskToRandomPlayerCommand";
 import { ArraySchema } from "@colyseus/schema";
 import { AssignTaskToPlayerCommand } from "./cmds/assignTaskToPlayer";
+import { SendControlsToClient } from "./cmds/sendControlsToClient";
+import { SendTaskToClient } from "./cmds/sendTaskToClient";
 
 export class CodeRedRoom extends Room<GameState> {
   // Allow up to 6 players per room
@@ -84,6 +86,9 @@ export class CodeRedRoom extends Room<GameState> {
         client,
         taskId,
       });
+      if (this.state.tasksDone >= this.numRequiredTasksCompletedPerRound) {
+        this.dispatcher.dispatch(new StartNewRoundCommand());
+      }
     });
 
     // Handle stuff once a player fails a task
@@ -91,55 +96,41 @@ export class CodeRedRoom extends Room<GameState> {
       this.dispatcher.dispatch(new OnTaskFailureCommand(), {
         client,
         taskId,
-        healthDiff: 5,
+        // TODO: change this dynamically as the game progresses
+        healthDiff: 20,
       });
-    });
-
-    // Send the game over stats to the clients
-    this.onMessage("gameOverStats", (client) => {
-      // TODO: Just sending the state data for now. in the future, send relevant data listed in
-      // the proposal.
-      this.broadcast("gameOverStats", this.state);
+      if (this.state.tasksDone >= this.numRequiredTasksCompletedPerRound) {
+        this.dispatcher.dispatch(new StartNewRoundCommand());
+      }
     });
 
     this.onMessage("giveMeControlsPls", (client) => {
-      const playerId = client.sessionId;
-      const controls = this.lobbyControlsByPlayer.get(playerId)!;
-      const controlsArr = new Array<string>();
-      if (!controls) {
-        console.error("Player", playerId, "does not have any controls assigned to them.");
-        console.log("controls", controls);
-        return;
-      }
-      controls.forEach((control) => {
-        controlsArr.push(control);
-      });
-      console.log("Sending controls to player", playerId, controlsArr);
-      client.send("controls", controlsArr);
-      // then send tasks? if sync issues still exist
+      this.dispatcher.dispatch(new SendControlsToClient(), { client });
     });
 
     // check if player can do it, if so, let them perform the task
     this.onMessage("taskForControl", (client, control: string) => {
-      const playerId = client.sessionId;
-      const playerControls = this.lobbyControlsByPlayer.get(playerId);
+      this.dispatcher.dispatch(new SendTaskToClient(), { client, control });
+    });
 
-      // Check if the player has the control
-      if (!playerControls || !playerControls.includes(control)) {
-        console.log("Player", playerId, "does not have control", control);
-        client.send("noTaskForControl", { control });
+    this.onMessage("giveMeTaskPls", (client) => {
+      if (this.tasksArrCurrRound.length === 0) {
+        console.log("tasksArrCurrRound is empty", this.tasksArrCurrRound, this.actualTasks);
         return;
       }
-
-      // Find a task that matches the control
-      const task = this.actualTasks.find((t) => t.control === control);
-
-      if (task) {
-        client.send("hasTaskForControl", task);
-      } else {
-        console.log("No task found for control", control);
-        client.send("noTaskForControl", control);
+      const newTask = this.tasksArrCurrRound.shift()!;
+      if (!newTask) {
+        console.log("No more tasks to assign!", this.tasksArrCurrRound, this.actualTasks);
+        return;
       }
+      this.dispatcher.dispatch(new AssignTaskToPlayerCommand(), {
+        client,
+        task: newTask,
+      });
+    });
+
+    this.onMessage("trackAdsClicked", (client) => {
+      this.state.totalAdsClicked++;
     });
   }
 
@@ -167,11 +158,23 @@ export class CodeRedRoom extends Room<GameState> {
   // This will only be called once at the start of each round
   assignInitialTasks() {
     console.log("Assigning initial tasks to players...");
+    console.log("Total players size as of round", this.state.round, ":", this.state.players.size);
     this.state.players.forEach((player, sessionId) => {
+      console.log(
+        "Checking player",
+        player.name,
+        sessionId,
+        "for initial task assignment",
+        "- activeTaskId:",
+        player.activeTaskId,
+      );
       if (player.activeTaskId === null && this.tasksArrCurrRound.length > 0) {
         const task = this.tasksArrCurrRound.shift()!;
         const client = this.clients.find((c) => c.sessionId === sessionId);
-        this.dispatcher.dispatch(new AssignTaskToPlayerCommand(), { client, task });
+        this.dispatcher.dispatch(new AssignTaskToPlayerCommand(), {
+          client,
+          task,
+        });
       }
     });
   }
@@ -186,6 +189,7 @@ export class CodeRedRoom extends Room<GameState> {
     this.gameInterval = this.clock.setInterval(() => {
       // Keep track of the current round's timer
       this.state.timer--;
+      this.state.totalTimeSecs++;
       if (this.state.timer === 0) {
         // If there are still active tasks by the time the round ends, the game is over
         this.state.activeTasks.size > 0
@@ -224,7 +228,7 @@ export class CodeRedRoom extends Room<GameState> {
 
     task.id = Math.random().toString(36).substring(2, 9);
     task.type = Tasks[taskType];
-    task.timeLimit = 30; // Can be adjusted as players get further in the rounds
+    // task.timeLimit = 30; // Can be adjusted as players get further in the rounds
     task.control = TaskToControls.get(taskType) || "";
     return task;
   }

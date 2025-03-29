@@ -20,6 +20,9 @@ const config: Types.Core.GameConfig = {
   backgroundColor: CONFIG_BACKGROUND_COLOR,
   // make sandbox first scene to load
   scene: IS_DEV ? [Sandbox, MainGame] : [MainGame],
+  scale: {
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
 };
 
 const StartGame = (parent: string) => {

@@ -5,6 +5,7 @@ import { EventBus } from "../EventBus";
 import { createTask } from "../gameObjs/tasks/taskFactory";
 import { Tasks } from "../types/room";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
+import { SpamAds } from "../gameObjs/spamAds";
 
 export const GAME_NAME = "Sandbox";
 
@@ -12,6 +13,7 @@ export const GAME_NAME = "Sandbox";
 
 export class Sandbox extends Scene {
   taskManager: TaskManager;
+  spamAds: SpamAds;
 
   constructor() {
     super(GAME_NAME);
@@ -24,9 +26,20 @@ export class Sandbox extends Scene {
   preload() {}
 
   create() {
-    // this.add.text(100, 100, "Hello World", {});
     const testId = "testId";
-    this.taskManager.addTask(testId, createTask(this, testId, Tasks.FIREWALL_CONFIG));
+    const rect1 = this.add.rectangle(500, 500, 100, 100, 0xff0000).setInteractive();
+    const rect2 = this.add.rectangle(500, 600, 100, 100, 0x00ff00).setInteractive();
+    rect1.on("pointerdown", () => {
+      console.log("Rect1 clicked");
+    });
+    rect2.on("pointerdown", () => {
+      console.log("Rect2 clicked");
+    });
+
+    this.spamAds = new SpamAds(this);
+    this.spamAds.spawnAds();
+
+    this.taskManager.addTask(testId, createTask(this, testId, Tasks.RESTART_PC));
     console.log("Added task");
     this.taskManager.startTask(testId);
     EventBus.emit("current-active-scene");
