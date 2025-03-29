@@ -105,16 +105,17 @@ export class PostMatchUI {
     this.hide();
     this.postMatchPanel.removeAll(true);
 
-    const background = this.scene.add
-      .rectangle(
-        this.scene.cameras.main.width / 2,
-        this.scene.cameras.main.height / 2,
-        450,
-        300,
-        0x000000,
-        0.8,
-      )
-      .setOrigin(0.5, 0.5);
+    // const background = this.scene.add
+    //   .rectangle(
+    //     this.scene.cameras.main.width / 2,
+    //     this.scene.cameras.main.height / 2,
+    //     450,
+    //     300,
+    //     0x000000,
+    //     0.8,
+    //   )
+    //   .setOrigin(0.5, 0.5)
+    //   .setDepth(0);
 
     const title = this.scene.add
       .text(
@@ -125,6 +126,16 @@ export class PostMatchUI {
           fontFamily: "Arial",
           fontSize: "32px",
           color: "#ffffff",
+          stroke: "#000000",
+          strokeThickness: 4,
+          shadow: {
+            offsetX: 2,
+            offsetY: 2,
+            color: '#000000',
+            blur: 2,
+            stroke: true,
+            fill: true
+          }
         },
       )
       .setDepth(1)
@@ -149,21 +160,33 @@ export class PostMatchUI {
             fontFamily: "Arial",
             fontSize: "24px",
             color: "#ffffff",
+            stroke: "#000000",      // Add black stroke around text
+            strokeThickness: 4,     // Make stroke thick enough to be visible
+            shadow: {              // Add text shadow
+              offsetX: 2,
+              offsetY: 2,
+              color: '#000000',
+              blur: 2,
+              stroke: true,
+              fill: true
+            }
           },
         )
+        .setDepth(1)
         .setOrigin(0.5, 0.5);
       this.postMatchPanel.add(statTextItem);
     });
 
     const closeButton = this.scene.add
-      .text(this.scene.cameras.main.width / 2, this.scene.cameras.main.height / 2 + 120, "Close", {
+      .text(this.scene.cameras.main.width / 2, this.scene.cameras.main.height / 2 + 140, "Close", {
         fontFamily: "Arial",
         fontSize: "24px",
         color: "#ffffff",
         backgroundColor: "#ff0000",
         padding: { x: 20, y: 10 },
       })
-      .setOrigin(0.5, 0.5);
+      .setOrigin(0.5, 0.5)
+      .setDepth(1);
 
     closeButton.setInteractive({ useHandCursor: true });
     closeButton.on("pointerdown", () => {
@@ -171,7 +194,7 @@ export class PostMatchUI {
       this.show();
     });
 
-    this.postMatchPanel.add([background, title, closeButton]);
+    this.postMatchPanel.add([title, closeButton]);
     this.postMatchPanel.setVisible(true);
   }
 }
