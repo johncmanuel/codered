@@ -160,9 +160,9 @@ export class PostMatchUI {
             fontFamily: "Arial",
             fontSize: "24px",
             color: "#ffffff",
-            stroke: "#000000",      // Add black stroke around text
-            strokeThickness: 4,     // Make stroke thick enough to be visible
-            shadow: {              // Add text shadow
+            stroke: "#000000",      
+            strokeThickness: 4,     
+            shadow: {              
               offsetX: 2,
               offsetY: 2,
               color: '#000000',
