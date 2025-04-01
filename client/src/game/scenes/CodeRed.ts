@@ -38,6 +38,9 @@ export class CodeRed extends Scene {
 
   flipControlBtnsTimer: Phaser.Time.TimerEvent | null;
 
+  disableTimer: Phaser.Time.TimerEvent | null = null;
+  reEnableTimer: Phaser.Time.TimerEvent | null = null;
+
   constructor() {
     super(GAME_NAME);
   }
@@ -200,7 +203,7 @@ export class CodeRed extends Scene {
       this.controlBtns.clear();
       this.assignedTaskNotifs.hide();
       this.taskManager.cleanup();
-      this.controlBtnDisabler.stop();
+      // this.controlBtnDisabler.stop();
       if (this.adSpawnTimer) {
         this.time.removeEvent(this.adSpawnTimer);
         this.adSpawnTimer = null;
@@ -209,8 +212,16 @@ export class CodeRed extends Scene {
         this.time.removeEvent(this.flipControlBtnsTimer);
         this.flipControlBtnsTimer = null;
       }
-
+      if (this.disableTimer) {
+        this.disableTimer.destroy();
+        this.disableTimer = null;
+      }
+      if (this.reEnableTimer) {
+        this.reEnableTimer.destroy();
+        this.reEnableTimer = null;
+      }
       this.adsSpammer.clearAds();
+
       this.postMatchUI.show();
     });
 
@@ -263,11 +274,21 @@ export class CodeRed extends Scene {
         this.time.removeEvent(this.flipControlBtnsTimer);
         this.flipControlBtnsTimer = null;
       }
+      if (this.disableTimer) {
+        this.disableTimer.destroy();
+        this.disableTimer = null;
+      }
+      if (this.reEnableTimer) {
+        this.reEnableTimer.destroy();
+        this.reEnableTimer = null;
+      }
+
       // stop any ongoing events and start a new one
       if (round > 1) {
         this.hideInformation = this.canHideInformation();
-        this.controlBtnDisabler.stop();
-        this.controlBtnDisabler.start();
+        this.scheduleNextDisable();
+        // this.controlBtnDisabler.stop();
+        // this.controlBtnDisabler.start();
         this.adsSpammer.clearAds();
 
         this.startAdSpawning();
@@ -335,5 +356,25 @@ export class CodeRed extends Scene {
   // so it's not likely that all players will have hidden information
   private canHideInformation(hideProb: number = 0.3): boolean {
     return Math.random() < hideProb;
+  }
+
+  private scheduleNextDisable() {
+    const delay = this.controlBtnDisabler.calculateNextDisableDelay();
+
+    this.disableTimer = this.time.delayedCall(delay, () => {
+      try {
+        const { buttonIndex, reEnableDelay } = this.controlBtnDisabler.disableRandomCtrlBtn();
+
+        this.reEnableTimer = this.time.delayedCall(reEnableDelay, () => {
+          this.controlBtnDisabler.reEnableCtrlBtn(buttonIndex);
+          this.reEnableTimer = null;
+          this.scheduleNextDisable();
+        });
+      } catch (error) {
+        console.error("Error disabling button:", error);
+        // retry after a delay if there was an error
+        this.time.delayedCall(5000, this.scheduleNextDisable, [], this);
+      }
+    });
   }
 }
