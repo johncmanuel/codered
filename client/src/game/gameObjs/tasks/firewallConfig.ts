@@ -117,7 +117,7 @@ export class FirewallConfig extends Task {
       "Instructions: Determine if the IP address is in the trust IPs list",
       {
         fontSize: "24px",
-        color: "black",
+        color: "#ffffff",
         align: "center",
         fontStyle: "bold",
       }
