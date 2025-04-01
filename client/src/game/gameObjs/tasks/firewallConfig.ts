@@ -38,6 +38,7 @@ export class FirewallConfig extends Task {
     this.totalIPs = this.ipQueue.length;
     this.mistakes = 0;
     this.currentIP = "";
+    this.createBlockingOverlay();
   }
 
   // Load assets
