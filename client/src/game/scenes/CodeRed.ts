@@ -10,6 +10,7 @@ import { createTask } from "../gameObjs/tasks/taskFactory";
 import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
 import { SpamAds } from "../gameObjs/spamAds";
 import { type IRoundTimer, type IDataHealth } from "../types/eventBusTypes";
+import { ObstacleTimer } from "../gameObjs/obstacleTimer";
 
 export const GAME_NAME = "CodeRed";
 
@@ -29,17 +30,13 @@ export class CodeRed extends Scene {
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
 
-  adSpawnTimer: Phaser.Time.TimerEvent | null;
   adsSpammer: SpamAds;
 
   controlBtnDisabler: ControlButtonDisabler;
 
   hideInformation: boolean;
 
-  flipControlBtnsTimer: Phaser.Time.TimerEvent | null;
-
-  disableTimer: Phaser.Time.TimerEvent | null = null;
-  reEnableTimer: Phaser.Time.TimerEvent | null = null;
+  obstacleTimer: ObstacleTimer;
 
   constructor() {
     super(GAME_NAME);
@@ -53,7 +50,6 @@ export class CodeRed extends Scene {
     this.controlBtns = new ControlButtons(this);
     this.taskManager = new TaskManager();
     this.adsSpammer = new SpamAds(this);
-    this.adSpawnTimer = null;
     this.hideInformation = false;
 
     EventBus.on("test", (gameStore: GameStore) => {
@@ -89,6 +85,12 @@ export class CodeRed extends Scene {
 
     this.postMatchUI = new PostMatchUI(this);
     this.controlBtnDisabler = new ControlButtonDisabler(this, this.controlBtns);
+    this.obstacleTimer = new ObstacleTimer(
+      this,
+      this.controlBtns,
+      this.adsSpammer,
+      this.controlBtnDisabler,
+    );
 
     // keep this at the end
     EventBus.emit("current-scene-ready", this);
@@ -203,24 +205,8 @@ export class CodeRed extends Scene {
       this.controlBtns.clear();
       this.assignedTaskNotifs.hide();
       this.taskManager.cleanup();
-      // this.controlBtnDisabler.stop();
-      if (this.adSpawnTimer) {
-        this.time.removeEvent(this.adSpawnTimer);
-        this.adSpawnTimer = null;
-      }
-      if (this.flipControlBtnsTimer) {
-        this.time.removeEvent(this.flipControlBtnsTimer);
-        this.flipControlBtnsTimer = null;
-      }
-      if (this.disableTimer) {
-        this.disableTimer.destroy();
-        this.disableTimer = null;
-      }
-      if (this.reEnableTimer) {
-        this.reEnableTimer.destroy();
-        this.reEnableTimer = null;
-      }
       this.adsSpammer.clearAds();
+      this.obstacleTimer.stopAll();
 
       this.postMatchUI.show();
     });
@@ -245,8 +231,10 @@ export class CodeRed extends Scene {
       this.playerControls.add(control);
     });
     console.log("Controls received:", this.playerControls);
+
     this.controlBtns.setPlayerControls(this.playerControls);
     this.controlBtnDisabler.setControlButtons(this.controlBtns);
+    this.obstacleTimer.setControlButtonDisabler(this.controlBtnDisabler);
   }
 
   // Set up listeners between Phaser events
@@ -266,33 +254,12 @@ export class CodeRed extends Scene {
     // triggers after controls are assigned, which is a must need before anything else
     this.events.on("newRound", () => {
       const round = this.registry.get("round") as number;
-      if (this.adSpawnTimer) {
-        this.time.removeEvent(this.adSpawnTimer);
-        this.adSpawnTimer = null;
-      }
-      if (this.flipControlBtnsTimer) {
-        this.time.removeEvent(this.flipControlBtnsTimer);
-        this.flipControlBtnsTimer = null;
-      }
-      if (this.disableTimer) {
-        this.disableTimer.destroy();
-        this.disableTimer = null;
-      }
-      if (this.reEnableTimer) {
-        this.reEnableTimer.destroy();
-        this.reEnableTimer = null;
-      }
-
+      this.obstacleTimer.stopAll();
       // stop any ongoing events and start a new one
       if (round > 1) {
         this.hideInformation = this.canHideInformation();
-        this.scheduleNextDisable();
-        // this.controlBtnDisabler.stop();
-        // this.controlBtnDisabler.start();
         this.adsSpammer.clearAds();
-
-        this.startAdSpawning();
-        this.startFlipControlBtns();
+        this.obstacleTimer.startAll();
       }
     });
 
@@ -302,79 +269,10 @@ export class CodeRed extends Scene {
     });
   }
 
-  private startAdSpawning(
-    baseProbability: number = 0.1,
-    roundMultiplier: number = 0.03,
-    maxProbability: number = 0.8,
-  ) {
-    // calculate the current probability based on the round number
-    const currProbability = Math.min(
-      ((baseProbability + this.registry.get("round")) as number) * roundMultiplier,
-      maxProbability,
-    );
-
-    const spawnAdsWithProbability = () => {
-      const randomProb = Math.random();
-      console.log("Spawning ads with probability", currProbability);
-      console.log("Math.random()", randomProb);
-      if (randomProb < currProbability) {
-        this.adsSpammer.spawnAds();
-      }
-      // schedule the next ad spawn check after delay
-      const delayMs = Phaser.Math.Between(2000, 4000);
-      this.adSpawnTimer = this.time.delayedCall(delayMs, spawnAdsWithProbability);
-    };
-
-    spawnAdsWithProbability();
-  }
-
-  private startFlipControlBtns(
-    baseDurationMs: number = 4000,
-    durationVarianceMs: number = 1000,
-    initialDelayMs: number = 5000,
-  ) {
-    this.time.delayedCall(initialDelayMs, () => {
-      const flipButtons = () => {
-        this.controlBtns.flipAllBtns();
-
-        // Schedule unflip after random duration
-        const duration = baseDurationMs + Math.random() * durationVarianceMs;
-        this.time.delayedCall(duration, () => {
-          this.controlBtns.unflipAllBtns();
-
-          // Schedule next flip after another random delay
-          const nextFlipDelayMs = 5000 + Math.random() * 20000;
-          this.flipControlBtnsTimer = this.time.delayedCall(nextFlipDelayMs, flipButtons);
-        });
-      };
-      flipButtons();
-    });
-  }
-
   // hide information from the player, forcing them to rely on other players
   // NOTE: probabily of all players having hidden information is (0.3)^n,
   // so it's not likely that all players will have hidden information
   private canHideInformation(hideProb: number = 0.3): boolean {
     return Math.random() < hideProb;
-  }
-
-  private scheduleNextDisable() {
-    const delay = this.controlBtnDisabler.calculateNextDisableDelay();
-
-    this.disableTimer = this.time.delayedCall(delay, () => {
-      try {
-        const { buttonIndex, reEnableDelay } = this.controlBtnDisabler.disableRandomCtrlBtn();
-
-        this.reEnableTimer = this.time.delayedCall(reEnableDelay, () => {
-          this.controlBtnDisabler.reEnableCtrlBtn(buttonIndex);
-          this.reEnableTimer = null;
-          this.scheduleNextDisable();
-        });
-      } catch (error) {
-        console.error("Error disabling button:", error);
-        // retry after a delay if there was an error
-        this.time.delayedCall(5000, this.scheduleNextDisable, [], this);
-      }
-    });
   }
 }
