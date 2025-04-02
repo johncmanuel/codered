@@ -6,6 +6,7 @@ import { createTask } from "../gameObjs/tasks/taskFactory";
 import { Tasks } from "../types/room";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
 import { SpamAds } from "../gameObjs/spamAds";
+import { TimeLimitBar } from "../gameObjs/taskTimeLimitBar";
 
 export const GAME_NAME = "Sandbox";
 
@@ -36,12 +37,14 @@ export class Sandbox extends Scene {
       console.log("Rect2 clicked");
     });
 
-    this.spamAds = new SpamAds(this);
-    this.spamAds.spawnAds();
+    const timeLimitBar = new TimeLimitBar(this, 15, () => {
+      console.log("Time limit reached");
+    });
+    timeLimitBar.startTimer();
 
-    this.taskManager.addTask(testId, createTask(this, testId, Tasks.FIREWALL_CONFIG));
-    console.log("Added task");
-    this.taskManager.startTask(testId);
+    // this.taskManager.addTask(testId, createTask(this, testId, Tasks.FIREWALL_CONFIG));
+    // console.log("Added task");
+    // this.taskManager.startTask(testId);
     EventBus.emit("current-active-scene");
   }
   update() {
