@@ -25,11 +25,22 @@ export class TimeLimitBar {
 
   private isRunning: boolean = false;
 
-  constructor(scene: Phaser.Scene, maxTimeSec: number, onCompleteCallback?: () => void) {
+  constructor(
+    scene: Phaser.Scene,
+    maxTimeSec: number,
+    onCompleteCallback?: (bar: TimeLimitBar) => void,
+  ) {
     this.scene = scene;
     this.maxTimeSec = maxTimeSec;
     this.remainingTimeSec = maxTimeSec;
-    if (onCompleteCallback) this.onCompleteCallback = onCompleteCallback;
+
+    // wrapper for callback func
+    this.onCompleteCallback = () => {
+      if (onCompleteCallback) onCompleteCallback(this);
+      // anything else if needed once timer is finished
+      // it should be explicitly destroyed rather as soon as it's done
+      // this.destroy();
+    };
 
     this.border = this.scene.add.graphics();
     this.border.fillStyle(0x000000, 1);
@@ -124,8 +135,16 @@ export class TimeLimitBar {
 
   public destroy(): void {
     this.stopTimer();
-    this.bar.destroy();
-    this.border.destroy();
+    if (this.bar) {
+      this.bar.destroy();
+      // this.bar = null;
+    }
+
+    if (this.border) {
+      this.border.destroy();
+      // this.border = null;
+    }
+    console.log(this.bar, this.border);
   }
 
   public getRemainingTime(): number {
