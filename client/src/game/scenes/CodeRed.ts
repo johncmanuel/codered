@@ -1,7 +1,7 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
-import { type TaskState, Tasks, type GameState } from "../types/room";
+import { type TaskState, Tasks, type GameState, FillerTasks } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
 import { AssignedTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
@@ -10,6 +10,7 @@ import { createTask } from "../gameObjs/tasks/taskFactory";
 import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
 import { SpamAds } from "../gameObjs/spamAds";
 import { type IRoundTimer, type IDataHealth } from "../types/eventBusTypes";
+import { ObstacleTimer } from "../gameObjs/obstacleTimer";
 
 export const GAME_NAME = "CodeRed";
 
@@ -21,6 +22,7 @@ export class CodeRed extends Scene {
 
   playerId: string | null;
   playerControls: Set<string>;
+  currentTaskTypeNum: number | null;
 
   // setup game objects here
   controlBtns: ControlButtons;
@@ -29,14 +31,13 @@ export class CodeRed extends Scene {
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
 
-  adSpawnTimer: Phaser.Time.TimerEvent | null;
   adsSpammer: SpamAds;
 
   controlBtnDisabler: ControlButtonDisabler;
 
   hideInformation: boolean;
 
-  flipControlBtnsTimer: Phaser.Time.TimerEvent | null;
+  obstacleTimer: ObstacleTimer;
 
   constructor() {
     super(GAME_NAME);
@@ -50,7 +51,6 @@ export class CodeRed extends Scene {
     this.controlBtns = new ControlButtons(this);
     this.taskManager = new TaskManager();
     this.adsSpammer = new SpamAds(this);
-    this.adSpawnTimer = null;
     this.hideInformation = false;
 
     EventBus.on("test", (gameStore: GameStore) => {
@@ -86,6 +86,12 @@ export class CodeRed extends Scene {
 
     this.postMatchUI = new PostMatchUI(this);
     this.controlBtnDisabler = new ControlButtonDisabler(this, this.controlBtns);
+    this.obstacleTimer = new ObstacleTimer(
+      this,
+      this.controlBtns,
+      this.adsSpammer,
+      this.controlBtnDisabler,
+    );
 
     // keep this at the end
     EventBus.emit("current-scene-ready", this);
@@ -162,6 +168,14 @@ export class CodeRed extends Scene {
       const taskTypeNum = Tasks[task.type as keyof typeof Tasks];
       this.taskManager.addTask(task.id, createTask(this, task.id, taskTypeNum));
       this.taskManager.startTask(task.id);
+
+      // only stop the timer if it's not a filler task
+      // @ts-ignore: this still works despite strings being compared (when it's actually numbers)
+      if (!Object.values(FillerTasks).includes(taskTypeNum)) {
+        this.currentTaskTypeNum = taskTypeNum;
+        console.log("Task is not a filler task, stopping it", taskTypeNum);
+        this.obstacleTimer.stopAll();
+      }
     });
 
     // handle things if there isn't a task for the player's specific control
@@ -177,8 +191,12 @@ export class CodeRed extends Scene {
         "this.assignedTaskNotifs.getCurrentTaskId()",
         this.assignedTaskNotifs.getCurrentTaskId(),
       );
-      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
-      else console.error("Task completed but the notification is still there");
+      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) {
+        this.assignedTaskNotifs.fade();
+      } else {
+        console.error("Task completed but the notification is still there");
+      }
+
       this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
@@ -189,8 +207,12 @@ export class CodeRed extends Scene {
         "this.assignedTaskNotifs.getCurrentTaskId()",
         this.assignedTaskNotifs.getCurrentTaskId(),
       );
-      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
-      else console.error("Task failed but the notification is still there");
+      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) {
+        this.assignedTaskNotifs.fade();
+      } else {
+        console.error("Task failed but the notification is still there");
+      }
+
       this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
@@ -200,17 +222,9 @@ export class CodeRed extends Scene {
       this.controlBtns.clear();
       this.assignedTaskNotifs.hide();
       this.taskManager.cleanup();
-      this.controlBtnDisabler.stop();
-      if (this.adSpawnTimer) {
-        this.time.removeEvent(this.adSpawnTimer);
-        this.adSpawnTimer = null;
-      }
-      if (this.flipControlBtnsTimer) {
-        this.time.removeEvent(this.flipControlBtnsTimer);
-        this.flipControlBtnsTimer = null;
-      }
-
       this.adsSpammer.clearAds();
+      this.obstacleTimer.stopAll();
+
       this.postMatchUI.show();
     });
 
@@ -234,8 +248,10 @@ export class CodeRed extends Scene {
       this.playerControls.add(control);
     });
     console.log("Controls received:", this.playerControls);
+
     this.controlBtns.setPlayerControls(this.playerControls);
     this.controlBtnDisabler.setControlButtons(this.controlBtns);
+    this.obstacleTimer.setControlButtonDisabler(this.controlBtnDisabler);
   }
 
   // Set up listeners between Phaser events
@@ -246,87 +262,41 @@ export class CodeRed extends Scene {
     });
     this.events.on("taskCompleted", (taskId: string) => {
       this.gameStore?.room?.send("taskCompleted", taskId);
+
+      if ((this.registry.get("round") as number) > 1 && this.currentTaskTypeNum !== null) {
+        console.log("starting obstacle timer again");
+        this.currentTaskTypeNum = null;
+        this.obstacleTimer.startAll();
+      }
+
       this.taskManager.removeTask(taskId);
     });
     this.events.on("taskFailed", (taskId: string) => {
       this.gameStore?.room?.send("taskFailed", taskId);
+
+      if ((this.registry.get("round") as number) > 1 && this.currentTaskTypeNum !== null) {
+        console.log("starting obstacle timer again");
+        this.currentTaskTypeNum = null;
+        this.obstacleTimer.startAll();
+      }
+
       this.taskManager.removeTask(taskId);
     });
     // triggers after controls are assigned, which is a must need before anything else
     this.events.on("newRound", () => {
       const round = this.registry.get("round") as number;
-      if (this.adSpawnTimer) {
-        this.time.removeEvent(this.adSpawnTimer);
-        this.adSpawnTimer = null;
-      }
-      if (this.flipControlBtnsTimer) {
-        this.time.removeEvent(this.flipControlBtnsTimer);
-        this.flipControlBtnsTimer = null;
-      }
+      this.obstacleTimer.stopAll();
       // stop any ongoing events and start a new one
       if (round > 1) {
         this.hideInformation = this.canHideInformation();
-        this.controlBtnDisabler.stop();
-        this.controlBtnDisabler.start();
         this.adsSpammer.clearAds();
-
-        this.startAdSpawning();
-        this.startFlipControlBtns();
+        this.obstacleTimer.startAll();
       }
     });
 
     this.events.on("adClicked", () => {
       this.gameStore?.room?.send("trackAdsClicked");
       console.log("Ad clicked, sending to server");
-    });
-  }
-
-  private startAdSpawning(
-    baseProbability: number = 0.1,
-    roundMultiplier: number = 0.03,
-    maxProbability: number = 0.8,
-  ) {
-    // calculate the current probability based on the round number
-    const currProbability = Math.min(
-      ((baseProbability + this.registry.get("round")) as number) * roundMultiplier,
-      maxProbability,
-    );
-
-    const spawnAdsWithProbability = () => {
-      const randomProb = Math.random();
-      console.log("Spawning ads with probability", currProbability);
-      console.log("Math.random()", randomProb);
-      if (randomProb < currProbability) {
-        this.adsSpammer.spawnAds();
-      }
-      // schedule the next ad spawn check after delay
-      const delayMs = Phaser.Math.Between(2000, 4000);
-      this.adSpawnTimer = this.time.delayedCall(delayMs, spawnAdsWithProbability);
-    };
-
-    spawnAdsWithProbability();
-  }
-
-  private startFlipControlBtns(
-    baseDurationMs: number = 4000,
-    durationVarianceMs: number = 1000,
-    initialDelayMs: number = 5000,
-  ) {
-    this.time.delayedCall(initialDelayMs, () => {
-      const flipButtons = () => {
-        this.controlBtns.flipAllBtns();
-
-        // Schedule unflip after random duration
-        const duration = baseDurationMs + Math.random() * durationVarianceMs;
-        this.time.delayedCall(duration, () => {
-          this.controlBtns.unflipAllBtns();
-
-          // Schedule next flip after another random delay
-          const nextFlipDelayMs = 5000 + Math.random() * 20000;
-          this.flipControlBtnsTimer = this.time.delayedCall(nextFlipDelayMs, flipButtons);
-        });
-      };
-      flipButtons();
     });
   }
 

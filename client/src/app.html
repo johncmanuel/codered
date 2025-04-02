@@ -4,38 +4,60 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%sveltekit.assets%/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap"
+    />
+    <meta name="title" content="Code Red" />
+    <meta name="description" content="A web-based, multiplayer icebreaker activity." />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://codered-snowy.vercel.app/" />
+    <meta property="og:title" content="Code Red" />
+    <meta property="og:description" content="A web-based, multiplayer icebreaker activity." />
+    <!-- <meta property="og:image" content="add img here later" /> -->
+
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://codered-snowy.vercel.app/" />
+    <meta property="twitter:title" content="Code Red" />
+    <meta property="twitter:description" content="A web-based, multiplayer icebreaker activity." />
+    <!-- <meta property="twitter:image" content="add img here later" /> -->
+
     %sveltekit.head%
+
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
     <style>
       .title-container {
-        background-image: url('../assets/cloud.png'); 
-        background-size: 500px 230px; 
+        background-image: url("../assets/cloud.png");
+        background-size: 500px 230px;
         background-position: center;
-        height: 250px; 
+        height: 250px;
         display: flex;
         justify-content: center;
         align-items: center;
         position: relative;
-        background-repeat: no-repeat; 
+        background-repeat: no-repeat;
       }
       .title {
         color: white;
-        font-family: 'Audiowide', sans-serif;
+        font-family: "Audiowide", sans-serif;
         font-size: 70px;
         text-align: center;
         margin: 0;
         padding: 20px;
-        padding-top: 90px; /* Adds space at the top to lower the title */
-        z-index: 1; 
+        padding-top: 90px;
+        z-index: 1;
       }
       .title-container::after {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        /*background-color: rgba(0, 0, 0, 0.5); /* Add an overlay for better text visibility */
+        /*background-color: rgba(0, 0, 0, 0.5);  */
         z-index: 0;
       }
       .red-text {
@@ -50,7 +72,6 @@
         font-size: 24px;
         color: white;
       }
-      
     </style>
   </head>
   <body data-sveltekit-preload-data="hover">
@@ -60,3 +81,4 @@
     <div style="display: contents">%sveltekit.body%</div>
   </body>
 </html>
+
