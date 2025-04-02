@@ -98,7 +98,11 @@ export class SpamAds {
   public clearAds() {
     for (const ad of this.ads) {
       // @ts-ignore
-      ad.forEach((obj) => obj.destroy());
+      // ad.forEach((obj) => obj.destroy());
+      ad.adBackground.destroy();
+      ad.title.destroy();
+      ad.closeButton.destroy();
+      ad.closeText.destroy();
     }
     console.log("Ads cleared");
     this.ads = [];
