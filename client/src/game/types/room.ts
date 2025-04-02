@@ -71,3 +71,12 @@ export interface Player {
   id: string;
   name: string;
 }
+
+export enum FillerTasks {
+  RESTART_PC = Tasks.RESTART_PC,
+  RESET_PASSWORDS = Tasks.RESET_PASSWORDS,
+  MALWARE_SCAN = Tasks.MALWARE_SCAN,
+  CREATE_INCIDENT_REPORT = Tasks.CREATE_INCIDENT_REPORT,
+  UPDATE_SOFTWARE = Tasks.UPDATE_SOFTWARE,
+  PATCH_SECURITY_SOFTWARE = Tasks.PATCH_SECURITY_SOFTWARE,
+}
