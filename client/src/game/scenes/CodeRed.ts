@@ -1,7 +1,7 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
-import { type TaskState, Tasks, type GameState } from "../types/room";
+import { type TaskState, Tasks, type GameState, FillerTasks } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
 import { AssignedTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
@@ -22,6 +22,7 @@ export class CodeRed extends Scene {
 
   playerId: string | null;
   playerControls: Set<string>;
+  currentTaskTypeNum: number | null;
 
   // setup game objects here
   controlBtns: ControlButtons;
@@ -167,6 +168,14 @@ export class CodeRed extends Scene {
       const taskTypeNum = Tasks[task.type as keyof typeof Tasks];
       this.taskManager.addTask(task.id, createTask(this, task.id, taskTypeNum));
       this.taskManager.startTask(task.id);
+
+      // only stop the timer if it's not a filler task
+      // @ts-ignore: this still works despite strings being compared (when it's actually numbers)
+      if (!Object.values(FillerTasks).includes(taskTypeNum)) {
+        this.currentTaskTypeNum = taskTypeNum;
+        console.log("Task is not a filler task, stopping it", taskTypeNum);
+        this.obstacleTimer.stopAll();
+      }
     });
 
     // handle things if there isn't a task for the player's specific control
@@ -182,8 +191,12 @@ export class CodeRed extends Scene {
         "this.assignedTaskNotifs.getCurrentTaskId()",
         this.assignedTaskNotifs.getCurrentTaskId(),
       );
-      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
-      else console.error("Task completed but the notification is still there");
+      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) {
+        this.assignedTaskNotifs.fade();
+      } else {
+        console.error("Task completed but the notification is still there");
+      }
+
       this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
@@ -194,8 +207,12 @@ export class CodeRed extends Scene {
         "this.assignedTaskNotifs.getCurrentTaskId()",
         this.assignedTaskNotifs.getCurrentTaskId(),
       );
-      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
-      else console.error("Task failed but the notification is still there");
+      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) {
+        this.assignedTaskNotifs.fade();
+      } else {
+        console.error("Task failed but the notification is still there");
+      }
+
       this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
@@ -245,10 +262,24 @@ export class CodeRed extends Scene {
     });
     this.events.on("taskCompleted", (taskId: string) => {
       this.gameStore?.room?.send("taskCompleted", taskId);
+
+      if ((this.registry.get("round") as number) > 1 && this.currentTaskTypeNum !== null) {
+        console.log("starting obstacle timer again");
+        this.currentTaskTypeNum = null;
+        this.obstacleTimer.startAll();
+      }
+
       this.taskManager.removeTask(taskId);
     });
     this.events.on("taskFailed", (taskId: string) => {
       this.gameStore?.room?.send("taskFailed", taskId);
+
+      if ((this.registry.get("round") as number) > 1 && this.currentTaskTypeNum !== null) {
+        console.log("starting obstacle timer again");
+        this.currentTaskTypeNum = null;
+        this.obstacleTimer.startAll();
+      }
+
       this.taskManager.removeTask(taskId);
     });
     // triggers after controls are assigned, which is a must need before anything else

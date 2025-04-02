@@ -10,7 +10,11 @@ export class ObstacleTimer {
   private adsSpammer: SpamAds;
 
   private adSpawnTimer: Phaser.Time.TimerEvent | null = null;
+
   private flipControlBtnsTimer: Phaser.Time.TimerEvent | null = null;
+  private initialFlipDelayTimer: Phaser.Time.TimerEvent | null = null;
+  private unflipTimer: Phaser.Time.TimerEvent | null = null;
+
   private disableTimer: Phaser.Time.TimerEvent | null = null;
   private reEnableTimer: Phaser.Time.TimerEvent | null = null;
 
@@ -78,14 +82,14 @@ export class ObstacleTimer {
   public startFlipControlBtns(
     baseDurationMs: number = 4000,
     durationVarianceMs: number = 1000,
-    initialDelayMs: number = 5000,
   ): void {
-    this.scene.time.delayedCall(initialDelayMs, () => {
+    const initDelayMs = Phaser.Math.Between(1000, 5000);
+    this.initialFlipDelayTimer = this.scene.time.delayedCall(initDelayMs, () => {
       const flipButtons = () => {
         this.controlBtns.flipAllBtns();
 
         const duration = baseDurationMs + Math.random() * durationVarianceMs;
-        this.scene.time.delayedCall(duration, () => {
+        this.unflipTimer = this.scene.time.delayedCall(duration, () => {
           this.controlBtns.unflipAllBtns();
 
           const nextFlipDelayMs = 5000 + Math.random() * 20000;
@@ -101,6 +105,16 @@ export class ObstacleTimer {
       this.scene.time.removeEvent(this.flipControlBtnsTimer);
       this.flipControlBtnsTimer = null;
     }
+    if (this.unflipTimer) {
+      this.scene.time.removeEvent(this.unflipTimer);
+      this.unflipTimer = null;
+    }
+    if (this.initialFlipDelayTimer) {
+      this.scene.time.removeEvent(this.initialFlipDelayTimer);
+      this.initialFlipDelayTimer = null;
+    }
+    // ensure all buttons are unflipped
+    this.controlBtns.unflipAllBtns();
   }
 
   public startButtonDisabling(): void {
