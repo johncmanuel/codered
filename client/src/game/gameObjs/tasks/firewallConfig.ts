@@ -34,7 +34,7 @@ export class FirewallConfig extends Task {
     // TODO: adjust number of IPs to generate based on number of rounds
     // or through something that makes the game harder
     this.trustedIPs = this.generateRandomIPs(5);
-    this.ipQueue = this.generateIPQueue(10);
+    this.ipQueue = this.generateIPQueue(4);
     this.totalIPs = this.ipQueue.length;
     this.mistakes = 0;
     this.currentIP = "";
