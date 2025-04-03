@@ -37,9 +37,18 @@ export class Sandbox extends Scene {
       console.log("Rect2 clicked");
     });
 
-    const timeLimitBar = new TimeLimitBar(this, 15, () => {
-      console.log("Time limit reached");
-    });
+    const options = {
+      scene: this,
+      maxTimeSec: 5,
+      onCompleteCallback: (bar: TimeLimitBar) => {
+        console.log("Time limit reached");
+        bar.destroy();
+        // then create a new one and go crazy lol
+        let x = new TimeLimitBar(options);
+        x.startTimer();
+      },
+    };
+    const timeLimitBar = new TimeLimitBar(options);
     timeLimitBar.startTimer();
 
     // this.taskManager.addTask(testId, createTask(this, testId, Tasks.FIREWALL_CONFIG));
