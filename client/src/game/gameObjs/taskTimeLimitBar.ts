@@ -61,17 +61,16 @@ export class TimeLimitBar {
       // this.destroy();
     };
 
+    const labelX = this.x + this.widthPx / 2;
+    const labelY = this.y - 15;
+    const labelText = options.labelText || "Time Left";
+
     this.label = this.scene.add
-      .text(
-        this.x + this.widthPx / 2, // Center horizontally
-        this.y - 15, // 15px above the bar
-        options.labelText || "Time Left",
-        {
-          font: "12px Arial",
-          color: "#ffffff",
-          align: "center",
-        },
-      )
+      .text(labelX, labelY, labelText, {
+        font: "12px Arial",
+        color: "#ffffff",
+        align: "center",
+      })
       .setOrigin(0.5);
 
     this.label.setInteractive();
