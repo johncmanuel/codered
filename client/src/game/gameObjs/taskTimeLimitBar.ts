@@ -1,15 +1,32 @@
 import { Scene, GameObjects } from "phaser";
 
+export interface TimeLimitBarConfig {
+  scene: Scene;
+  maxTimeSec: number;
+  x?: number;
+  y?: number;
+  margin?: number;
+  labelText?: string;
+  onCompleteCallback?: (bar: TimeLimitBar) => void;
+}
+
 export class TimeLimitBar {
   private scene: Scene;
   private maxTimeSec: number;
   private remainingTimeSec: number;
   private bar: GameObjects.Graphics;
   private border: GameObjects.Graphics;
+  private label: GameObjects.Text;
+
   private widthPx: number = 300;
   private heightPx: number = 20;
-  private x: number = 100;
-  private y: number = 50;
+
+  // want to position the bar below the task or top right
+  // for now, use top right
+  private marginFromScreenEdgesPx: number = 30;
+  private x: number;
+  private y: number;
+
   private updateEvent: Phaser.Time.TimerEvent;
   private onCompleteCallback: () => void;
 
@@ -25,22 +42,41 @@ export class TimeLimitBar {
 
   private isRunning: boolean = false;
 
-  constructor(
-    scene: Phaser.Scene,
-    maxTimeSec: number,
-    onCompleteCallback?: (bar: TimeLimitBar) => void,
-  ) {
-    this.scene = scene;
-    this.maxTimeSec = maxTimeSec;
-    this.remainingTimeSec = maxTimeSec;
+  constructor(options: TimeLimitBarConfig) {
+    this.scene = options.scene;
+    this.maxTimeSec = options.maxTimeSec;
+    this.remainingTimeSec = options.maxTimeSec;
+    this.x =
+      options.x ??
+      (this.scene.game.config.width as number) - this.widthPx - this.marginFromScreenEdgesPx;
+    this.y = options.y ?? this.marginFromScreenEdgesPx;
 
     // wrapper for callback func
     this.onCompleteCallback = () => {
-      if (onCompleteCallback) onCompleteCallback(this);
+      if (options.onCompleteCallback) options.onCompleteCallback(this);
+      console.log("callback called");
       // anything else if needed once timer is finished
+      //
       // it should be explicitly destroyed rather as soon as it's done
       // this.destroy();
     };
+
+    this.label = this.scene.add
+      .text(
+        this.x + this.widthPx / 2, // Center horizontally
+        this.y - 15, // 15px above the bar
+        options.labelText || "Time Left",
+        {
+          font: "12px Arial",
+          color: "#ffffff",
+          align: "center",
+        },
+      )
+      .setOrigin(0.5);
+
+    this.label.setInteractive();
+    this.label.on("pointerover", () => this.label.setAlpha(0.8));
+    this.label.on("pointerout", () => this.label.setAlpha(1));
 
     this.border = this.scene.add.graphics();
     this.border.fillStyle(0x000000, 1);
@@ -71,10 +107,11 @@ export class TimeLimitBar {
 
     this.remainingTimeSec -= elapsedSec;
     this.updateBar();
+    this.label.setText(`Time Limit: ${this.remainingTimeSec.toFixed(1)}s`);
 
     if (this.remainingTimeSec <= 0) {
       this.stopTimer();
-      if (this.onCompleteCallback) this.onCompleteCallback();
+      this.onCompleteCallback();
     }
   }
 
@@ -144,7 +181,10 @@ export class TimeLimitBar {
       this.border.destroy();
       // this.border = null;
     }
-    console.log(this.bar, this.border);
+    if (this.label) {
+      this.label.destroy();
+    }
+    // console.log(this.bar, this.border);
   }
 
   public getRemainingTime(): number {
