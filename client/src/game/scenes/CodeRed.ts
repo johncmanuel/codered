@@ -72,7 +72,9 @@ export class CodeRed extends Scene {
   }
 
   // Load all assets here first and other stuff
-  preload() {}
+  preload() {
+    this.load.image("exe", "/assets/exe.png");
+  }
 
   // load the game objects stuff here
   create() {
