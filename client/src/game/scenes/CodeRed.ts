@@ -140,6 +140,9 @@ export class CodeRed extends Scene {
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
       this.assignedTaskNotifs.add(`New Task: ${task.type}`, task.id);
       console.log("New task assigned:", task.type, task);
+
+      // TODO: set time limit dynamically based on number of rounds
+      const taskTimeLimitSec = 10;
     });
 
     // handle controls assigned to the player from server
