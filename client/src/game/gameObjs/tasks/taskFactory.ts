@@ -11,8 +11,6 @@ import { FillerTask } from "./fillerTask";
 
 // factory function to create tasks based on their type
 export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task {
-  // all return firewall config for now lol
-  // rest of tasks are WIP
   switch (taskType) {
     case Tasks.FIREWALL_CONFIG:
       return new FirewallConfig(scene, taskId);
@@ -26,25 +24,8 @@ export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task 
       return new SystemRebootSequence(scene, taskId);
     case Tasks.ENCRYPYTION_DECRYPTION:
       return new EncryptionDecryption(scene, taskId);
-
-    // case Tasks.SOCIAL_ENGINEERING:
-    //   return new FirewallConfig(scene, taskId);
-    // case Tasks.RESTART_PC:
-    //   return new FillerTask(scene, taskId);
-    // case Tasks.RESET_PASSWORDS:
-    //   return new FillerTask(scene, taskId);
-    // case Tasks.MALWARE_SCAN:
-    //   return new FillerTask(scene, taskId);
-    // case Tasks.CREATE_INCIDENT_REPORT:
-    //   return new FillerTask(scene, taskId);
-    // case Tasks.UPDATE_SOFTWARE:
-    //   return new FillerTask(scene, taskId);
-    // case Tasks.PATCH_SECURITY_SOFTWARE:
-    //   return new FillerTask(scene, taskId);
-    // by default it is a filler task
     default:
       return new FillerTask(scene, taskId);
-    // throw new Error(`Unknown task type: ${taskType}`);
   }
 }
 
