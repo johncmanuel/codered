@@ -70,6 +70,11 @@ export class CodeRedRoom extends Room<GameState> {
       this.numPlayersReady++;
       if (this.numPlayersReady !== this.state.players.size) return;
 
+      this.numRequiredTasksCompletedPerRound = this.setRequiredTasksPerRound(
+        this.state.players.size,
+      );
+      console.log("this.numRequiredTasksCompletedPerRound", this.numRequiredTasksCompletedPerRound);
+
       // start the game once all players are in
       this.broadcast("allPlayersReady");
       this.dispatcher.dispatch(new AssignPlayerControlsCommand());
@@ -231,6 +236,14 @@ export class CodeRedRoom extends Room<GameState> {
     // task.timeLimit = 30; // Can be adjusted as players get further in the rounds
     task.control = TaskToControls.get(taskType) || "";
     return task;
+  }
+
+  // if max number of players is 6 and basetasksPerPlayer is 5, then
+  // playerCount*basetasksPerPlayer = 6*5 = 30 tasks in total per round
+  setRequiredTasksPerRound(playerCount: number): number {
+    const baseTasksPerPlayer = 5;
+    const minTasks = this.state.players.size;
+    return Math.max(minTasks, playerCount * baseTasksPerPlayer);
   }
 
   // See this guide for generating custom room IDs
