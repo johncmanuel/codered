@@ -8,6 +8,7 @@ export class ControlButtons {
   private buttonHeightPx: number = 60; 
   private padding: number = 100; 
   private columns: number = 2;
+  private buttonImages: GameObjects.Image[] = []; 
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -25,14 +26,13 @@ export class ControlButtons {
 
   // TODO: make each control button unique given the task.control
   show() {
-    if (this.playerControls.size < 0) {
+    if (this.playerControls.size <= 0) {  
       console.error("No controls assigned to player");
       return;
     }
 // get the number of rows needed based on the number of controls and columns    
     const numControls = this.playerControls.size;
     const rows = Math.ceil(numControls / this.columns);
-
     const startX = 
       (this.scene.cameras.main.width - 
        (this.columns * this.buttonWidthPx + (this.columns - 1) * this.padding)) / 2;
@@ -48,6 +48,16 @@ export class ControlButtons {
 
       const x = startX + col * (this.buttonWidthPx + this.padding);
       const y = startY + row * (this.buttonHeightPx + this.padding);
+
+      const image = this.scene.add.image(x, y, "exe");
+
+      const scale = Math.min(
+        this.buttonWidthPx / image.width * 3, 
+        this.buttonHeightPx / image.height * 2.3  
+      );
+      image.setDepth(0);  
+      image.setScale(scale);
+      this.buttonImages.push(image);
 
       const button = this.scene.add
         .text(x, y, control, {
@@ -95,11 +105,14 @@ export class ControlButtons {
 
   hide() {
     this.buttons.forEach((button) => button.setVisible(false));
+    this.buttonImages.forEach((image) => image.setVisible(false));
   }
 
   clear() {
     this.buttons.forEach((button) => button.destroy());
+    this.buttonImages.forEach((image) => image.destroy());
     this.buttons = [];
+    this.buttonImages = [];
   }
 
   check() {
