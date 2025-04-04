@@ -11,6 +11,7 @@ import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
 import { SpamAds } from "../gameObjs/spamAds";
 import { type IRoundTimer, type IDataHealth } from "../types/eventBusTypes";
 import { ObstacleTimer } from "../gameObjs/obstacleTimer";
+import { TimeLimitBar } from "../gameObjs/taskTimeLimitBar";
 
 export const GAME_NAME = "CodeRed";
 
@@ -27,16 +28,15 @@ export class CodeRed extends Scene {
   // setup game objects here
   controlBtns: ControlButtons;
   assignedTaskNotifs: AssignedTaskNotification;
+  timeLimitBar: TimeLimitBar | null;
+
   loadingText: Phaser.GameObjects.Text;
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
 
   adsSpammer: SpamAds;
-
   controlBtnDisabler: ControlButtonDisabler;
-
   hideInformation: boolean;
-
   obstacleTimer: ObstacleTimer;
 
   constructor() {
@@ -138,6 +138,28 @@ export class CodeRed extends Scene {
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
       this.assignedTaskNotifs.add(`New Task: ${task.type}`, task.id);
       console.log("New task assigned:", task.type, task);
+
+      // TODO: set time limit dynamically based on number of rounds
+      const timeLimitSec = 10;
+
+      // BUG: this is not working atm
+      // if (this.timeLimitBar) {
+      //   console.log("time limit bar still exists");
+      //   return;
+      // }
+      // this.timeLimitBar = new TimeLimitBar({
+      //   scene: this,
+      //   maxTimeSec: timeLimitSec,
+      //   // if timer runs out before player clicks on controls,
+      //   // task is failed
+      //   onCompleteCallback: (timeLimitBar) => {
+      //     timeLimitBar.destroy();
+      //     this.assignedTaskNotifs.fade();
+      //     // this.taskManager.removeTask(task.id);
+      //     this.events.emit("taskFailed", task.id);
+      //   },
+      // } as TimeLimitBarConfig);
+      // this.timeLimitBar.startTimer();
     });
 
     // handle controls assigned to the player from server
@@ -162,8 +184,10 @@ export class CodeRed extends Scene {
       this.gameStore?.room?.send("giveMeControlsPls");
     });
 
-    // start the task
+    // officially start the task once the server confirms the
+    // player has the right controls
     this.gameStore?.room?.onMessage("hasTaskForControl", (task: TaskState) => {
+      // if (this.timeLimitBar) this.timeLimitBar.destroy();
       console.log("Task assigned:", task.type, task);
       const taskTypeNum = Tasks[task.type as keyof typeof Tasks];
       this.taskManager.addTask(task.id, createTask(this, task.id, taskTypeNum));
