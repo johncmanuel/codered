@@ -11,6 +11,7 @@ import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
 import { SpamAds } from "../gameObjs/spamAds";
 import { type IRoundTimer, type IDataHealth } from "../types/eventBusTypes";
 import { ObstacleTimer } from "../gameObjs/obstacleTimer";
+import { TimeLimitBar } from "../gameObjs/taskTimeLimitBar";
 
 export const GAME_NAME = "CodeRed";
 
@@ -38,6 +39,7 @@ export class CodeRed extends Scene {
   hideInformation: boolean;
 
   obstacleTimer: ObstacleTimer;
+  timeLimitBar: TimeLimitBar | null;
 
   constructor() {
     super(GAME_NAME);
@@ -52,6 +54,7 @@ export class CodeRed extends Scene {
     this.taskManager = new TaskManager();
     this.adsSpammer = new SpamAds(this);
     this.hideInformation = false;
+    this.timeLimitBar = null;
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -142,7 +145,24 @@ export class CodeRed extends Scene {
       console.log("New task assigned:", task.type, task);
 
       // TODO: set time limit dynamically based on number of rounds
-      const taskTimeLimitSec = 10;
+      // const taskTimeLimitSec = 10;
+      // if (this.timeLimitBar) {
+      //   console.warn("old time limit bar still exists, removing");
+      //   // return;
+      // }
+      // this.timeLimitBar = new TimeLimitBar({
+      //   scene: this,
+      //   maxTimeSec: taskTimeLimitSec,
+      //   labelText: "Task Time Limit",
+      //   // if timer runs out before player clicks on controls,
+      //   // task is failed
+      //   onCompleteCallback: (bar) => {
+      //     bar.destroy();
+      //     this.assignedTaskNotifs.fade();
+      //     this.events.emit("taskFailed", task.id);
+      //   },
+      // });
+      // this.timeLimitBar.startTimer();
     });
 
     // handle controls assigned to the player from server
@@ -170,6 +190,9 @@ export class CodeRed extends Scene {
     // start the task
     this.gameStore?.room?.onMessage("hasTaskForControl", (task: TaskState) => {
       console.log("Task assigned:", task.type, task);
+
+      // if (this.timeLimitBar) this.timeLimitBar.destroy();
+
       const taskTypeNum = Tasks[task.type as keyof typeof Tasks];
       this.taskManager.addTask(task.id, createTask(this, task.id, taskTypeNum));
       this.taskManager.startTask(task.id);
@@ -267,25 +290,11 @@ export class CodeRed extends Scene {
     });
     this.events.on("taskCompleted", (taskId: string) => {
       this.gameStore?.room?.send("taskCompleted", taskId);
-
-      if ((this.registry.get("round") as number) > 1 && this.currentTaskTypeNum !== null) {
-        console.log("starting obstacle timer again");
-        this.currentTaskTypeNum = null;
-        this.obstacleTimer.startAll();
-      }
-
-      this.taskManager.removeTask(taskId);
+      this.handleTaskOutcome(taskId);
     });
     this.events.on("taskFailed", (taskId: string) => {
       this.gameStore?.room?.send("taskFailed", taskId);
-
-      if ((this.registry.get("round") as number) > 1 && this.currentTaskTypeNum !== null) {
-        console.log("starting obstacle timer again");
-        this.currentTaskTypeNum = null;
-        this.obstacleTimer.startAll();
-      }
-
-      this.taskManager.removeTask(taskId);
+      this.handleTaskOutcome(taskId);
     });
     // triggers after controls are assigned, which is a must need before anything else
     this.events.on("newRound", () => {
@@ -310,5 +319,14 @@ export class CodeRed extends Scene {
   // so it's not likely that all players will have hidden information
   private canHideInformation(hideProb: number = 0.3): boolean {
     return Math.random() < hideProb;
+  }
+
+  private handleTaskOutcome(taskId: string) {
+    if ((this.registry.get("round") as number) > 1 && this.currentTaskTypeNum !== null) {
+      console.log("starting obstacle timer again");
+      this.currentTaskTypeNum = null;
+      this.obstacleTimer.startAll();
+    }
+    this.taskManager.removeTask(taskId);
   }
 }
