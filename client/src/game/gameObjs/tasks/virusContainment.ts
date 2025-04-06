@@ -109,6 +109,15 @@ export class VirusContainment extends Task {
       .setInteractive()
       .setScale(0.48);
 
+    // increase hit box size 
+    this.quarantineBox.input.hitArea.setTo(-50, -50, 
+      this.quarantineBox.width + 100, 
+      this.quarantineBox.height + 100);
+
+    this.safeArea.input.hitArea.setTo(-50, -50, 
+      this.safeArea.width + 100, 
+      this.safeArea.height + 100);
+
     this.quarantineBoxText = this.scene.add.text(340, 580, "Quarantine", { 
       color: "#ffffff",
       fontSize: "20px",
@@ -166,32 +175,35 @@ export class VirusContainment extends Task {
       this.fileObject.off("drag");
     });
 
-    // prevent duplicate listeners
-    if (this.scene.input.listeners("dragend").length > 0) return;
-    console.log("Adding dragend listener");
+    this.fileObject.on("dragend", (pointer: Phaser.Input.Pointer) => {
+      const bounds = this.fileObject.getBounds();
+      const quarantineBounds = this.quarantineBox.getBounds();
+      const safeBounds = this.safeArea.getBounds();
 
-    this.scene.input.on(
-      "dragend",
-      (
-        pointer: Phaser.Input.Pointer,
-        gameObject: Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle,
-      ) => {
-        if (this.quarantineBox.getBounds().contains(gameObject.x, gameObject.y)) {
-          this.handleFileDrop(currentFile, true);
-        } else if (this.safeArea.getBounds().contains(gameObject.x, gameObject.y)) {
-          this.handleFileDrop(currentFile, false);
-        } else {
-          // Reset position if dropped outside
-          gameObject.setPosition(this.fileObjectStartingPos.x, this.fileObjectStartingPos.y);
-        }
-      },
-    );
+      // Check for intersection instead of point containment
+      if (Phaser.Geom.Rectangle.Overlaps(bounds, quarantineBounds)) {
+        this.handleFileDrop(currentFile, true);
+      } else if (Phaser.Geom.Rectangle.Overlaps(bounds, safeBounds)) {
+        this.handleFileDrop(currentFile, false);
+      } else {
+        // Reset position if dropped outside
+        this.fileObject.setPosition(this.fileObjectStartingPos.x, this.fileObjectStartingPos.y);
+      }
+    });
   }
 
   handleFileDrop(
     file: { name: string; description: string; isInfected: boolean },
     droppedInQuarantine: boolean,
   ): void {
+    console.log('Drop detected:', {
+        x: this.fileObject.x,
+        y: this.fileObject.y,
+        quarantineBounds: this.quarantineBox.getBounds(),
+        safeBounds: this.safeArea.getBounds(),
+        zone: droppedInQuarantine ? 'quarantine' : 'safe'
+    });
+    
     if ((file.isInfected && droppedInQuarantine) || (!file.isInfected && !droppedInQuarantine)) {
       // Correct choice
       console.log("Correct choice");
