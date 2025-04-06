@@ -94,11 +94,11 @@ export class VirusContainment extends Task {
     this.incorrectSound = this.scene.sound.add("incorrect");
     const blackBox = this.scene.add.rectangle(650, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
 
-    this.scene.add.text(650, 25, "Your Task: Virus Containment", { 
-      color: "#ffffff",
-      fontSize: "30px",
-      fontStyle: "bold", 
-    }).setOrigin(0.5, 0);  
+    // this.scene.add.text(650, 25, "Your Task: Virus Containment", { 
+    //   color: "#ffffff",
+    //   fontSize: "30px",
+    //   fontStyle: "bold", 
+    // }).setOrigin(0.5, 0);  
 
     // Replace rectangles with images
     this.quarantineBox = this.scene.add.sprite(400, 600, "quarantine")
