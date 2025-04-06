@@ -1,5 +1,6 @@
 <script lang="ts">
   export let timer: number;
+  export let hideInfo: boolean;
 
   function formatTimer(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
@@ -9,5 +10,9 @@
 </script>
 
 <div class="timer">
-  <span>Time: {formatTimer(timer)}</span>
+  {#if hideInfo}
+    <span>Time: ERROR! FAILED TO RETRIEVE TIMER STATUS, PLEASE WAIT FOR A FIX!</span>
+  {:else}
+    <span>Time: {formatTimer(timer)}</span>
+  {/if}
 </div>

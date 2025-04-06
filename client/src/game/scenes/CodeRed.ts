@@ -1,12 +1,17 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
-import { type TaskState, Tasks } from "../types/room";
+import { type TaskState, Tasks, type GameState, FillerTasks } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
 import { AssignedTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
 import { TaskManager } from "../gameObjs/tasks/taskManager";
 import { createTask } from "../gameObjs/tasks/taskFactory";
+import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
+import { SpamAds } from "../gameObjs/spamAds";
+import { type IRoundTimer, type IDataHealth } from "../types/eventBusTypes";
+import { ObstacleTimer } from "../gameObjs/obstacleTimer";
+import { TimeLimitBar } from "../gameObjs/taskTimeLimitBar";
 
 export const GAME_NAME = "CodeRed";
 
@@ -18,6 +23,7 @@ export class CodeRed extends Scene {
 
   playerId: string | null;
   playerControls: Set<string>;
+  currentTaskTypeNum: number | null;
 
   // setup game objects here
   controlBtns: ControlButtons;
@@ -25,6 +31,15 @@ export class CodeRed extends Scene {
   loadingText: Phaser.GameObjects.Text;
   postMatchUI: PostMatchUI;
   taskManager: TaskManager;
+
+  adsSpammer: SpamAds;
+
+  controlBtnDisabler: ControlButtonDisabler;
+
+  hideInformation: boolean;
+
+  obstacleTimer: ObstacleTimer;
+  timeLimitBar: TimeLimitBar | null;
 
   constructor() {
     super(GAME_NAME);
@@ -37,6 +52,9 @@ export class CodeRed extends Scene {
     this.assignedTaskNotifs = new AssignedTaskNotification(this);
     this.controlBtns = new ControlButtons(this);
     this.taskManager = new TaskManager();
+    this.adsSpammer = new SpamAds(this);
+    this.hideInformation = false;
+    this.timeLimitBar = null;
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -57,7 +75,9 @@ export class CodeRed extends Scene {
   }
 
   // Load all assets here first and other stuff
-  preload() {}
+  preload() {
+    this.load.image("exe", "/assets/exe.png");
+  }
 
   // load the game objects stuff here
   create() {
@@ -70,12 +90,19 @@ export class CodeRed extends Scene {
       .setOrigin(0.5, 0.5);
 
     this.postMatchUI = new PostMatchUI(this);
+    this.controlBtnDisabler = new ControlButtonDisabler(this, this.controlBtns);
+    this.obstacleTimer = new ObstacleTimer(
+      this,
+      this.controlBtns,
+      this.adsSpammer,
+      this.controlBtnDisabler,
+    );
 
     // keep this at the end
     EventBus.emit("current-scene-ready", this);
   }
 
-  update() {
+  update(time: number, delta: number): void {
     this.taskManager.update();
   }
 
@@ -83,11 +110,16 @@ export class CodeRed extends Scene {
   //https://docs.colyseus.io/state/schema-callbacks/#schema-callbacks
   createServerListeners() {
     this.gameStore?.room?.state.listen("timer", (timer: number) => {
-      EventBus.emit("updateTimer", timer);
+      const roundTimer: IRoundTimer = { timer, hideInfo: this.hideInformation };
+      EventBus.emit("updateTimer", roundTimer);
+      // ensure registry keeps actual timer
+      this.registry.set("timer", timer);
     });
 
     this.gameStore?.room?.state.listen("dataHealth", (dataHealth: number) => {
-      EventBus.emit("updateHealth", dataHealth);
+      const dataHealthObj: IDataHealth = { health: dataHealth, hideInfo: this.hideInformation };
+      EventBus.emit("updateHealth", dataHealthObj);
+      // ensure registry keeps actual data health
       this.registry.set("dataHealth", dataHealth);
     });
 
@@ -96,6 +128,7 @@ export class CodeRed extends Scene {
       console.log("new round", round);
       EventBus.emit("updateRound", round);
       this.registry.set("round", round);
+
       // this.assignedTaskNotifs.clear();
       this.taskManager.cleanup();
 
@@ -110,6 +143,26 @@ export class CodeRed extends Scene {
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
       this.assignedTaskNotifs.add(`New Task: ${task.type}`, task.id);
       console.log("New task assigned:", task.type, task);
+
+      // TODO: set time limit dynamically based on number of rounds
+      // const taskTimeLimitSec = 10;
+      // if (this.timeLimitBar) {
+      //   console.warn("old time limit bar still exists, removing");
+      //   // return;
+      // }
+      // this.timeLimitBar = new TimeLimitBar({
+      //   scene: this,
+      //   maxTimeSec: taskTimeLimitSec,
+      //   labelText: "Task Time Limit",
+      //   // if timer runs out before player clicks on controls,
+      //   // task is failed
+      //   onCompleteCallback: (bar) => {
+      //     bar.destroy();
+      //     this.assignedTaskNotifs.fade();
+      //     this.events.emit("taskFailed", task.id);
+      //   },
+      // });
+      // this.timeLimitBar.startTimer();
     });
 
     // handle controls assigned to the player from server
@@ -123,6 +176,7 @@ export class CodeRed extends Scene {
       this.controlBtns.show();
       this.assignedTaskNotifs.show();
       this.controlBtns.check();
+      this.events.emit("newRound");
     });
 
     // do stuff once all players connected
@@ -136,9 +190,20 @@ export class CodeRed extends Scene {
     // start the task
     this.gameStore?.room?.onMessage("hasTaskForControl", (task: TaskState) => {
       console.log("Task assigned:", task.type, task);
+
+      // if (this.timeLimitBar) this.timeLimitBar.destroy();
+
       const taskTypeNum = Tasks[task.type as keyof typeof Tasks];
       this.taskManager.addTask(task.id, createTask(this, task.id, taskTypeNum));
       this.taskManager.startTask(task.id);
+
+      // only stop the timer if it's not a filler task
+      // @ts-ignore: this still works despite strings being compared (when it's actually numbers)
+      if (!Object.values(FillerTasks).includes(taskTypeNum)) {
+        this.currentTaskTypeNum = taskTypeNum;
+        console.log("Task is not a filler task, stopping it", taskTypeNum);
+        this.obstacleTimer.stopAll();
+      }
     });
 
     // handle things if there isn't a task for the player's specific control
@@ -154,8 +219,12 @@ export class CodeRed extends Scene {
         "this.assignedTaskNotifs.getCurrentTaskId()",
         this.assignedTaskNotifs.getCurrentTaskId(),
       );
-      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
-      else console.error("Task completed but the notification is still there");
+      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) {
+        this.assignedTaskNotifs.fade();
+      } else {
+        console.error("Task completed but the notification is still there");
+      }
+
       this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
@@ -166,17 +235,25 @@ export class CodeRed extends Scene {
         "this.assignedTaskNotifs.getCurrentTaskId()",
         this.assignedTaskNotifs.getCurrentTaskId(),
       );
-      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) this.assignedTaskNotifs.fade();
-      else console.error("Task failed but the notification is still there");
+      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) {
+        this.assignedTaskNotifs.fade();
+      } else {
+        console.error("Task failed but the notification is still there");
+      }
+
       this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
-    this.gameStore?.room?.onMessage("gameOver", () => {
+    this.gameStore?.room?.onMessage("gameOverStats", (gameState: GameState) => {
+      this.postMatchUI.setGameState(gameState);
       this.loadingText.setVisible(false);
-      this.controlBtns.hide();
+      this.controlBtns.clear();
       this.assignedTaskNotifs.hide();
-      this.postMatchUI.show();
       this.taskManager.cleanup();
+      this.adsSpammer.clearAds();
+      this.obstacleTimer.stopAll();
+
+      this.postMatchUI.show();
     });
 
     // handle stuff once the player leaves the game
@@ -199,7 +276,10 @@ export class CodeRed extends Scene {
       this.playerControls.add(control);
     });
     console.log("Controls received:", this.playerControls);
+
     this.controlBtns.setPlayerControls(this.playerControls);
+    this.controlBtnDisabler.setControlButtons(this.controlBtns);
+    this.obstacleTimer.setControlButtonDisabler(this.controlBtnDisabler);
   }
 
   // Set up listeners between Phaser events
@@ -210,11 +290,43 @@ export class CodeRed extends Scene {
     });
     this.events.on("taskCompleted", (taskId: string) => {
       this.gameStore?.room?.send("taskCompleted", taskId);
-      this.taskManager.removeTask(taskId);
+      this.handleTaskOutcome(taskId);
     });
     this.events.on("taskFailed", (taskId: string) => {
       this.gameStore?.room?.send("taskFailed", taskId);
-      this.taskManager.removeTask(taskId);
+      this.handleTaskOutcome(taskId);
     });
+    // triggers after controls are assigned, which is a must need before anything else
+    this.events.on("newRound", () => {
+      const round = this.registry.get("round") as number;
+      this.obstacleTimer.stopAll();
+      // stop any ongoing events and start a new one
+      if (round > 1) {
+        this.hideInformation = this.canHideInformation();
+        this.adsSpammer.clearAds();
+        this.obstacleTimer.startAll();
+      }
+    });
+
+    this.events.on("adClicked", () => {
+      this.gameStore?.room?.send("trackAdsClicked");
+      console.log("Ad clicked, sending to server");
+    });
+  }
+
+  // hide information from the player, forcing them to rely on other players
+  // NOTE: probabily of all players having hidden information is (0.3)^n,
+  // so it's not likely that all players will have hidden information
+  private canHideInformation(hideProb: number = 0.3): boolean {
+    return Math.random() < hideProb;
+  }
+
+  private handleTaskOutcome(taskId: string) {
+    if ((this.registry.get("round") as number) > 1 && this.currentTaskTypeNum !== null) {
+      console.log("starting obstacle timer again");
+      this.currentTaskTypeNum = null;
+      this.obstacleTimer.startAll();
+    }
+    this.taskManager.removeTask(taskId);
   }
 }

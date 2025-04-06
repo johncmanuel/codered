@@ -7,14 +7,14 @@ export class SystemRebootSequence extends Task {
   private sequence: string[] = [];
   private playerSequence: string[] = [];
   private currentRound: number = 1;
-  private maxRounds: number = 4;
+  private maxRounds: number = 2;
   private maxFails: number = 2;
   private fails: number = 0;
   private isShowingSequence: boolean = false;
   private isPlayerInputEnabled: boolean = false;
   private numColorsPerSequence: number = 4;
   private instructionsText: Phaser.GameObjects.Text;
-  private sequenceText: Phaser.GameObjects.Text; 
+  private sequenceText: Phaser.GameObjects.Text;
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
     this.tiles = [];
@@ -22,8 +22,9 @@ export class SystemRebootSequence extends Task {
 
   start() {
     console.log("Starting SYSTEM_REBOOT_SEQUENCE task");
+    this.createBlockingOverlay();
     this.createInstructions();
-    this.createSequenceText(); 
+    this.createSequenceText();
     this.createTiles();
     this.startRound();
   }
@@ -34,37 +35,41 @@ export class SystemRebootSequence extends Task {
     super.cleanup();
     this.tiles.forEach((tile) => tile.destroy());
     this.instructionsText.destroy();
-    this.sequenceText.destroy(); 
+    this.sequenceText.destroy();
   }
 
   private createInstructions() {
-    this.instructionsText = this.scene.add.text(
-      this.scene.cameras.main.centerX, 
-      50, 
-      "Instructions: Memorize the given pattern and repeat it back in order to reboot the company's system!",
-      {
-        fontFamily: "Audiowide", 
-        fontSize: "22px",
-        color: "#ffffff",
-        align: "center",
-        backgroundColor: "#000000",
-        padding: { x: 10, y: 5 },
-      }
-    ).setOrigin(0.5, 0); 
+    this.instructionsText = this.scene.add
+      .text(
+        this.scene.cameras.main.centerX,
+        50,
+        "Instructions: Memorize the given pattern and repeat it back in order to reboot the company's system!",
+        {
+          fontFamily: "Audiowide",
+          fontSize: "22px",
+          color: "#ffffff",
+          align: "center",
+          backgroundColor: "#000000",
+          padding: { x: 10, y: 5 },
+        },
+      )
+      .setOrigin(0.5, 0);
   }
 
   private createSequenceText() {
-    this.sequenceText = this.scene.add.text(
-      this.scene.cameras.main.centerX, 
-      120, 
-      `Sequence ${this.currentRound}/${this.maxRounds}`, 
-      {
-        fontFamily: "Audiowide", 
-        fontSize: "24px",
-        color: "#ffffff",
-        align: "center",
-      }
-    ).setOrigin(0.5, 0); 
+    this.sequenceText = this.scene.add
+      .text(
+        this.scene.cameras.main.centerX,
+        120,
+        `Sequence ${this.currentRound}/${this.maxRounds}`,
+        {
+          fontFamily: "Audiowide",
+          fontSize: "24px",
+          color: "#ffffff",
+          align: "center",
+        },
+      )
+      .setOrigin(0.5, 0);
   }
 
   private updateSequenceText() {
@@ -120,7 +125,7 @@ export class SystemRebootSequence extends Task {
 
   private startRound() {
     console.log(`Starting Round ${this.currentRound}`);
-    this.updateSequenceText(); 
+    this.updateSequenceText();
     this.generateSequence();
     this.showSequence();
   }
@@ -168,7 +173,7 @@ export class SystemRebootSequence extends Task {
 
   private handleTileClick(tile: Phaser.GameObjects.Rectangle) {
     if (!this.isPlayerInputEnabled || this.isShowingSequence) return;
-    
+
     this.flashTile(tile);
     const clickedColor = this.colors[this.tiles.indexOf(tile)];
 

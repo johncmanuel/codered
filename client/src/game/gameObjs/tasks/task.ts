@@ -1,10 +1,14 @@
-import { Scene } from "phaser";
+import { Scene, Display } from "phaser";
 
 export abstract class Task {
   taskId: string;
   isCompleted: boolean;
   isFailed: boolean;
   scene: Scene;
+
+  // stop game objects from outside the task from being interacted with while task is running
+  // idea from: https://phaser.discourse.group/t/phaser-buttons-still-clickable-under-other-objects/8606
+  blockingOverlay: Phaser.GameObjects.Rectangle | null;
 
   constructor(scene: Scene, taskId: string) {
     this.scene = scene;
@@ -44,5 +48,31 @@ export abstract class Task {
   // clean up after task game is over
   cleanup(): void {
     console.log(`Cleaning up task ${this.taskId}`);
+    this.destroyBlockingOverlay();
+  }
+
+  protected createBlockingOverlay(): void {
+    const alpha = 1;
+    const color = new Display.Color(0, 0, 200, 1).color;
+    this.blockingOverlay = this.scene.add.rectangle(
+      this.scene.cameras.main.centerX,
+      this.scene.cameras.main.centerY,
+      this.scene.cameras.main.width - 20,
+      this.scene.cameras.main.height - 20,
+      color,
+      alpha,
+    );
+    this.blockingOverlay.setInteractive();
+
+    // ensure it's above other game objects but below game objects in tasks
+    // this.blockingOverlay.depth = 9998;
+    // this.scene.children.sendToBack(this.blockingOverlay);
+  }
+
+  protected destroyBlockingOverlay(): void {
+    if (this.blockingOverlay) {
+      this.blockingOverlay.destroy();
+      this.blockingOverlay = null;
+    }
   }
 }

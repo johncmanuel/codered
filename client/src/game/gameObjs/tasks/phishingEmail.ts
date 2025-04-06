@@ -21,6 +21,7 @@ export class PhishingEmail extends Task {
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
+    this.createBlockingOverlay();
     this.emails = this.generateEmails();
   }
 

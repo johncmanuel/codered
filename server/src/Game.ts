@@ -70,6 +70,11 @@ export class CodeRedRoom extends Room<GameState> {
       this.numPlayersReady++;
       if (this.numPlayersReady !== this.state.players.size) return;
 
+      this.numRequiredTasksCompletedPerRound = this.setRequiredTasksPerRound(
+        this.state.players.size,
+      );
+      console.log("this.numRequiredTasksCompletedPerRound", this.numRequiredTasksCompletedPerRound);
+
       // start the game once all players are in
       this.broadcast("allPlayersReady");
       this.dispatcher.dispatch(new AssignPlayerControlsCommand());
@@ -104,13 +109,6 @@ export class CodeRedRoom extends Room<GameState> {
       }
     });
 
-    // Send the game over stats to the clients
-    this.onMessage("gameOverStats", (client) => {
-      // TODO: Just sending the state data for now. in the future, send relevant data listed in
-      // the proposal.
-      this.broadcast("gameOverStats", this.state);
-    });
-
     this.onMessage("giveMeControlsPls", (client) => {
       this.dispatcher.dispatch(new SendControlsToClient(), { client });
     });
@@ -134,6 +132,10 @@ export class CodeRedRoom extends Room<GameState> {
         client,
         task: newTask,
       });
+    });
+
+    this.onMessage("trackAdsClicked", (client) => {
+      this.state.totalAdsClicked++;
     });
   }
 
@@ -192,6 +194,7 @@ export class CodeRedRoom extends Room<GameState> {
     this.gameInterval = this.clock.setInterval(() => {
       // Keep track of the current round's timer
       this.state.timer--;
+      this.state.totalTimeSecs++;
       if (this.state.timer === 0) {
         // If there are still active tasks by the time the round ends, the game is over
         this.state.activeTasks.size > 0
@@ -233,6 +236,14 @@ export class CodeRedRoom extends Room<GameState> {
     // task.timeLimit = 30; // Can be adjusted as players get further in the rounds
     task.control = TaskToControls.get(taskType) || "";
     return task;
+  }
+
+  // if max number of players is 6 and basetasksPerPlayer is 5, then
+  // playerCount*basetasksPerPlayer = 6*5 = 30 tasks in total per round
+  setRequiredTasksPerRound(playerCount: number): number {
+    const baseTasksPerPlayer = 5;
+    const minTasks = this.state.players.size;
+    return Math.max(minTasks, playerCount * baseTasksPerPlayer);
   }
 
   // See this guide for generating custom room IDs

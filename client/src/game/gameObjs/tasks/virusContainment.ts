@@ -20,45 +20,46 @@ export class VirusContainment extends Task {
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
+    this.createBlockingOverlay();
     this.files = [
-      { name: "File1", description: "File Description: High CPU usage detected.", isInfected: true },
-      { name: "File2", description: "File Description: Routine system log file.", isInfected: false },
-      { name: "File3", description: "File Description: Unusual network activity observed.", isInfected: true },
-      { name: "File4", description: "File Description: Backup file created last night.", isInfected: false },
-      { name: "File5", description: "File Description: Encrypted content, source unknown.", isInfected: true },
-      { name: "File6", description: "File Description: User-generated document.", isInfected: false },
-      { name: "File7", description: "File Description: Suspicious file extension.", isInfected: true },
-      { name: "File8", description: "File Description: System update package.", isInfected: false },
-      { name: "File9", description: "File Description: Contains macros from an unknown sender.", isInfected: true },
+      { name: "File1", description: "High CPU usage detected.", isInfected: true },
+      { name: "File2", description: "Routine system log file.", isInfected: false },
+      { name: "File3", description: "Unusual network activity observed.", isInfected: true },
+      { name: "File4", description: "Backup file created last night.", isInfected: false },
+      { name: "File5", description: "Encrypted content, source unknown.", isInfected: true },
+      { name: "File6", description: "User-generated document.", isInfected: false },
+      { name: "File7", description: "Suspicious file extension.", isInfected: true },
+      { name: "File8", description: "System update package.", isInfected: false },
+      { name: "File9", description: "Contains macros from an unknown sender.", isInfected: true },
       {
         name: "File10",
-        description: "File Description: Media file downloaded from a trusted source.",
+        description: "Media file downloaded from a trusted source.",
         isInfected: false,
       },
       {
         name: "File11",
-        description: "File Description: Executable file with no digital signature.",
+        description: "Executable file with no digital signature.",
         isInfected: true,
       },
       {
         name: "File12",
-        description: "File Description: Configuration file for a trusted application.",
+        description: "Configuration file for a trusted application.",
         isInfected: false,
       },
-      { name: "File13", description: "File Description: File size has unexpectedly increased.", isInfected: true },
-      { name: "File14", description: "File Description: Temporary cache file.", isInfected: false },
+      { name: "File13", description: "File size has unexpectedly increased.", isInfected: true },
+      { name: "File14", description: "Temporary cache file.", isInfected: false },
       {
         name: "File15",
-        description: "File Description: File accessed by multiple unknown processes.",
+        description: "File accessed by multiple unknown processes.",
         isInfected: true,
       },
-      { name: "File16", description: "File Description: Readme file from a verified developer.", isInfected: false },
-      { name: "File17", description: "File Description: File contains obfuscated code.", isInfected: true },
-      { name: "File18", description: "File Description: Log file from a trusted service.", isInfected: false },
-      { name: "File19", description: "File Description: File has been flagged by the system.", isInfected: true },
+      { name: "File16", description: "Readme file from a verified developer.", isInfected: false },
+      { name: "File17", description: "File contains obfuscated code.", isInfected: true },
+      { name: "File18", description: "Log file from a trusted service.", isInfected: false },
+      { name: "File19", description: "File has been flagged by the system.", isInfected: true },
       {
         name: "File20",
-        description: "File Description: File is part of a verified software package.",
+        description: "File is part of a verified software package.",
         isInfected: false,
       },
     ];
@@ -155,7 +156,7 @@ export class VirusContainment extends Task {
       stroke: '#000000',
       strokeThickness: 1,
     }).setOrigin(0.5); 
-
+    
     this.fileObject.on("drag", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       this.fileObject.x = dragX;
       this.fileObject.y = dragY;
