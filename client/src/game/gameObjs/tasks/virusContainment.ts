@@ -92,7 +92,7 @@ export class VirusContainment extends Task {
     await this.preload();
     this.correctSound = this.scene.sound.add("correct");
     this.incorrectSound = this.scene.sound.add("incorrect");
-    const blackBox = this.scene.add.rectangle(650, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
+    // const blackBox = this.scene.add.rectangle(650, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
 
     // this.scene.add.text(650, 25, "Your Task: Virus Containment", { 
     //   color: "#ffffff",
