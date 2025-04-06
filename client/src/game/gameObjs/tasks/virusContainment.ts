@@ -4,8 +4,8 @@ import { Scene } from "phaser";
 export class VirusContainment extends Task {
   private files: { name: string; description: string; isInfected: boolean }[];
   private currentFileIndex: number;
-  private quarantineBox: Phaser.GameObjects.Rectangle;
-  private safeArea: Phaser.GameObjects.Rectangle;
+  private quarantineBox: Phaser.GameObjects.Sprite;
+  private safeArea: Phaser.GameObjects.Sprite;
   private fileObject: Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle;
   private fileObjectStartingPos = { x: 650, y: 310 };
   private errorCount: number = 0;
@@ -72,6 +72,8 @@ export class VirusContainment extends Task {
         }
         // Still need to find better file image
         this.scene.load.image("fileIcon", "/assets/file2.png");
+        this.scene.load.image("box", "/assets/box.png");
+        this.scene.load.image("quarantine", "/assets/trash-can.png");
         this.scene.load.on("complete", () => {
             console.log("File icon loaded successfully");
             resolve();
@@ -80,7 +82,6 @@ export class VirusContainment extends Task {
             console.error("Error loading file:", fileObj.src);
             resolve();
         });
-
         this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
         this.scene.load.audio("incorrect", "/assets/wrongsoundeffect.mp3");
         this.scene.load.start();
@@ -89,7 +90,6 @@ export class VirusContainment extends Task {
 
   async start(): Promise<void> {
     await this.preload();
-    this.preload();
     this.correctSound = this.scene.sound.add("correct");
     this.incorrectSound = this.scene.sound.add("incorrect");
     const blackBox = this.scene.add.rectangle(650, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
@@ -100,18 +100,29 @@ export class VirusContainment extends Task {
       fontStyle: "bold", 
     }).setOrigin(0.5, 0);  
 
-    this.quarantineBox = this.scene.add.rectangle(400, 600, 150, 100, 0xff0000).setInteractive();
-    this.safeArea = this.scene.add.rectangle(900, 600, 150, 100, 0x00ff00).setInteractive();
+    // Replace rectangles with images
+    this.quarantineBox = this.scene.add.sprite(400, 600, "quarantine")
+      .setInteractive()
+      .setScale(0.5);
+
+    this.safeArea = this.scene.add.sprite(900, 600, "box")
+      .setInteractive()
+      .setScale(0.5);
 
     this.quarantineBoxText = this.scene.add.text(340, 580, "Quarantine", { 
       color: "#ffffff",
       fontSize: "20px",
-      fontStyle: "bold", 
+      fontStyle: "bold",
+      stroke: '#000000',        
+      strokeThickness: 2
     });
+
     this.safeAreaText = this.scene.add.text(845, 580, "Safe Area", { 
       color: "#ffffff",
       fontSize: "20px",
-      fontStyle: "bold", 
+      fontStyle: "bold",
+      stroke: '#000000',        
+      strokeThickness: 2
     });
 
     this.currentFileIndex = Math.floor(Math.random() * this.files.length);
@@ -140,7 +151,9 @@ export class VirusContainment extends Task {
     
     this.fileText = this.scene.add.text(centerX, centerY + 50, currentFile.description, { 
       color: "#000000",
-      align: 'center'
+      align: 'center',
+      stroke: '#000000',
+      strokeThickness: 1,
     }).setOrigin(0.5); 
 
     this.fileObject.on("drag", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
