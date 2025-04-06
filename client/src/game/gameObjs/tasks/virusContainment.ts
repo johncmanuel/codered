@@ -71,7 +71,6 @@ export class VirusContainment extends Task {
             resolve();
             return;
         }
-        // Still need to find better file image
         this.scene.load.image("fileIcon", "/assets/file2.png");
         this.scene.load.image("box", "/assets/box.png");
         this.scene.load.image("quarantine", "/assets/trash-can.png");
@@ -104,11 +103,11 @@ export class VirusContainment extends Task {
     // Replace rectangles with images
     this.quarantineBox = this.scene.add.sprite(400, 600, "quarantine")
       .setInteractive()
-      .setScale(0.5);
+      .setScale(0.48);
 
     this.safeArea = this.scene.add.sprite(900, 600, "box")
       .setInteractive()
-      .setScale(0.5);
+      .setScale(0.48);
 
     this.quarantineBoxText = this.scene.add.text(340, 580, "Quarantine", { 
       color: "#ffffff",
@@ -151,7 +150,7 @@ export class VirusContainment extends Task {
     }
     
     this.fileText = this.scene.add.text(centerX, centerY + 50, currentFile.description, { 
-      color: "#000000",
+      color: "#ffffff",
       align: 'center',
       stroke: '#000000',
       strokeThickness: 1,
