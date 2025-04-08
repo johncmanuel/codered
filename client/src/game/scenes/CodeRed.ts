@@ -11,6 +11,7 @@ import { ControlButtonDisabler } from "../gameObjs/buttonDisabler";
 import { SpamAds } from "../gameObjs/spamAds";
 import { type IRoundTimer, type IDataHealth } from "../types/eventBusTypes";
 import { ObstacleTimer } from "../gameObjs/obstacleTimer";
+import { GameplayScreen } from "../gameObjs/gameplayScreen";
 
 export const GAME_NAME = "CodeRed";
 
@@ -18,6 +19,7 @@ export const GAME_NAME = "CodeRed";
 // update runs continuously
 export class CodeRed extends Scene {
   // btw this is temporary, we wouldn't need to track this much data
+  private gameplayScreen: GameplayScreen;
   gameStore: GameStore | null;
 
   playerId: string | null;
@@ -74,6 +76,11 @@ export class CodeRed extends Scene {
   // Load all assets here first and other stuff
   preload() {
     this.load.image("exe", "/assets/exe.png");
+    this.load.image("wifiIcon", "/assets/wifi.png");
+    this.load.image("powerIcon", "/assets/power.png");
+    this.load.image("calender", "/assets/calender.png");
+    this.load.image("volume", "/assets/volume-up.png");
+    this.load.image("clock", "/assets/clock.png");
   }
 
   // load the game objects stuff here
@@ -85,6 +92,22 @@ export class CodeRed extends Scene {
         color: "#ffffff",
       })
       .setOrigin(0.5, 0.5);
+
+    this.gameplayScreen = new GameplayScreen(this);
+    this.gameplayScreen.show(); 
+
+    // Update time every second
+    this.time.addEvent({
+      delay: 1000,
+      loop: true,
+      callback: () => {
+        const currentTime = new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        this.gameplayScreen["timeText"].setText(currentTime);
+      },
+    });
 
     this.postMatchUI = new PostMatchUI(this);
     this.controlBtnDisabler = new ControlButtonDisabler(this, this.controlBtns);
