@@ -11,7 +11,6 @@ export class GameplayScreen {
   private volume: GameObjects.Image;
   private clock: GameObjects.Image;
 
-
   constructor(scene: Scene) {
     this.scene = scene;
     this.createHeaderBar();
@@ -24,15 +23,23 @@ export class GameplayScreen {
       headerHeight / 2,
       this.scene.cameras.main.width,
       headerHeight,
-      0x333333, 
-      1
+      0x333333,
+      1,
     );
     this.headerBar.setDepth(0);
 
-    this.wifiIcon = this.scene.add.image(this.scene.cameras.main.width - 490, headerHeight / 2, "wifiIcon");
+    this.wifiIcon = this.scene.add.image(
+      this.scene.cameras.main.width - 490,
+      headerHeight / 2,
+      "wifiIcon",
+    );
     this.wifiIcon.setOrigin(0, 0.5).setScale(0.1).setDepth(0);
 
-    this.calender = this.scene.add.image(this.scene.cameras.main.width - 385, headerHeight / 2, "calender");
+    this.calender = this.scene.add.image(
+      this.scene.cameras.main.width - 385,
+      headerHeight / 2,
+      "calender",
+    );
     this.calender.setOrigin(0, 0.5).setScale(0.09).setDepth(0);
 
     const currentDate = new Date().toLocaleDateString("en-US", {
@@ -40,11 +47,16 @@ export class GameplayScreen {
       day: "numeric",
       year: "numeric",
     });
-    this.dateText = this.scene.add.text(this.scene.cameras.main.width - 335, headerHeight / 2, currentDate, {
-      fontFamily: "Audiowide",
-      fontSize: "20px",
-      color: "#000000",
-    });
+    this.dateText = this.scene.add.text(
+      this.scene.cameras.main.width - 335,
+      headerHeight / 2,
+      currentDate,
+      {
+        fontFamily: "Audiowide",
+        fontSize: "20px",
+        color: "#000000",
+      },
+    );
     this.dateText.setOrigin(0, 0.4).setDepth(0);
 
     const currentTime = new Date().toLocaleTimeString("en-US", {
@@ -59,17 +71,29 @@ export class GameplayScreen {
         fontFamily: "Audiowide",
         fontSize: "20px",
         color: "#000000",
-      }
+      },
     );
     this.timeText.setOrigin(0.5, 0.4).setDepth(0);
 
-    this.clock = this.scene.add.image(this.scene.cameras.main.width - 185, headerHeight / 2, "clock");
+    this.clock = this.scene.add.image(
+      this.scene.cameras.main.width - 185,
+      headerHeight / 2,
+      "clock",
+    );
     this.clock.setOrigin(0.5, 0.5).setScale(0.09).setDepth(0);
 
-    this.volume = this.scene.add.image(this.scene.cameras.main.width - 412, headerHeight / 2, "volume");
+    this.volume = this.scene.add.image(
+      this.scene.cameras.main.width - 412,
+      headerHeight / 2,
+      "volume",
+    );
     this.volume.setOrigin(0.5, 0.5).setScale(0.09).setDepth(0);
 
-    this.powerButton = this.scene.add.image(this.scene.cameras.main.width - 15, headerHeight / 2, "powerIcon");
+    this.powerButton = this.scene.add.image(
+      this.scene.cameras.main.width - 15,
+      headerHeight / 2,
+      "powerIcon",
+    );
     this.powerButton.setOrigin(0.7, 0.5).setScale(0.09).setDepth(0);
   }
 
@@ -94,4 +118,20 @@ export class GameplayScreen {
     this.volume.setVisible(false);
     this.clock.setVisible(false);
   }
+
+  // updates time on the header
+  public startUpdatingTime(delayMs: number = 1000): void {
+    this.scene.time.addEvent({
+      delay: delayMs,
+      loop: true,
+      callback: () => {
+        const currentTime = new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        this.timeText.setText(currentTime);
+      },
+    });
+  }
 }
+

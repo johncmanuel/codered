@@ -107,19 +107,7 @@ export class CodeRed extends Scene {
 
     this.gameplayScreen = new GameplayScreen(this);
     this.gameplayScreen.show();
-
-    // Update time every second
-    this.time.addEvent({
-      delay: 1000,
-      loop: true,
-      callback: () => {
-        const currentTime = new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        this.gameplayScreen["timeText"].setText(currentTime);
-      },
-    });
+    this.gameplayScreen.startUpdatingTime();
 
     this.postMatchUI = new PostMatchUI(this);
     this.controlBtnDisabler = new ControlButtonDisabler(this, this.controlBtns);
