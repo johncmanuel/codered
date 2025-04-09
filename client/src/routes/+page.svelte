@@ -16,7 +16,7 @@
   $: hasStarted = false;
   let showAbout = false;
 
-  const mainMenuSong = new Audio('/assets/mainmenu.wav');
+  const mainMenuSong = new Audio("/assets/mainmenu.wav");
   let isMuted = false;
   let isPlaying = false;
   let showVolumeSlider = false;
@@ -34,24 +34,25 @@
     const startMusic = () => {
       mainMenuSong.loop = true;
       mainMenuSong.volume = 0.3;
-      mainMenuSong.play()
+      mainMenuSong
+        .play()
         .then(() => {
           isPlaying = true;
         })
-        .catch(err => {
-          console.log('Audio autoplay blocked - waiting for user interaction');
+        .catch((err) => {
+          console.log("Audio autoplay blocked - waiting for user interaction");
           isPlaying = false;
         });
     };
 
-    document.addEventListener('click', startMusic, { once: true });
+    document.addEventListener("click", startMusic, { once: true });
   });
 
   onDestroy(() => {
     $gameStore.room?.leave();
     mainMenuSong.pause();
     mainMenuSong.currentTime = 0;
-    mainMenuSong.removeEventListener('ended', () => {}); // Clean up event listeners
+    mainMenuSong.removeEventListener("ended", () => {}); // Clean up event listeners
   });
 
   function toggleMute() {
@@ -150,10 +151,14 @@
 </script>
 
 <main>
-  <div class="audio-controls" 
-       on:mouseenter={() => showVolumeSlider = true}
-       on:mouseleave={() => showVolumeSlider = false}>
-    <button on:click={toggleMute} class="mute-button">
+  <div
+    class="audio-controls"
+    on:mouseenter={() => (showVolumeSlider = true)}
+    on:mouseleave={() => (showVolumeSlider = false)}
+    role="group"
+    aria-label="Audio controls"
+  >
+    <button on:click={toggleMute} class="mute-button" aria-label={isMuted ? "Unmute" : "Mute"}>
       {#if !isPlaying}
         ▶️
       {:else if !isMuted}
@@ -163,13 +168,18 @@
       {/if}
     </button>
     {#if showVolumeSlider && isPlaying}
-      <input type="range" 
-        min="0" 
-        max="1" 
-        step="0.1" 
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.1"
         value={mainMenuSong.volume}
         on:input={handleVolumeChange}
         class="volume-slider"
+        aria-label="Volume control"
+        aria-valuemin="0"
+        aria-valuemax="1"
+        aria-valuenow={mainMenuSong.volume}
       />
     {/if}
   </div>
@@ -324,7 +334,7 @@
 
   .audio-controls {
     position: fixed;
-    top: .25rem;
+    top: 0.25rem;
     right: 2rem;
     z-index: 100;
     display: flex;
@@ -375,3 +385,4 @@
     border: none;
   }
 </style>
+
