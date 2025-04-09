@@ -11,6 +11,8 @@ export class EncryptionDecryption extends Task {
   private optionButtons: Phaser.GameObjects.Text[] = [];
   private correctSound: Phaser.Sound.BaseSound;
   private incorrectSound: Phaser.Sound.BaseSound;
+  private box: Phaser.GameObjects.Rectangle;
+  private boxText: Phaser.GameObjects.Text;
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
@@ -28,8 +30,8 @@ export class EncryptionDecryption extends Task {
     console.log("Starting ENCRYPTION_DECRYPTION task");
     this.preload();
     this.displayQuestion();
-    this.scene.add.rectangle(10, 10, this.scene.cameras.main.width - 20, 50, 0x65E305).setOrigin(0, 0);
-    this.scene.add.text(20, 20, "FILES HAVE BEEN EXPOSED! ENCRYPT" , {
+    this.box = this.scene.add.rectangle(10, 10, this.scene.cameras.main.width - 20, 50, 0x65E305).setOrigin(0, 0);
+    this.boxText = this.scene.add.text(20, 20, "FILES HAVE BEEN EXPOSED! ENCRYPT" , {
       fontSize: "30px", 
       color: "#FE0000", })
   }
@@ -38,6 +40,8 @@ export class EncryptionDecryption extends Task {
 
   cleanup() {
     super.cleanup();
+    this.box.destroy();
+    this.boxText.destroy();
     if (this.questionText) this.questionText.destroy();
     this.optionButtons.forEach((button) => button.destroy());
   }
