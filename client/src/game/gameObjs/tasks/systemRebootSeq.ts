@@ -7,7 +7,7 @@ export class SystemRebootSequence extends Task {
   private sequence: string[] = [];
   private playerSequence: string[] = [];
   private currentRound: number = 1;
-  private maxRounds: number = 4;
+  private maxRounds: number = 2;
   private maxFails: number = 2;
   private fails: number = 0;
   private isShowingSequence: boolean = false;
@@ -219,4 +219,3 @@ export class SystemRebootSequence extends Task {
     }
   }
 }
-

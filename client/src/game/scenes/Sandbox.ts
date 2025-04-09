@@ -39,7 +39,8 @@ export class Sandbox extends Scene {
     this.spamAds = new SpamAds(this);
     this.spamAds.spawnAds();
 
-    this.taskManager.addTask(testId, createTask(this, testId, Tasks.FIREWALL_CONFIG));
+    this.taskManager.addTask(testId, createTask(this, testId, Tasks.VIRUS_CONTAINMENT));
+
     console.log("Added task");
     this.taskManager.startTask(testId);
     EventBus.emit("current-active-scene");

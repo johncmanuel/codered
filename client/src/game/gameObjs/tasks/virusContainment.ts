@@ -4,10 +4,10 @@ import { Scene } from "phaser";
 export class VirusContainment extends Task {
   private files: { name: string; description: string; isInfected: boolean }[];
   private currentFileIndex: number;
-  private quarantineBox: Phaser.GameObjects.Rectangle;
-  private safeArea: Phaser.GameObjects.Rectangle;
+  private quarantineBox: Phaser.GameObjects.Sprite;
+  private safeArea: Phaser.GameObjects.Sprite;
   private fileObject: Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle;
-  private fileObjectStartingPos = { x: 250, y: 100 };
+  private fileObjectStartingPos = { x: 650, y: 310 };
   private errorCount: number = 0;
   private maxErrors: number = 2;
   private score: number = 0;
@@ -15,6 +15,8 @@ export class VirusContainment extends Task {
   private fileText: Phaser.GameObjects.Text;
   private quarantineBoxText: Phaser.GameObjects.Text;
   private safeAreaText: Phaser.GameObjects.Text;
+  private correctSound: Phaser.Sound.BaseSound;
+  private incorrectSound: Phaser.Sound.BaseSound;
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
@@ -63,12 +65,74 @@ export class VirusContainment extends Task {
     ];
   }
 
-  start(): void {
-    this.quarantineBox = this.scene.add.rectangle(100, 300, 150, 100, 0xff0000).setInteractive();
-    this.safeArea = this.scene.add.rectangle(400, 300, 150, 100, 0x00ff00).setInteractive();
+  async preload(): Promise<void> {
+    return new Promise((resolve) => {
+        if (this.scene.textures.exists("fileIcon")) {
+            resolve();
+            return;
+        }
+        this.scene.load.image("fileIcon", "/assets/file2.png");
+        this.scene.load.image("box", "/assets/box.png");
+        this.scene.load.image("quarantine", "/assets/trash-can.png");
+        this.scene.load.on("complete", () => {
+            console.log("File icon loaded successfully");
+            resolve();
+        });
+        this.scene.load.on("loaderror", (fileObj: any) => {
+            console.error("Error loading file:", fileObj.src);
+            resolve();
+        });
+        this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
+        this.scene.load.audio("incorrect", "/assets/wrongsoundeffect.mp3");
+        this.scene.load.start();
+    });
+  }
 
-    this.quarantineBoxText = this.scene.add.text(50, 250, "Quarantine", { color: "#ffffff" });
-    this.safeAreaText = this.scene.add.text(350, 250, "Safe Area", { color: "#ffffff" });
+  async start(): Promise<void> {
+    await this.preload();
+    this.correctSound = this.scene.sound.add("correct");
+    this.incorrectSound = this.scene.sound.add("incorrect");
+    // const blackBox = this.scene.add.rectangle(650, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
+
+    // this.scene.add.text(650, 25, "Your Task: Virus Containment", { 
+    //   color: "#ffffff",
+    //   fontSize: "30px",
+    //   fontStyle: "bold", 
+    // }).setOrigin(0.5, 0);  
+
+    // Replace rectangles with images
+    this.quarantineBox = this.scene.add.sprite(400, 600, "quarantine")
+      .setInteractive()
+      .setScale(0.48);
+
+    this.safeArea = this.scene.add.sprite(900, 600, "box")
+      .setInteractive()
+      .setScale(0.48);
+
+    // increase hit box size 
+    this.quarantineBox.input.hitArea.setTo(-50, -50, 
+      this.quarantineBox.width + 100, 
+      this.quarantineBox.height + 100);
+
+    this.safeArea.input.hitArea.setTo(-50, -50, 
+      this.safeArea.width + 100, 
+      this.safeArea.height + 100);
+
+    this.quarantineBoxText = this.scene.add.text(340, 580, "Quarantine", { 
+      color: "#ffffff",
+      fontSize: "20px",
+      fontStyle: "bold",
+      stroke: '#000000',        
+      strokeThickness: 2
+    });
+
+    this.safeAreaText = this.scene.add.text(845, 580, "Safe Area", { 
+      color: "#ffffff",
+      fontSize: "20px",
+      fontStyle: "bold",
+      stroke: '#000000',        
+      strokeThickness: 2
+    });
 
     this.currentFileIndex = Math.floor(Math.random() * this.files.length);
     this.spawnFile(this.currentFileIndex);
@@ -76,20 +140,31 @@ export class VirusContainment extends Task {
 
   spawnFile(fileIdx: number): void {
     const currentFile = this.files[fileIdx];
+    const centerX = this.scene.cameras.main.centerX;
+    const centerY = this.scene.cameras.main.centerY;
 
     if (this.scene.textures.exists("fileIcon")) {
-      // TODO: find a good file icon image lol
       this.fileObject = this.scene.add
-        .sprite(this.fileObjectStartingPos.x, this.fileObjectStartingPos.y, "fileIcon")
-        .setInteractive({ draggable: true });
+        .sprite(centerX, centerY - 50, "fileIcon")
+        .setInteractive({ draggable: true })
+        .setScale(0.4) 
+        .setDepth(1);  
     } else {
       // Use a rectangle as a placeholder
       this.fileObject = this.scene.add
-        .rectangle(this.fileObjectStartingPos.x, this.fileObjectStartingPos.y, 80, 80, 0x0000ff)
-        .setInteractive({ draggable: true });
+        .sprite(centerX, centerY - 50, 'fileIcon')
+        .setInteractive({ draggable: true })
+        .setScale(0.4)
+        .setDepth(1);
     }
-    this.fileText = this.scene.add.text(200, 150, currentFile.description, { color: "#000000" });
-
+    
+    this.fileText = this.scene.add.text(centerX, centerY + 50, currentFile.description, { 
+      color: "#ffffff",
+      align: 'center',
+      stroke: '#000000',
+      strokeThickness: 1,
+    }).setOrigin(0.5); 
+    
     this.fileObject.on("drag", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       this.fileObject.x = dragX;
       this.fileObject.y = dragY;
@@ -100,35 +175,42 @@ export class VirusContainment extends Task {
       this.fileObject.off("drag");
     });
 
-    // prevent duplicate listeners
-    if (this.scene.input.listeners("dragend").length > 0) return;
-    console.log("Adding dragend listener");
+    this.fileObject.on("dragend", (pointer: Phaser.Input.Pointer) => {
+      const bounds = this.fileObject.getBounds();
+      const quarantineBounds = this.quarantineBox.getBounds();
+      const safeBounds = this.safeArea.getBounds();
 
-    this.scene.input.on(
-      "dragend",
-      (
-        pointer: Phaser.Input.Pointer,
-        gameObject: Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle,
-      ) => {
-        if (this.quarantineBox.getBounds().contains(gameObject.x, gameObject.y)) {
-          this.handleFileDrop(currentFile, true);
-        } else if (this.safeArea.getBounds().contains(gameObject.x, gameObject.y)) {
-          this.handleFileDrop(currentFile, false);
-        } else {
-          // Reset position if dropped outside
-          gameObject.setPosition(this.fileObjectStartingPos.x, this.fileObjectStartingPos.y);
-        }
-      },
-    );
+      // Check for intersection instead of point containment
+      if (Phaser.Geom.Rectangle.Overlaps(bounds, quarantineBounds)) {
+        this.handleFileDrop(currentFile, true);
+      } else if (Phaser.Geom.Rectangle.Overlaps(bounds, safeBounds)) {
+        this.handleFileDrop(currentFile, false);
+      } else {
+        // Reset position if dropped outside
+        this.fileObject.setPosition(this.fileObjectStartingPos.x, this.fileObjectStartingPos.y);
+      }
+    });
   }
 
   handleFileDrop(
     file: { name: string; description: string; isInfected: boolean },
     droppedInQuarantine: boolean,
   ): void {
+    console.log('Drop detected:', {
+        x: this.fileObject.x,
+        y: this.fileObject.y,
+        quarantineBounds: this.quarantineBox.getBounds(),
+        safeBounds: this.safeArea.getBounds(),
+        zone: droppedInQuarantine ? 'quarantine' : 'safe'
+    });
+    
     if ((file.isInfected && droppedInQuarantine) || (!file.isInfected && !droppedInQuarantine)) {
       // Correct choice
       console.log("Correct choice");
+      if (this.correctSound) {
+        this.correctSound.play();
+        console.log("Playing correct sound");
+      } 
       this.score++;
       if (this.score >= this.maxScore) {
         this.complete();
@@ -142,6 +224,10 @@ export class VirusContainment extends Task {
       // Incorrect choice
       this.errorCount++;
       console.log("Incorrect choice");
+      if (this.incorrectSound) {
+        this.incorrectSound.play();
+        console.log("Playing incorrect sound");
+      }
       if (this.errorCount >= this.maxErrors) {
         this.fail();
         return;
