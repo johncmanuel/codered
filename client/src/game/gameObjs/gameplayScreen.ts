@@ -29,10 +29,10 @@ export class GameplayScreen {
     );
     this.headerBar.setDepth(0);
 
-    this.wifiIcon = this.scene.add.image(this.scene.cameras.main.width - 445, headerHeight / 2, "wifiIcon");
+    this.wifiIcon = this.scene.add.image(this.scene.cameras.main.width - 490, headerHeight / 2, "wifiIcon");
     this.wifiIcon.setOrigin(0, 0.5).setScale(0.1).setDepth(0);
 
-    this.calender = this.scene.add.image(this.scene.cameras.main.width - 335, headerHeight / 2, "calender");
+    this.calender = this.scene.add.image(this.scene.cameras.main.width - 385, headerHeight / 2, "calender");
     this.calender.setOrigin(0, 0.5).setScale(0.09).setDepth(0);
 
     const currentDate = new Date().toLocaleDateString("en-US", {
@@ -40,36 +40,36 @@ export class GameplayScreen {
       day: "numeric",
       year: "numeric",
     });
-    this.dateText = this.scene.add.text(this.scene.cameras.main.width - 280, headerHeight / 2, currentDate, {
-      fontFamily: "Arial",
+    this.dateText = this.scene.add.text(this.scene.cameras.main.width - 335, headerHeight / 2, currentDate, {
+      fontFamily: "Audiowide",
       fontSize: "20px",
       color: "#000000",
     });
-    this.dateText.setOrigin(0, 0.5).setDepth(0);
+    this.dateText.setOrigin(0, 0.4).setDepth(0);
 
     const currentTime = new Date().toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
     });
     this.timeText = this.scene.add.text(
-      this.scene.cameras.main.width - 110,
+      this.scene.cameras.main.width - 105,
       headerHeight / 2,
       currentTime,
       {
-        fontFamily: "Arial",
+        fontFamily: "Audiowide",
         fontSize: "20px",
         color: "#000000",
       }
     );
-    this.timeText.setOrigin(0.4, 0.5).setDepth(0);
+    this.timeText.setOrigin(0.5, 0.4).setDepth(0);
 
-    this.clock = this.scene.add.image(this.scene.cameras.main.width - 170, headerHeight / 2, "clock");
+    this.clock = this.scene.add.image(this.scene.cameras.main.width - 185, headerHeight / 2, "clock");
     this.clock.setOrigin(0.5, 0.5).setScale(0.09).setDepth(0);
 
-    this.volume = this.scene.add.image(this.scene.cameras.main.width - 365, headerHeight / 2, "volume");
+    this.volume = this.scene.add.image(this.scene.cameras.main.width - 412, headerHeight / 2, "volume");
     this.volume.setOrigin(0.5, 0.5).setScale(0.09).setDepth(0);
 
-    this.powerButton = this.scene.add.image(this.scene.cameras.main.width - 20, headerHeight / 2, "powerIcon");
+    this.powerButton = this.scene.add.image(this.scene.cameras.main.width - 15, headerHeight / 2, "powerIcon");
     this.powerButton.setOrigin(0.7, 0.5).setScale(0.09).setDepth(0);
   }
 

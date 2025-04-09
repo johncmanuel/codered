@@ -36,11 +36,13 @@ export class AssignedTaskNotification {
     if (!nextNotification) return;
 
     this.notificationText = this.scene.add
-      .text(this.scene.cameras.main.width / 2, 50, nextNotification.message, {
-        fontFamily: "Arial",
+      .text(this.scene.cameras.main.width / 2, 80, nextNotification.message, {
+        fontFamily: "Audiowide",
         fontSize: "24px",
-        color: "#ffffff",
-        backgroundColor: "#000000",
+        color: "#000000",
+        stroke: "#ffffff",
+        strokeThickness: 1,
+        backgroundColor: "#EEFF00",
         padding: { x: 10, y: 10 },
       })
       .setOrigin(0.5, 0.5)
