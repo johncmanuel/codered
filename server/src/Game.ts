@@ -32,9 +32,11 @@ export class CodeRedRoom extends Room<GameState> {
 
   // i think
   maxNumRounds = 6;
-  numRequiredTasksCompletedPerRound = 5; // default value
-  roundTimeLimitSecs = initRoundTimeLimitSecs; // 30s for testing, adjust later
-  lobbyControls: Set<string> = new Set(); // all controls currently assigned to players
+  numTotalTasksRequiredPerRound = 5; // default value, will be set later
+  roundTimeLimitSecs = initRoundTimeLimitSecs;
+
+  // all controls currently assigned to players
+  lobbyControls: Set<string> = new Set();
   numPlayersReady: number = 0;
 
   // controls assigned to each player
@@ -70,19 +72,21 @@ export class CodeRedRoom extends Room<GameState> {
       this.numPlayersReady++;
       if (this.numPlayersReady !== this.state.players.size) return;
 
-      this.numRequiredTasksCompletedPerRound = this.setRequiredTasksPerRound(
+      const baseTasksPerPlayer = 5;
+      this.numTotalTasksRequiredPerRound = this.setRequiredTasksPerRound(
         this.state.players.size,
+        baseTasksPerPlayer,
       );
-      console.log("this.numRequiredTasksCompletedPerRound", this.numRequiredTasksCompletedPerRound);
+      console.log("this.numRequiredTasksCompletedPerRound", this.numTotalTasksRequiredPerRound);
 
       this.state.players.forEach((player) => {
-        player.numTasksTodo = this.numRequiredTasksCompletedPerRound;
+        player.numTasksTodo = baseTasksPerPlayer;
       });
 
       // start the game once all players are in
       this.broadcast("allPlayersReady");
       this.dispatcher.dispatch(new AssignPlayerControlsCommand());
-      this.tasksArrCurrRound = this.batchCreateTasks(this.numRequiredTasksCompletedPerRound);
+      this.tasksArrCurrRound = this.batchCreateTasks(this.numTotalTasksRequiredPerRound);
       this.assignInitialTasks();
       this.startClock();
       this.gameLoop();
@@ -95,7 +99,7 @@ export class CodeRedRoom extends Room<GameState> {
         client,
         taskId,
       });
-      if (this.state.tasksDone >= this.numRequiredTasksCompletedPerRound) {
+      if (this.state.tasksDone >= this.numTotalTasksRequiredPerRound) {
         this.dispatcher.dispatch(new StartNewRoundCommand());
       }
     });
@@ -108,7 +112,7 @@ export class CodeRedRoom extends Room<GameState> {
         // TODO: change this dynamically as the game progresses
         healthDiff: 20,
       });
-      if (this.state.tasksDone >= this.numRequiredTasksCompletedPerRound) {
+      if (this.state.tasksDone >= this.numTotalTasksRequiredPerRound) {
         this.dispatcher.dispatch(new StartNewRoundCommand());
       }
     });

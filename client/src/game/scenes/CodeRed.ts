@@ -227,6 +227,7 @@ export class CodeRed extends Scene {
       console.log("task completed", data.taskId);
       this.handleTaskNotifs(data.taskId);
       if (data.isDoneWithTasks) {
+        console.log("all tasks complete");
         this.showAllTasksCompleteNotification();
       }
     });
@@ -235,6 +236,7 @@ export class CodeRed extends Scene {
       console.log("task failed", data.taskId);
       this.handleTaskNotifs(data.taskId);
       if (data.isDoneWithTasks) {
+        console.log("all tasks complete");
         this.showAllTasksCompleteNotification();
       }
     });
@@ -341,16 +343,16 @@ export class CodeRed extends Scene {
   }
 
   private showAllTasksCompleteNotification() {
-    // Remove any existing notification
     if (this.allTasksCompleteNotif) {
       this.allTasksCompleteNotif.destroy();
     }
 
-    // Create and show the notification
     this.allTasksCompleteNotif = this.add
       .text(
+        // this.cameras.main.width / 2,
+        // this.cameras.main.height / 2 - 100,
         this.cameras.main.width / 2,
-        this.cameras.main.height / 2 - 100,
+        50,
         "ALL TASKS COMPLETE!",
         {
           fontFamily: "Arial",
@@ -362,7 +364,7 @@ export class CodeRed extends Scene {
       )
       .setOrigin(0.5, 0.5);
 
-    // Add some effects
+    // add an interesting effect...
     this.tweens.add({
       targets: this.allTasksCompleteNotif,
       scale: { from: 1, to: 1.2 },
@@ -371,7 +373,7 @@ export class CodeRed extends Scene {
       repeat: -1,
     });
 
-    // Automatically remove after 5 seconds
+    //  remove after 5 seconds
     this.time.delayedCall(5000, () => {
       if (this.allTasksCompleteNotif) {
         this.allTasksCompleteNotif.destroy();

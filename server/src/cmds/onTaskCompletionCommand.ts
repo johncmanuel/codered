@@ -50,11 +50,6 @@ export class OnTaskCompletionCommand extends Command<
 
     console.log("Task completed by", client.sessionId, "Task type:", task.type);
     console.log("Player that task", task.type, "was assigned to:", playerClientWithTask.sessionId);
-    console.log(
-      "Tasks done:",
-      this.state.tasksDone,
-      "/",
-      this.room.numRequiredTasksCompletedPerRound,
-    );
+    console.log("Tasks done:", this.state.tasksDone, "/", this.room.numTotalTasksRequiredPerRound);
   }
 }

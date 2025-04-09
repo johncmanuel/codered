@@ -18,10 +18,11 @@ export class StartNewRoundCommand extends Command<CodeRedRoom> {
     this.state.players.forEach((player) => {
       player.controls.clear();
       player.activeTaskId = null;
+      player.numTasksTodo = 0;
     });
     this.room.dispatcher.dispatch(new AssignPlayerControlsCommand());
     this.room.tasksArrCurrRound = this.room.batchCreateTasks(
-      this.room.numRequiredTasksCompletedPerRound,
+      this.room.numTotalTasksRequiredPerRound,
     );
     this.room.assignInitialTasks();
   }
