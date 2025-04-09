@@ -80,7 +80,7 @@ export class CodeRedRoom extends Room<GameState> {
       console.log("this.numRequiredTasksCompletedPerRound", this.numTotalTasksRequiredPerRound);
 
       this.state.players.forEach((player) => {
-        player.numTasksTodo = baseTasksPerPlayer;
+        player.numTasksTodo = this.baseTasksPerPlayer;
       });
 
       // start the game once all players are in
