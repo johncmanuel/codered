@@ -1,7 +1,13 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { type GameStore } from "../stores/gameStore";
-import { type TaskState, Tasks, type GameState, FillerTasks } from "../types/room";
+import {
+  type TaskState,
+  Tasks,
+  type GameState,
+  FillerTasks,
+  type TaskCompletedData,
+} from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
 import { AssignedTaskNotification } from "../gameObjs/activeTaskNotification";
 import { ControlButtons } from "../gameObjs/controlButtons";
@@ -40,6 +46,7 @@ export class CodeRed extends Scene {
 
   obstacleTimer: ObstacleTimer;
   timeLimitBar: TimeLimitBar | null;
+  allTasksCompleteNotif: Phaser.GameObjects.Text | null;
 
   constructor() {
     super(GAME_NAME);
@@ -55,6 +62,7 @@ export class CodeRed extends Scene {
     this.adsSpammer = new SpamAds(this);
     this.hideInformation = false;
     this.timeLimitBar = null;
+    this.allTasksCompleteNotif = null;
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -165,6 +173,9 @@ export class CodeRed extends Scene {
       // this.timeLimitBar.startTimer();
     });
 
+    // receive updates on time limit once received
+    // this.gameStore?.room?.onMessage("updateTaskTimeLimit", (taskTimeLimitSec: number) => {});
+
     // handle controls assigned to the player from server
     this.gameStore?.room?.onMessage("controls", (controls) => {
       if (!controls) {
@@ -212,36 +223,20 @@ export class CodeRed extends Scene {
       // do something else like notify the player (e.g., display a message or play a sound)
     });
 
-    this.gameStore?.room?.onMessage("taskCompleted", (taskId: string) => {
-      console.log(
-        "taskId",
-        taskId,
-        "this.assignedTaskNotifs.getCurrentTaskId()",
-        this.assignedTaskNotifs.getCurrentTaskId(),
-      );
-      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) {
-        this.assignedTaskNotifs.fade();
-      } else {
-        console.error("Task completed but the notification is still there");
+    this.gameStore?.room?.onMessage("taskCompleted", (data: TaskCompletedData) => {
+      console.log("task completed", data.taskId);
+      this.handleTaskNotifs(data.taskId);
+      if (data.isDoneWithTasks) {
+        this.showAllTasksCompleteNotification();
       }
-
-      this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
-    this.gameStore?.room?.onMessage("taskFailed", (taskId: string) => {
-      console.log(
-        "taskId",
-        taskId,
-        "this.assignedTaskNotifs.getCurrentTaskId()",
-        this.assignedTaskNotifs.getCurrentTaskId(),
-      );
-      if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) {
-        this.assignedTaskNotifs.fade();
-      } else {
-        console.error("Task failed but the notification is still there");
+    this.gameStore?.room?.onMessage("taskFailed", (data: TaskCompletedData) => {
+      console.log("task failed", data.taskId);
+      this.handleTaskNotifs(data.taskId);
+      if (data.isDoneWithTasks) {
+        this.showAllTasksCompleteNotification();
       }
-
-      this.gameStore?.room?.send("giveMeTaskPls", taskId);
     });
 
     this.gameStore?.room?.onMessage("gameOverStats", (gameState: GameState) => {
@@ -328,5 +323,60 @@ export class CodeRed extends Scene {
       this.obstacleTimer.startAll();
     }
     this.taskManager.removeTask(taskId);
+  }
+
+  private handleTaskNotifs(taskId: string) {
+    console.log(
+      "taskId",
+      taskId,
+      "this.assignedTaskNotifs.getCurrentTaskId()",
+      this.assignedTaskNotifs.getCurrentTaskId(),
+    );
+    if (this.assignedTaskNotifs.getCurrentTaskId() === taskId) {
+      this.assignedTaskNotifs.fade();
+    } else {
+      console.error("Task finished but the notification is still there");
+    }
+    this.gameStore?.room?.send("giveMeTaskPls", taskId);
+  }
+
+  private showAllTasksCompleteNotification() {
+    // Remove any existing notification
+    if (this.allTasksCompleteNotif) {
+      this.allTasksCompleteNotif.destroy();
+    }
+
+    // Create and show the notification
+    this.allTasksCompleteNotif = this.add
+      .text(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2 - 100,
+        "ALL TASKS COMPLETE!",
+        {
+          fontFamily: "Arial",
+          fontSize: "48px",
+          color: "#00ff00",
+          backgroundColor: "#000000",
+          padding: { x: 20, y: 10 },
+        },
+      )
+      .setOrigin(0.5, 0.5);
+
+    // Add some effects
+    this.tweens.add({
+      targets: this.allTasksCompleteNotif,
+      scale: { from: 1, to: 1.2 },
+      duration: 500,
+      yoyo: true,
+      repeat: -1,
+    });
+
+    // Automatically remove after 5 seconds
+    this.time.delayedCall(5000, () => {
+      if (this.allTasksCompleteNotif) {
+        this.allTasksCompleteNotif.destroy();
+        this.allTasksCompleteNotif = null;
+      }
+    });
   }
 }

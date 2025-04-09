@@ -74,6 +74,11 @@ export class GameState extends Schema {
 
 export const initRoundTimeLimitSecs = 120;
 
+export interface TaskCompletedData {
+  taskId: string;
+  isDoneWithTasks: boolean;
+}
+
 export type GameRoom = Room<GameState>;
 
 export interface Player {

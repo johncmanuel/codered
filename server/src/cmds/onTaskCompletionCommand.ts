@@ -1,6 +1,7 @@
 import { Command } from "@colyseus/command";
 import { CodeRedRoom } from "../Game";
 import { Client } from "colyseus";
+import { type TaskCompletedData } from "../CodeRedState";
 
 export class OnTaskCompletionCommand extends Command<
   CodeRedRoom,
@@ -28,9 +29,22 @@ export class OnTaskCompletionCommand extends Command<
       return;
     }
 
+    const player = this.state.players.get(client.sessionId);
+    if (!player) {
+      console.error("Player not found:", client.sessionId);
+      return;
+    }
+
+    player.numTasksTodo--;
+
+    const data: TaskCompletedData = {
+      taskId: taskId,
+      isDoneWithTasks: player.numTasksTodo <= 0,
+    };
+
     this.state.activeTasks.delete(taskId);
     this.room.actualTasks = this.room.actualTasks.filter((t) => t.id !== taskId);
-    playerClientWithTask.send("taskCompleted", taskId);
+    playerClientWithTask.send("taskCompleted", data);
     this.state.tasksDone++;
     this.state.totalTasksDone++;
 
