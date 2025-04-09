@@ -1,6 +1,7 @@
 import { Task } from "./task";
 import { Scene } from "phaser";
 
+
 export class EncryptionDecryption extends Task {
   private questions: { question: string; answer: number; options: number[] }[];
   private currentQuestionIndex: number = 0;
@@ -8,6 +9,8 @@ export class EncryptionDecryption extends Task {
   private fails: number = 0;
   private questionText: Phaser.GameObjects.Text;
   private optionButtons: Phaser.GameObjects.Text[] = [];
+  private correctSound: Phaser.Sound.BaseSound;
+  private incorrectSound: Phaser.Sound.BaseSound;
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
@@ -15,9 +18,20 @@ export class EncryptionDecryption extends Task {
     this.questions = this.generateQuestions();
   }
 
+  preload() {
+    this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
+    this.scene.load.audio("incorrect", "/assets/wrongsoundeffect.mp3");
+    this.scene.load.start()
+  }
+
   start() {
     console.log("Starting ENCRYPTION_DECRYPTION task");
+    this.preload();
     this.displayQuestion();
+    this.scene.add.rectangle(10, 10, this.scene.cameras.main.width - 20, 50, 0x65E305).setOrigin(0, 0);
+    this.scene.add.text(20, 20, "FILES HAVE BEEN EXPOSED! ENCRYPT" , {
+      fontSize: "30px", 
+      color: "#FE0000", })
   }
 
   update() {}
@@ -43,9 +57,10 @@ export class EncryptionDecryption extends Task {
     console.log("currentQuestion.answer: ", currentQuestion.answer);
 
     this.questionText = this.scene.add
-      .text(this.scene.cameras.main.centerX, 200, currentQuestion.question, {
+      .text(this.scene.cameras.main.centerX- 35, 200, currentQuestion.question, {
         fontSize: "24px",
         color: "#ffffff",
+        backgroundColor: "#000000",
       })
       .setOrigin(0.5, 0.5);
 
@@ -80,12 +95,16 @@ export class EncryptionDecryption extends Task {
 
   private handleAnswer(selectedAnswer: number) {
     const currentQuestion = this.questions[this.currentQuestionIndex];
+    this.correctSound = this.scene.sound.add("correct");
+    this.incorrectSound = this.scene.sound.add("incorrect");
 
     if (selectedAnswer === currentQuestion.answer) {
       console.log("Correct answer!");
+      this.correctSound.play();
     } else {
       this.fails++;
       console.log("Incorrect answer!");
+      this.incorrectSound.play();
     }
 
     this.currentQuestionIndex++;
