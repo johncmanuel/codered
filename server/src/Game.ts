@@ -33,6 +33,7 @@ export class CodeRedRoom extends Room<GameState> {
   // i think
   maxNumRounds = 6;
   numTotalTasksRequiredPerRound = 5; // default value, will be set later
+  baseTasksPerPlayer = 5; // defines how many tasks each player gets per round
   roundTimeLimitSecs = initRoundTimeLimitSecs;
 
   // all controls currently assigned to players
@@ -72,10 +73,9 @@ export class CodeRedRoom extends Room<GameState> {
       this.numPlayersReady++;
       if (this.numPlayersReady !== this.state.players.size) return;
 
-      const baseTasksPerPlayer = 5;
       this.numTotalTasksRequiredPerRound = this.setRequiredTasksPerRound(
         this.state.players.size,
-        baseTasksPerPlayer,
+        this.baseTasksPerPlayer,
       );
       console.log("this.numRequiredTasksCompletedPerRound", this.numTotalTasksRequiredPerRound);
 
