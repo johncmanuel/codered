@@ -19,6 +19,7 @@ import { type IRoundTimer, type IDataHealth } from "../types/eventBusTypes";
 import { ObstacleTimer } from "../gameObjs/obstacleTimer";
 import { GameplayScreen } from "../gameObjs/gameplayScreen";
 import { TimeLimitBar } from "../gameObjs/taskTimeLimitBar";
+import { TasksCompleteNotif } from "../gameObjs/tasksCompleteNotif";
 
 export const GAME_NAME = "CodeRed";
 
@@ -48,7 +49,7 @@ export class CodeRed extends Scene {
 
   obstacleTimer: ObstacleTimer;
   timeLimitBar: TimeLimitBar | null;
-  allTasksCompleteNotif: Phaser.GameObjects.Text | null;
+  allTasksCompleteNotif: TasksCompleteNotif;
 
   constructor() {
     super(GAME_NAME);
@@ -64,7 +65,7 @@ export class CodeRed extends Scene {
     this.adsSpammer = new SpamAds(this);
     this.hideInformation = false;
     this.timeLimitBar = null;
-    this.allTasksCompleteNotif = null;
+    this.allTasksCompleteNotif = new TasksCompleteNotif(this);
 
     EventBus.on("test", (gameStore: GameStore) => {
       this.gameStore = gameStore;
@@ -105,7 +106,7 @@ export class CodeRed extends Scene {
       .setOrigin(0.5, 0.5);
 
     this.gameplayScreen = new GameplayScreen(this);
-    this.gameplayScreen.show(); 
+    this.gameplayScreen.show();
 
     // Update time every second
     this.time.addEvent({
@@ -165,6 +166,7 @@ export class CodeRed extends Scene {
 
       this.loadingText.setVisible(true);
       this.controlBtns.hide();
+      this.allTasksCompleteNotif.hide();
 
       this.gameStore?.room?.send("giveMeControlsPls");
     });
@@ -248,20 +250,12 @@ export class CodeRed extends Scene {
 
     this.gameStore?.room?.onMessage("taskCompleted", (data: TaskCompletedData) => {
       console.log("task completed", data.taskId);
-      this.handleTaskNotifs(data.taskId);
-      if (data.isDoneWithTasks) {
-        console.log("all tasks complete");
-        this.showAllTasksCompleteNotification();
-      }
+      this.handleTaskNotifs(data.taskId, data.isDoneWithTasks);
     });
 
     this.gameStore?.room?.onMessage("taskFailed", (data: TaskCompletedData) => {
-      console.log("task failed", data.taskId);
-      this.handleTaskNotifs(data.taskId);
-      if (data.isDoneWithTasks) {
-        console.log("all tasks complete");
-        this.showAllTasksCompleteNotification();
-      }
+      console.log("task failed", data.taskId, data.isDoneWithTasks);
+      this.handleTaskNotifs(data.taskId, data.isDoneWithTasks);
     });
 
     this.gameStore?.room?.onMessage("gameOverStats", (gameState: GameState) => {
@@ -272,6 +266,7 @@ export class CodeRed extends Scene {
       this.taskManager.cleanup();
       this.adsSpammer.clearAds();
       this.obstacleTimer.stopAll();
+      this.allTasksCompleteNotif.hide();
 
       this.postMatchUI.show();
     });
@@ -350,7 +345,7 @@ export class CodeRed extends Scene {
     this.taskManager.removeTask(taskId);
   }
 
-  private handleTaskNotifs(taskId: string) {
+  private handleTaskNotifs(taskId: string, isCompleted: boolean) {
     console.log(
       "taskId",
       taskId,
@@ -362,46 +357,12 @@ export class CodeRed extends Scene {
     } else {
       console.error("Task finished but the notification is still there");
     }
+
     this.gameStore?.room?.send("giveMeTaskPls", taskId);
-  }
 
-  private showAllTasksCompleteNotification() {
-    if (this.allTasksCompleteNotif) {
-      this.allTasksCompleteNotif.destroy();
+    if (isCompleted) {
+      console.log("all tasks complete");
+      this.allTasksCompleteNotif.show();
     }
-
-    this.allTasksCompleteNotif = this.add
-      .text(
-        // this.cameras.main.width / 2,
-        // this.cameras.main.height / 2 - 100,
-        this.cameras.main.width / 2,
-        50,
-        "ALL TASKS COMPLETE!",
-        {
-          fontFamily: "Arial",
-          fontSize: "48px",
-          color: "#00ff00",
-          backgroundColor: "#000000",
-          padding: { x: 20, y: 10 },
-        },
-      )
-      .setOrigin(0.5, 0.5);
-
-    // add an interesting effect...
-    this.tweens.add({
-      targets: this.allTasksCompleteNotif,
-      scale: { from: 1, to: 1.2 },
-      duration: 500,
-      yoyo: true,
-      repeat: -1,
-    });
-
-    //  remove after 5 seconds
-    this.time.delayedCall(5000, () => {
-      if (this.allTasksCompleteNotif) {
-        this.allTasksCompleteNotif.destroy();
-        this.allTasksCompleteNotif = null;
-      }
-    });
   }
 }
