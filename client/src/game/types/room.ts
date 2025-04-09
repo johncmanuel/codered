@@ -49,6 +49,7 @@ export class PlayerState extends Schema {
   @type("string") name: string;
   @type(["string"]) controls = new ArraySchema<string>();
   @type("string") activeTaskId: string | null = null;
+  @type("number") numTasksTodo: number;
 }
 
 // Limit for number of fields: 64
@@ -73,6 +74,11 @@ export class GameState extends Schema {
 }
 
 export const initRoundTimeLimitSecs = 120;
+
+export interface TaskCompletedData {
+  taskId: string;
+  isDoneWithTasks: boolean;
+}
 
 export type GameRoom = Room<GameState>;
 
