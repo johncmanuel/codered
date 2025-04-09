@@ -57,8 +57,8 @@ export abstract class Task {
     this.blockingOverlay = this.scene.add.rectangle(
       this.scene.cameras.main.centerX,
       this.scene.cameras.main.centerY,
-      this.scene.cameras.main.width - 20,
-      this.scene.cameras.main.height - 20,
+      this.scene.cameras.main.width - 10,
+      this.scene.cameras.main.height - 10,
       color,
       alpha,
     );
