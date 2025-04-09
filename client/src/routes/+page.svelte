@@ -205,14 +205,17 @@
     </div>
   {:else}
     <div class="lobby">
-      <h2
-        style="font-size: 34px; font-weight: normal; letter-spacing: 2px;"
-        class="clickable"
-        on:click={copyToClipboard}
-      >
-        Lobby Code: <span class="underline">{$gameStore.joinCode}</span>
-      </h2>
-
+      <div class="lobby-code-container">
+        <h2 style="font-size: 34px; font-weight: normal; letter-spacing: 2px;">Lobby Code:</h2>
+        <button
+          style="font-size: 34px; font-weight: normal; letter-spacing: 2px"
+          class="clickable no-style no-hover"
+          on:click={copyToClipboard}
+          aria-label="Copy lobby code to clipboard"
+        >
+          <span class="underline">{$gameStore.joinCode}</span>
+        </button>
+      </div>
       <PlayerList players={$gameStore.players} currentPlayerId={$gameStore.room.sessionId} />
       <button class="leave-button" on:click={handleLeaveLobby} style="font-weight: strong;">
         Leave Lobby
@@ -247,12 +250,29 @@
     transition: background-color 0.3s;
   }
 
+  button.no-style {
+    all: unset;
+  }
+
+  button.no-hover:hover {
+    background-color: initial;
+    transform: none;
+    cursor: pointer;
+  }
+
   button:hover {
     background-color: rgb(190, 10, 10);
   }
+
   .lobby-creation {
     max-width: 400px;
     margin: 0 auto;
+  }
+
+  .lobby-code-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .tabs {
