@@ -103,11 +103,11 @@ export class CodeRedRoom extends Room<GameState> {
 
     // Handle stuff once a player fails a task
     this.onMessage("taskFailed", (client, taskId: string) => {
+      const healthDiff = this.computeHealthDiff(this.state.round);
       this.dispatcher.dispatch(new OnTaskFailureCommand(), {
         client,
         taskId,
-        // TODO: change this dynamically as the game progresses
-        healthDiff: 20,
+        healthDiff: healthDiff,
       });
       if (this.state.tasksDone >= this.numTotalTasksRequiredPerRound) {
         this.dispatcher.dispatch(new StartNewRoundCommand());
@@ -267,5 +267,18 @@ export class CodeRedRoom extends Room<GameState> {
 
     await this.presence.sadd(this.LOBBY_CHANNEL, id);
     return id;
+  }
+
+  private computeHealthDiff(round: number, baseHealthDiff: number = 5): number {
+    const roundMultiplier = Math.max(1, this.state.round);
+
+    // all possible methods of dynamically computing the health diff
+    // based on number of rounds
+    // 1. Linear increase: baseHealthDiff * roundMultiplier
+    // 2. Exponential increase: baseHealthDiff * Math.pow(1.5, this.state.currentRound)
+    // 3. Step increase: baseHealthDiff + (10 * this.state.currentRound)
+    // 4. Cap the maximum: Math.min(baseHealthDiff * roundMultiplier, 100)
+    const newHealthDiff = baseHealthDiff * roundMultiplier;
+    return newHealthDiff;
   }
 }
