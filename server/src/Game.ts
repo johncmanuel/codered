@@ -33,7 +33,7 @@ export class CodeRedRoom extends Room<GameState> {
   // i think
   maxNumRounds = 6;
   numTotalTasksRequiredPerRound = 5; // default value if not modified yet
-  baseTasksPerPlayer = 2; // defines how many tasks each player gets per round
+  baseTasksPerPlayer = 3; // defines how many tasks each player gets per round
   roundTimeLimitSecs = initRoundTimeLimitSecs;
 
   // all controls currently assigned to players
