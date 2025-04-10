@@ -37,4 +37,9 @@ jobs:
         run: npm ci
 
       - name: Check formatting with Prettier
-        run: npx prettier --check .
+        run: |
+          if ! npx prettier --check .; then
+            echo "🚫 Error: Some files need formatting! Run 'npm run format' and commit the changes."
+            echo "See the list of unformatted files above 👆"
+            exit 1
+          fi

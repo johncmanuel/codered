@@ -5,7 +5,7 @@
   "scripts": {
     "setup": "npm i && cd client && npm i && cd ../server && npm i && cd ..",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "prettier --write  'client/' 'server/' ",
+    "format": "prettier --write .",
     "start": "concurrently \"cd client && npm run dev\" \"cd server && npm run start\""
   },
   "keywords": [
