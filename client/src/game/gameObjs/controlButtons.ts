@@ -4,11 +4,11 @@ export class ControlButtons {
   private scene: Scene;
   private buttons: GameObjects.Text[];
   private playerControls: Set<string>;
-  private buttonWidthPx: number = 250; 
-  private buttonHeightPx: number = 60; 
-  private padding: number = 100; 
+  private buttonWidthPx: number = 250;
+  private buttonHeightPx: number = 60;
+  private padding: number = 100;
   private columns: number = 2;
-  private buttonImages: GameObjects.Image[] = []; 
+  private buttonImages: GameObjects.Image[] = [];
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -26,20 +26,22 @@ export class ControlButtons {
 
   // TODO: make each control button unique given the task.control
   show() {
-    if (this.playerControls.size <= 0) {  
+    if (this.playerControls.size <= 0) {
       console.error("No controls assigned to player");
       return;
     }
-// get the number of rows needed based on the number of controls and columns    
+    // get the number of rows needed based on the number of controls and columns
     const numControls = this.playerControls.size;
     const rows = Math.ceil(numControls / this.columns);
-    const startX = 
-      (this.scene.cameras.main.width - 
-       (this.columns * this.buttonWidthPx + (this.columns - 1) * this.padding)) / 2;
+    const startX =
+      (this.scene.cameras.main.width -
+        (this.columns * this.buttonWidthPx + (this.columns - 1) * this.padding)) /
+      2;
 
     const startY =
-      this.scene.cameras.main.height - 
-      (rows * this.buttonHeightPx + (rows - 1) * this.padding) - 20;
+      this.scene.cameras.main.height -
+      (rows * this.buttonHeightPx + (rows - 1) * this.padding) -
+      20;
 
     let index = 0;
     this.playerControls.forEach((control) => {
@@ -52,10 +54,10 @@ export class ControlButtons {
       const image = this.scene.add.image(x, y, "exe");
 
       const scale = Math.min(
-        this.buttonWidthPx / image.width * 3, 
-        this.buttonHeightPx / image.height * 2.3  
+        (this.buttonWidthPx / image.width) * 3,
+        (this.buttonHeightPx / image.height) * 2.3,
       );
-      image.setDepth(0);  
+      image.setDepth(0);
       image.setScale(scale);
       this.buttonImages.push(image);
 

@@ -67,24 +67,24 @@ export class VirusContainment extends Task {
 
   async preload(): Promise<void> {
     return new Promise((resolve) => {
-        if (this.scene.textures.exists("fileIcon")) {
-            resolve();
-            return;
-        }
-        this.scene.load.image("fileIcon", "/assets/file2.png");
-        this.scene.load.image("box", "/assets/box.png");
-        this.scene.load.image("quarantine", "/assets/trash-can.png");
-        this.scene.load.on("complete", () => {
-            console.log("File icon loaded successfully");
-            resolve();
-        });
-        this.scene.load.on("loaderror", (fileObj: any) => {
-            console.error("Error loading file:", fileObj.src);
-            resolve();
-        });
-        this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
-        this.scene.load.audio("incorrect", "/assets/wrongsoundeffect.mp3");
-        this.scene.load.start();
+      if (this.scene.textures.exists("fileIcon")) {
+        resolve();
+        return;
+      }
+      this.scene.load.image("fileIcon", "/assets/file2.png");
+      this.scene.load.image("box", "/assets/box.png");
+      this.scene.load.image("quarantine", "/assets/trash-can.png");
+      this.scene.load.on("complete", () => {
+        console.log("File icon loaded successfully");
+        resolve();
+      });
+      this.scene.load.on("loaderror", (fileObj: any) => {
+        console.error("Error loading file:", fileObj.src);
+        resolve();
+      });
+      this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
+      this.scene.load.audio("incorrect", "/assets/wrongsoundeffect.mp3");
+      this.scene.load.start();
     });
   }
 
@@ -94,44 +94,49 @@ export class VirusContainment extends Task {
     this.incorrectSound = this.scene.sound.add("incorrect");
     // const blackBox = this.scene.add.rectangle(650, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
 
-    // this.scene.add.text(650, 25, "Your Task: Virus Containment", { 
+    // this.scene.add.text(650, 25, "Your Task: Virus Containment", {
     //   color: "#ffffff",
     //   fontSize: "30px",
-    //   fontStyle: "bold", 
-    // }).setOrigin(0.5, 0);  
+    //   fontStyle: "bold",
+    // }).setOrigin(0.5, 0);
 
     // Replace rectangles with images
-    this.quarantineBox = this.scene.add.sprite(400, 600, "quarantine")
+    this.quarantineBox = this.scene.add
+      .sprite(400, 600, "quarantine")
       .setInteractive()
       .setScale(0.48);
 
-    this.safeArea = this.scene.add.sprite(900, 600, "box")
-      .setInteractive()
-      .setScale(0.48);
+    this.safeArea = this.scene.add.sprite(900, 600, "box").setInteractive().setScale(0.48);
 
-    // increase hit box size 
-    this.quarantineBox.input.hitArea.setTo(-50, -50, 
-      this.quarantineBox.width + 100, 
-      this.quarantineBox.height + 100);
+    // increase hit box size
+    this.quarantineBox.input.hitArea.setTo(
+      -50,
+      -50,
+      this.quarantineBox.width + 100,
+      this.quarantineBox.height + 100,
+    );
 
-    this.safeArea.input.hitArea.setTo(-50, -50, 
-      this.safeArea.width + 100, 
-      this.safeArea.height + 100);
+    this.safeArea.input.hitArea.setTo(
+      -50,
+      -50,
+      this.safeArea.width + 100,
+      this.safeArea.height + 100,
+    );
 
-    this.quarantineBoxText = this.scene.add.text(340, 580, "Quarantine", { 
+    this.quarantineBoxText = this.scene.add.text(340, 580, "Quarantine", {
       color: "#ffffff",
       fontSize: "20px",
       fontStyle: "bold",
-      stroke: '#000000',        
-      strokeThickness: 2
+      stroke: "#000000",
+      strokeThickness: 2,
     });
 
-    this.safeAreaText = this.scene.add.text(845, 580, "Safe Area", { 
+    this.safeAreaText = this.scene.add.text(845, 580, "Safe Area", {
       color: "#ffffff",
       fontSize: "20px",
       fontStyle: "bold",
-      stroke: '#000000',        
-      strokeThickness: 2
+      stroke: "#000000",
+      strokeThickness: 2,
     });
 
     this.currentFileIndex = Math.floor(Math.random() * this.files.length);
@@ -147,24 +152,26 @@ export class VirusContainment extends Task {
       this.fileObject = this.scene.add
         .sprite(centerX, centerY - 50, "fileIcon")
         .setInteractive({ draggable: true })
-        .setScale(0.4) 
-        .setDepth(1);  
+        .setScale(0.4)
+        .setDepth(1);
     } else {
       // Use a rectangle as a placeholder
       this.fileObject = this.scene.add
-        .sprite(centerX, centerY - 50, 'fileIcon')
+        .sprite(centerX, centerY - 50, "fileIcon")
         .setInteractive({ draggable: true })
         .setScale(0.4)
         .setDepth(1);
     }
-    
-    this.fileText = this.scene.add.text(centerX, centerY + 50, currentFile.description, { 
-      color: "#ffffff",
-      align: 'center',
-      stroke: '#000000',
-      strokeThickness: 1,
-    }).setOrigin(0.5); 
-    
+
+    this.fileText = this.scene.add
+      .text(centerX, centerY + 50, currentFile.description, {
+        color: "#ffffff",
+        align: "center",
+        stroke: "#000000",
+        strokeThickness: 1,
+      })
+      .setOrigin(0.5);
+
     this.fileObject.on("drag", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       this.fileObject.x = dragX;
       this.fileObject.y = dragY;
@@ -196,21 +203,21 @@ export class VirusContainment extends Task {
     file: { name: string; description: string; isInfected: boolean },
     droppedInQuarantine: boolean,
   ): void {
-    console.log('Drop detected:', {
-        x: this.fileObject.x,
-        y: this.fileObject.y,
-        quarantineBounds: this.quarantineBox.getBounds(),
-        safeBounds: this.safeArea.getBounds(),
-        zone: droppedInQuarantine ? 'quarantine' : 'safe'
+    console.log("Drop detected:", {
+      x: this.fileObject.x,
+      y: this.fileObject.y,
+      quarantineBounds: this.quarantineBox.getBounds(),
+      safeBounds: this.safeArea.getBounds(),
+      zone: droppedInQuarantine ? "quarantine" : "safe",
     });
-    
+
     if ((file.isInfected && droppedInQuarantine) || (!file.isInfected && !droppedInQuarantine)) {
       // Correct choice
       console.log("Correct choice");
       if (this.correctSound) {
         this.correctSound.play();
         console.log("Playing correct sound");
-      } 
+      }
       this.score++;
       if (this.score >= this.maxScore) {
         this.complete();

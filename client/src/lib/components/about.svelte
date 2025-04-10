@@ -1,10 +1,26 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
   export let show = false; // Start with the popup hidden
-  const close = () => dispatch('close');
-  const open = () => dispatch('open');
+  const close = () => dispatch("close");
+  const open = () => dispatch("open");
 </script>
+
+<button class="about-us" on:click={open}>About Us</button>
+
+{#if show}
+  <div class="popup-overlay" on:click={close}>
+    <div class="popup-content" on:click|stopPropagation>
+      <p>
+        Two students from California State University Fullerton passionate about software and game
+        development. Code Red is designed for icebreaker activities in large social gatherings. It
+        addresses the lack of inclusivity for remote users by fostering team dynamics and improving
+        productivity in virtual settings.
+      </p>
+      <button class="close-button" on:click={close}>Close</button>
+    </div>
+  </div>
+{/if}
 
 <style>
   .about-us {
@@ -46,7 +62,7 @@
     text-align: center;
     z-index: 1001;
     font-size: 25px;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: "Courier New", Courier, monospace;
   }
 
   .close-button {
@@ -58,18 +74,3 @@
     font-size: 20px;
   }
 </style>
-
-<button class="about-us" on:click={open}>About Us</button>
-
-{#if show}
-  <div class="popup-overlay" on:click={close}>
-    <div class="popup-content" on:click|stopPropagation>
-      <p>
-        Two students from California State University Fullerton passionate about software and game development. 
-        Code Red is designed for icebreaker activities in large social gatherings. It addresses the lack of inclusivity for remote users 
-        by fostering team dynamics and improving productivity in virtual settings.
-      </p>
-      <button class="close-button" on:click={close}>Close</button>
-    </div>
-  </div>
-{/if}

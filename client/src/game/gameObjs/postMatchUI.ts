@@ -131,11 +131,11 @@ export class PostMatchUI {
           shadow: {
             offsetX: 2,
             offsetY: 2,
-            color: '#000000',
+            color: "#000000",
             blur: 2,
             stroke: true,
-            fill: true
-          }
+            fill: true,
+          },
         },
       )
       .setDepth(1)
@@ -160,16 +160,16 @@ export class PostMatchUI {
             fontFamily: "Arial",
             fontSize: "24px",
             color: "#ffffff",
-            stroke: "#000000",      
-            strokeThickness: 4,     
-            shadow: {              
+            stroke: "#000000",
+            strokeThickness: 4,
+            shadow: {
               offsetX: 2,
               offsetY: 2,
-              color: '#000000',
+              color: "#000000",
               blur: 2,
               stroke: true,
-              fill: true
-            }
+              fill: true,
+            },
           },
         )
         .setDepth(1)

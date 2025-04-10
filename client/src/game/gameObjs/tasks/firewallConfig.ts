@@ -106,24 +106,26 @@ export class FirewallConfig extends Task {
         fontSize: "20px",
         color: "#ffffff",
         align: "left",
-      }
+      },
     );
   }
 
   private showInstructions() {
-    this.instructionsText = this.scene.add.text(
-      this.scene.cameras.main.width / 2,
-      this.scene.cameras.main.height / 2 - 300,
-      "Instructions: Determine if the IP address is in the trust IPs list",
-      {
-        fontSize: "24px",
-        color: "#ffffff",
-        align: "center",
-        fontStyle: "bold",
-      }
-    ).setOrigin(0.5);
+    this.instructionsText = this.scene.add
+      .text(
+        this.scene.cameras.main.width / 2,
+        this.scene.cameras.main.height / 2 - 300,
+        "Instructions: Determine if the IP address is in the trust IPs list",
+        {
+          fontSize: "24px",
+          color: "#ffffff",
+          align: "center",
+          fontStyle: "bold",
+        },
+      )
+      .setOrigin(0.5);
   }
-  
+
   private nextIP() {
     if (this.whitelistBtn) this.whitelistBtn.destroy();
     if (this.blacklistBtn) this.blacklistBtn.destroy();
@@ -144,11 +146,13 @@ export class FirewallConfig extends Task {
 
     this.cloudImage = this.scene.add.image(600, 290, "cloudImage").setScale(2);
 
-    this.currentIPText = this.scene.add.text(420, 350, `IP Address: ${this.currentIP}`, {
-      fontSize: "24px",
-      color: "black",
-      fontStyle: "bold",
-    }).setDepth(1);
+    this.currentIPText = this.scene.add
+      .text(420, 350, `IP Address: ${this.currentIP}`, {
+        fontSize: "24px",
+        color: "black",
+        fontStyle: "bold",
+      })
+      .setDepth(1);
 
     this.whitelistImage = this.scene.add.image(400, 600, "folder").setScale(0.7);
     this.whitelistBtn = this.scene.add
@@ -172,29 +176,29 @@ export class FirewallConfig extends Task {
       {
         fontSize: "24px",
         color: "#ffffff",
-      }
+      },
     );
   }
 
   private handleDecision(isWhitelist: boolean) {
     this.whitelistBtn.disableInteractive();
     this.blacklistBtn.disableInteractive();
-  
+
     if (isWhitelist) {
       this.addCorrectGlowEffect(this.whitelistBtn, 0x00ff00);
     } else {
       this.addIncorrectGlowEffect(this.blacklistBtn, 0xff0000);
     }
-  
+
     const isTrusted = this.trustedIPs.includes(this.currentIP);
     let isCorrect = false;
-  
+
     if (isWhitelist && isTrusted) {
       isCorrect = true;
     } else if (!isWhitelist && !isTrusted) {
       isCorrect = true;
     }
-  
+
     if (!isCorrect) {
       this.mistakes++;
       console.log("Mistake made! Mistakes: ", this.mistakes);
@@ -211,15 +215,15 @@ export class FirewallConfig extends Task {
       }
       console.log("Correct decision!");
     }
-  
+
     if (this.currentIPText) {
       this.currentIPText.destroy();
     }
-  
+
     if (this.ipCountText) {
       this.ipCountText.destroy();
     }
-  
+
     this.scene.time.delayedCall(200, () => {
       this.nextIP();
     });
@@ -227,34 +231,34 @@ export class FirewallConfig extends Task {
 
   private addCorrectGlowEffect(button: Phaser.GameObjects.Text, color: number) {
     const glow = this.scene.add.graphics();
-    glow.fillStyle(color, 0.5); 
-    glow.fillRoundedRect( 330, 595, 140, 30, 10 );
-    glow.setDepth(0); 
+    glow.fillStyle(color, 0.5);
+    glow.fillRoundedRect(330, 595, 140, 30, 10);
+    glow.setDepth(0);
 
     this.scene.tweens.add({
       targets: glow,
-      alpha: 0, 
+      alpha: 0,
       duration: 700,
       ease: "Linear",
       onComplete: () => {
-        glow.destroy(); 
+        glow.destroy();
       },
     });
   }
 
   private addIncorrectGlowEffect(button: Phaser.GameObjects.Text, color: number) {
     const glow = this.scene.add.graphics();
-    glow.fillStyle(color, 0.5); 
-    glow.fillRoundedRect( 735, 595, 140, 30, 10 );
-    glow.setDepth(0); 
+    glow.fillStyle(color, 0.5);
+    glow.fillRoundedRect(735, 595, 140, 30, 10);
+    glow.setDepth(0);
 
     this.scene.tweens.add({
       targets: glow,
-      alpha: 0, 
+      alpha: 0,
       duration: 700,
       ease: "Linear",
       onComplete: () => {
-        glow.destroy(); 
+        glow.destroy();
       },
     });
   }

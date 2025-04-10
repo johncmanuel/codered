@@ -5,6 +5,10 @@
   export let onStart: () => void;
 </script>
 
+<div class="host-controls">
+  <button class="start-button" on:click={onStart}> Start Game </button>
+</div>
+
 <style>
   .host-controls {
     display: flex;
@@ -15,7 +19,7 @@
   .start-button {
     padding: 10px 20px;
     font-size: 24px;
-    font-family: 'Audiowide', sans-serif;
+    font-family: "Audiowide", sans-serif;
     border: none;
     border-radius: 10px;
     background-color: #222222;
@@ -27,7 +31,3 @@
     background-color: #333333;
   }
 </style>
-<div class="host-controls">
-  <button class="start-button" on:click={onStart}> Start Game </button>
-</div>
-
