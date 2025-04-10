@@ -32,8 +32,8 @@ export class CodeRedRoom extends Room<GameState> {
 
   // i think
   maxNumRounds = 6;
-  numTotalTasksRequiredPerRound = 5; // default value, will be set later
-  baseTasksPerPlayer = 5; // defines how many tasks each player gets per round
+  numTotalTasksRequiredPerRound = 5; // default value if not modified yet
+  baseTasksPerPlayer = 2; // defines how many tasks each player gets per round
   roundTimeLimitSecs = initRoundTimeLimitSecs;
 
   // all controls currently assigned to players
@@ -79,15 +79,12 @@ export class CodeRedRoom extends Room<GameState> {
       );
       console.log("this.numRequiredTasksCompletedPerRound", this.numTotalTasksRequiredPerRound);
 
-      this.state.players.forEach((player) => {
-        player.numTasksTodo = this.baseTasksPerPlayer;
-      });
-
       // start the game once all players are in
       this.broadcast("allPlayersReady");
       this.dispatcher.dispatch(new AssignPlayerControlsCommand());
       this.tasksArrCurrRound = this.batchCreateTasks(this.numTotalTasksRequiredPerRound);
       this.assignInitialTasks();
+
       this.startClock();
       this.gameLoop();
       this.numPlayersReady = 0;
@@ -126,14 +123,18 @@ export class CodeRedRoom extends Room<GameState> {
       this.dispatcher.dispatch(new SendTaskToClient(), { client, control });
     });
 
+    // handle task request from a player
     this.onMessage("giveMeTaskPls", (client) => {
       if (this.tasksArrCurrRound.length === 0) {
         console.log("tasksArrCurrRound is empty", this.tasksArrCurrRound, this.actualTasks);
+        client.send("noMoreTasks");
         return;
       }
       const newTask = this.tasksArrCurrRound.shift()!;
+      console.log("newTask", newTask);
       if (!newTask) {
         console.log("No more tasks to assign!", this.tasksArrCurrRound, this.actualTasks);
+        client.send("noMoreTasks");
         return;
       }
       this.dispatcher.dispatch(new AssignTaskToPlayerCommand(), {

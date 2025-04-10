@@ -238,12 +238,12 @@ export class CodeRed extends Scene {
 
     this.gameStore?.room?.onMessage("taskCompleted", (data: TaskCompletedData) => {
       console.log("task completed", data.taskId);
-      this.handleTaskNotifs(data.taskId, data.isDoneWithTasks);
+      this.handleTaskNotifs(data.taskId);
     });
 
     this.gameStore?.room?.onMessage("taskFailed", (data: TaskCompletedData) => {
-      console.log("task failed", data.taskId, data.isDoneWithTasks);
-      this.handleTaskNotifs(data.taskId, data.isDoneWithTasks);
+      console.log("task failed", data.taskId);
+      this.handleTaskNotifs(data.taskId);
     });
 
     this.gameStore?.room?.onMessage("gameOverStats", (gameState: GameState) => {
@@ -257,6 +257,11 @@ export class CodeRed extends Scene {
       this.allTasksCompleteNotif.hide();
 
       this.postMatchUI.show();
+    });
+
+    this.gameStore?.room?.onMessage("noMoreTasks", () => {
+      console.log("all tasks complete");
+      this.allTasksCompleteNotif.show();
     });
 
     // handle stuff once the player leaves the game
@@ -333,7 +338,7 @@ export class CodeRed extends Scene {
     this.taskManager.removeTask(taskId);
   }
 
-  private handleTaskNotifs(taskId: string, isCompleted: boolean) {
+  private handleTaskNotifs(taskId: string) {
     console.log(
       "taskId",
       taskId,
@@ -347,10 +352,5 @@ export class CodeRed extends Scene {
     }
 
     this.gameStore?.room?.send("giveMeTaskPls", taskId);
-
-    if (isCompleted) {
-      console.log("all tasks complete");
-      this.allTasksCompleteNotif.show();
-    }
   }
 }
