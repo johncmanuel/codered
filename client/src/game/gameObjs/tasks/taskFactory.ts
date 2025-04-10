@@ -22,7 +22,7 @@ export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task 
       return new NetworkMapping(scene, taskId);
     case Tasks.SYSTEM_REBOOT:
       return new SystemRebootSequence(scene, taskId);
-    case Tasks.ENCRYPYTION_DECRYPTION:
+    case Tasks.ENCRYPTION_DECRYPTION:
       return new EncryptionDecryption(scene, taskId);
     default:
       return new FillerTask(scene, taskId);

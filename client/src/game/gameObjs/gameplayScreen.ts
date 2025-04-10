@@ -29,14 +29,14 @@ export class GameplayScreen {
     this.headerBar.setDepth(0);
 
     this.wifiIcon = this.scene.add.image(
-      this.scene.cameras.main.width - 490,
+      this.scene.cameras.main.width - 495,
       headerHeight / 2,
       "wifiIcon",
     );
     this.wifiIcon.setOrigin(0, 0.5).setScale(0.1).setDepth(0);
 
     this.calender = this.scene.add.image(
-      this.scene.cameras.main.width - 385,
+      this.scene.cameras.main.width - 390,
       headerHeight / 2,
       "calender",
     );
@@ -48,7 +48,7 @@ export class GameplayScreen {
       year: "numeric",
     });
     this.dateText = this.scene.add.text(
-      this.scene.cameras.main.width - 335,
+      this.scene.cameras.main.width - 340,
       headerHeight / 2,
       currentDate,
       {
@@ -83,7 +83,7 @@ export class GameplayScreen {
     this.clock.setOrigin(0.5, 0.5).setScale(0.09).setDepth(0);
 
     this.volume = this.scene.add.image(
-      this.scene.cameras.main.width - 412,
+      this.scene.cameras.main.width - 415,
       headerHeight / 2,
       "volume",
     );

@@ -10,7 +10,7 @@ export enum Tasks {
   NETWORK_MAPPING,
   SYSTEM_REBOOT,
   SOCIAL_ENGINEERING,
-  ENCRYPYTION_DECRYPTION,
+  ENCRYPTION_DECRYPTION,
   // New ones not mentioned in the doc
   // These are the filler tasks, tasks that are meant to be done easily and should take like 1-2 clicks at most
   RESTART_PC,
