@@ -33,13 +33,12 @@ jobs:
             ${{ runner.os }}-node-${{ github.event.pull_request.number }}-
 
       - name: Install dependencies
-        if: steps.npm-cache.outputs.cache-hit != 'true'
+        # if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: List installed dependencies
+        run: npm ls --depth=0
+
       - name: Check formatting with Prettier
-        run: |
-          if ! npm run format -- --check; then
-            echo "🚫 Error: Some files need formatting! Run 'npm run format' and commit the changes."
-            echo "See the list of unformatted files above 👆"
-            exit 1
-          fi
+        # run: npx prettier --check .
+        run: npm run check
