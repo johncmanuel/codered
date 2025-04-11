@@ -36,10 +36,7 @@ export class Sandbox extends Scene {
       console.log("Rect2 clicked");
     });
 
-    this.spamAds = new SpamAds(this);
-    this.spamAds.spawnAds();
-
-    this.taskManager.addTask(testId, createTask(this, testId, Tasks.ENCRYPYTION_DECRYPTION));
+    this.taskManager.addTask(testId, createTask(this, testId, Tasks.SOCIAL_ENGINEERING));
 
     console.log("Added task");
     this.taskManager.startTask(testId);
