@@ -7,6 +7,7 @@ import { EncryptionDecryption } from "./encryptionDecryption";
 import { PhishingEmail } from "./phishingEmail";
 import { VirusContainment } from "./virusContainment";
 import { NetworkMapping } from "./networkMapping";
+import { SocialEng } from "./socialEng";
 import { FillerTask } from "./fillerTask";
 
 // factory function to create tasks based on their type
@@ -24,6 +25,8 @@ export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task 
       return new SystemRebootSequence(scene, taskId);
     case Tasks.ENCRYPTION_DECRYPTION:
       return new EncryptionDecryption(scene, taskId);
+    case Tasks.SOCIAL_ENGINEERING:
+      return new SocialEng(scene, taskId);
     default:
       return new FillerTask(scene, taskId);
   }
