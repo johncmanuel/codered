@@ -79,12 +79,8 @@ export class NetworkMapping extends Task {
   async start(): Promise<void> {
     console.log("NetworkMapping task starting");
     await this.preload();
-    console.log("Checking textures:");
-    console.log("computer texture exists:", this.scene.textures.exists("computer"));
-    console.log("router texture exists:", this.scene.textures.exists("router"));
-    console.log("server texture exists:", this.scene.textures.exists("server"));
     
-    this.addBackground();
+    // this.addBackground();
     
     this.initializeDevices();
     this.initializeWires();
@@ -153,7 +149,6 @@ export class NetworkMapping extends Task {
   }
 
   cleanup(): void {
-    console.log("NetworkMapping task cleaning up");
     try {
       super.cleanup();
       
