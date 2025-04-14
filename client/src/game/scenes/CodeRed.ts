@@ -7,6 +7,7 @@ import {
   type GameState,
   FillerTasks,
   type TaskCompletedData,
+  getTaskMessage,
 } from "../types/room";
 import { PostMatchUI } from "../gameObjs/postMatchUI";
 import { AssignedTaskNotification } from "../gameObjs/activeTaskNotification";
@@ -162,7 +163,8 @@ export class CodeRed extends Scene {
     // this can either be a task they can do or a task they have to tell another player to do
     // this is where the cooperative aspect of the game comes in
     this.gameStore?.room?.onMessage("newTask", (task: TaskState) => {
-      this.assignedTaskNotifs.add(`New Task: ${task.type}`, task.id);
+      const taskMessage = getTaskMessage(task.type);
+      this.assignedTaskNotifs.add(`New Task: ${taskMessage}`, task.id);
       console.log("New task assigned:", task.type, task);
 
       // TODO: set time limit dynamically based on number of rounds

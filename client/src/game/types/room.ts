@@ -1,5 +1,6 @@
 import type { Room } from "colyseus.js";
 import { Schema, type, MapSchema, ArraySchema } from "@colyseus/schema";
+import { toTitleCase } from "@/lib/utils";
 
 // See the doc for all tasks
 //https://docs.google.com/document/d/108iqAIOSarstxAkN5XhzX--UqDadNuoiModpusWcysA/edit?tab=t.0
@@ -44,6 +45,34 @@ export const TaskToControls = new Map<Tasks, string>(
     .filter((task) => typeof task === "number")
     .map((task) => [task, `${Tasks[task]}_CONTROL`]),
 );
+
+export const getTaskMessage = (taskType: string): string => {
+  const messages: Partial<Record<Tasks, string[]>> = {
+    [Tasks.FIREWALL_CONFIG]: ["Configure Firewall Rules"],
+    [Tasks.PHISHING_EMAIL]: ["Investigate Phishing Email"],
+    [Tasks.VIRUS_CONTAINMENT]: ["Contain Virus Spread"],
+    [Tasks.NETWORK_MAPPING]: ["Map Network Devices"],
+    [Tasks.SYSTEM_REBOOT]: ["Reboot Critical System"],
+    [Tasks.SOCIAL_ENGINEERING]: ["Investigate Social Engineering Issue"],
+    [Tasks.ENCRYPTION_DECRYPTION]: ["Run Encryption and Decryption"],
+    [Tasks.RESTART_PC]: ["Restart Computer"],
+    [Tasks.MALWARE_SCAN]: ["Run Malware Scan"],
+    [Tasks.UPDATE_SOFTWARE]: ["Update Outdated Software"],
+    [Tasks.TERMINATE_PROCESS]: ["Terminate Suspicious Process"],
+    [Tasks.REVOKE_API_KEYS]: ["Disable Compromised API Secrets"],
+    [Tasks.VERIFY_BACKUP_STATUS]: ["Verify backup integrity"],
+    [Tasks.ANALYZE_TRAFFIC_LOGS]: ["Analyze Network Traffic Logs"],
+    [Tasks.FLUSH_DNS_CACHE]: ["Flush DNS Cache"],
+  };
+
+  const enumKey = taskType as keyof typeof Tasks;
+  const enumValue = Tasks[enumKey];
+  const defaultMessage = toTitleCase(taskType.replace(/_/g, " "));
+
+  return messages[enumValue]
+    ? messages[enumValue][Math.floor(Math.random() * messages[enumValue].length)]
+    : defaultMessage;
+};
 
 export class PlayerState extends Schema {
   @type("string") name: string;
