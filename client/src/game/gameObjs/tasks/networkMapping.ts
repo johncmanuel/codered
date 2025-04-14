@@ -79,9 +79,7 @@ export class NetworkMapping extends Task {
   async start(): Promise<void> {
     console.log("NetworkMapping task starting");
     await this.preload();
-    
-    // this.addBackground();
-    
+        
     this.initializeDevices();
     this.initializeWires();
 
@@ -184,26 +182,6 @@ export class NetworkMapping extends Task {
     } catch (error) {
       console.error("Error during NetworkMapping cleanup:", error);
     }
-  }
-  
-  private addBackground(): void {
-    this.scene.add.rectangle(
-      this.scene.cameras.main.width / 2,
-      this.scene.cameras.main.height / 4,
-      this.scene.cameras.main.width,
-      this.scene.cameras.main.height / 2,
-      0x111122,
-      0.3
-    );
-    
-    this.scene.add.rectangle(
-      this.scene.cameras.main.width / 2,
-      this.scene.cameras.main.height * 3/4,
-      this.scene.cameras.main.width,
-      this.scene.cameras.main.height / 2,
-      0x221111,
-      0.3
-    );
   }
 
   private getRandomPosition(isDevice: boolean): { x: number, y: number } {
