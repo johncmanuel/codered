@@ -10,6 +10,9 @@ export class GameplayScreen {
   private calender: GameObjects.Image;
   private volume: GameObjects.Image;
   private clock: GameObjects.Image;
+  private batteryOutline: GameObjects.Image;
+  private batteryFill: GameObjects.Rectangle;
+  private batteryContainer: GameObjects.Container;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -95,6 +98,20 @@ export class GameplayScreen {
       "powerIcon",
     );
     this.powerButton.setOrigin(0.7, 0.5).setScale(0.09).setDepth(0);
+
+    this.batteryOutline = this.scene.add.image(
+      this.scene.cameras.main.width - 1250,
+      headerHeight / 2,
+      "batteryOutline",
+    );
+    this.batteryOutline.setOrigin(0.5, 0.5).setScale(0.1).setDepth(0);
+    const fillWidth = 30;
+    const fillHeight = 15;
+    const fillX = this.scene.cameras.main.width - 1250 - fillWidth / 2 + 1;
+    const fillY = headerHeight / 2;
+
+    this.batteryFill = this.scene.add.rectangle(fillX - 3, fillY, fillWidth, fillHeight, 0x00ff00);
+    this.batteryFill.setOrigin(0, 0.5).setDepth(0);
   }
 
   public show(): void {
@@ -106,6 +123,8 @@ export class GameplayScreen {
     this.calender.setVisible(true);
     this.volume.setVisible(true);
     this.clock.setVisible(true);
+    this.batteryOutline.setVisible(true);
+    this.batteryFill.setVisible(true);
   }
 
   public hide(): void {
@@ -117,6 +136,8 @@ export class GameplayScreen {
     this.calender.setVisible(false);
     this.volume.setVisible(false);
     this.clock.setVisible(false);
+    this.batteryOutline.setVisible(false);
+    this.batteryFill.setVisible(false);
   }
 
   // updates time on the header
@@ -132,5 +153,25 @@ export class GameplayScreen {
         this.timeText.setText(currentTime);
       },
     });
+  }
+
+  public updateBattery(health: number): void {
+    if (!this.batteryFill) return;
+
+    const healthPercent = Math.max(0, Math.min(100, health)) / 100;
+
+    const maxWidth = 30;
+    const newWidth = maxWidth * healthPercent;
+
+    this.batteryFill.width = newWidth;
+
+    let fillColor = 0x00ff00;
+    if (healthPercent <= 0.25) {
+      fillColor = 0xff0000;
+    } else if (healthPercent <= 0.5) {
+      fillColor = 0xffff00;
+    }
+
+    this.batteryFill.fillColor = fillColor;
   }
 }
