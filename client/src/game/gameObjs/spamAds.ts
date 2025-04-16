@@ -5,6 +5,7 @@ export interface Ad {
   title: Phaser.GameObjects.Text;
   closeButton: Phaser.GameObjects.Arc;
   closeText: Phaser.GameObjects.Text;
+  container?: Phaser.GameObjects.Container; // container to group ad elements in
 }
 
 export class SpamAds {
@@ -13,6 +14,10 @@ export class SpamAds {
   private maxAdsShowed: number;
   private maxAdsSpawned: number;
   private minAdsSpawned: number;
+
+  // for dragging ads around
+  private dragOffsetX: number = 0;
+  private dragOffsetY: number = 0;
 
   constructor(
     scene: Scene,
@@ -37,29 +42,65 @@ export class SpamAds {
     const x = Phaser.Math.Between(0, canvasWidth - adWidthPx);
     const y = Phaser.Math.Between(0, canvasHeight - adHeightPx);
 
+    const isMaliciousCloseBtn = Math.random() < this.probabilityMaliciousCloseBtn();
+
+    const container = this.scene.add.container(x, y);
+
     const adBackground = this.scene.add
-      .rectangle(x + adWidthPx / 2, y + adHeightPx / 2, adWidthPx, adHeightPx, 0xffffff)
+      .rectangle(adWidthPx / 2, adHeightPx / 2, adWidthPx, adHeightPx, 0xffffff)
       .setStrokeStyle(2, 0x000000)
       .setInteractive();
 
-    const title = this.scene.add.text(x + 10, y + 10, "Advertisement", {
+    const title = this.scene.add.text(10, 10, "Advertisement", {
       font: "16px Arial",
       color: "#000000",
     });
 
-    const closeButton = this.scene.add
-      .circle(x + adWidthPx - 20, y + 20, 10, 0xff0000)
-      .setInteractive();
+    const closeButton = this.scene.add.circle(adWidthPx - 20, 20, 10, 0xff0000).setInteractive();
     const closeText = this.scene.add.text(closeButton.x - 5, closeButton.y - 10, "X", {
       font: "16px Arial",
       color: "#ffffff",
     });
 
+    container.add([adBackground, title, closeButton, closeText]);
+
+    adBackground.setInteractive({ cursor: "move" });
+    this.scene.input.setDraggable(adBackground);
+
+    adBackground.on("dragstart", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+      const parentContainer = adBackground.parentContainer;
+      if (parentContainer) {
+        this.dragOffsetX = pointer.x - parentContainer.x;
+        this.dragOffsetY = pointer.y - parentContainer.y;
+      }
+    });
+
+    this.scene.input.on(
+      "drag",
+      (
+        pointer: Phaser.Input.Pointer,
+        gameObject: Phaser.GameObjects.GameObject,
+        dragX: number,
+        dragY: number,
+      ) => {
+        const parentContainer = gameObject.parentContainer;
+        if (parentContainer) {
+          parentContainer.x = pointer.x - this.dragOffsetX;
+          parentContainer.y = pointer.y - this.dragOffsetY;
+        }
+      },
+    );
+
     closeButton.on("pointerdown", () => {
-      adBackground.destroy();
-      title.destroy();
-      closeButton.destroy();
-      closeText.destroy();
+      if (isMaliciousCloseBtn) {
+        console.log(
+          "Malicious close button triggered! More ads coming! 😈 (sorry not sorry btw -john)",
+        );
+        this.spawnAds();
+        // shake the camera!
+        this.scene.cameras.main.shake(100, 0.01);
+      }
+      container.destroy();
       this.ads = this.ads.filter((ad) => ad.adBackground !== adBackground);
       this.scene.events.emit("adClicked");
       console.log("current ads length", this.ads.length);
@@ -70,6 +111,7 @@ export class SpamAds {
       title,
       closeButton,
       closeText,
+      container,
     };
     this.ads.push(ad);
   }
@@ -97,14 +139,31 @@ export class SpamAds {
 
   public clearAds() {
     for (const ad of this.ads) {
-      // @ts-ignore
-      // ad.forEach((obj) => obj.destroy());
-      ad.adBackground.destroy();
-      ad.title.destroy();
-      ad.closeButton.destroy();
-      ad.closeText.destroy();
+      if (ad.container) {
+        ad.container.destroy();
+      } else {
+        ad.adBackground.destroy();
+        ad.title.destroy();
+        ad.closeButton.destroy();
+        ad.closeText.destroy();
+      }
     }
     console.log("Ads cleared");
     this.ads = [];
+  }
+
+  private probabilityMaliciousCloseBtn(
+    multiplier: number = 0.1,
+    roundLimitBeforeMaliciousStarts: number = 2,
+  ) {
+    // if not available, use default value of 3
+    const currentRound = (this.scene.registry.get("round") as number) || 3;
+
+    const maxFakeChance = 0.6;
+    const fakeChance = Math.min(
+      (currentRound - roundLimitBeforeMaliciousStarts) * multiplier,
+      maxFakeChance,
+    );
+    return fakeChance;
   }
 }
