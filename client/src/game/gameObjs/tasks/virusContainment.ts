@@ -108,6 +108,10 @@ export class VirusContainment extends Task {
 
     this.safeArea = this.scene.add.sprite(900, 600, "box").setInteractive().setScale(0.48);
 
+    if (!this.quarantineBox || !this.safeArea) {
+      console.error("Failed to load quarantine or safe area images");
+    }
+
     // increase hit box size
     this.quarantineBox.input.hitArea.setTo(
       -50,
