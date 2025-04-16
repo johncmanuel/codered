@@ -282,8 +282,7 @@ export class FirewallConfig extends Task {
       }
       ipQueue.push(randomIP);
     }
-
-    return this.shuffleArray(ipQueue);
+    return Phaser.Utils.Array.Shuffle(ipQueue);
   }
 
   private generateRandomIPs(count: number): string[] {
@@ -298,13 +297,5 @@ export class FirewallConfig extends Task {
     return `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(
       Math.random() * 256,
     )}.${Math.floor(Math.random() * 256)}`;
-  }
-
-  private shuffleArray(array: string[]): string[] {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
   }
 }
