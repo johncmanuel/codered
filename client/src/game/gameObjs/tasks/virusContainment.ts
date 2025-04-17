@@ -18,6 +18,10 @@ export class VirusContainment extends Task {
   private correctSound: Phaser.Sound.BaseSound;
   private incorrectSound: Phaser.Sound.BaseSound;
 
+  private isObfuscated: boolean;
+
+  private instructionsText: Phaser.GameObjects.Text;
+
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
     this.createBlockingOverlay();
@@ -90,6 +94,8 @@ export class VirusContainment extends Task {
 
   async start(): Promise<void> {
     await this.preload();
+    this.showInstructions();
+
     this.correctSound = this.scene.sound.add("correct");
     this.incorrectSound = this.scene.sound.add("incorrect");
     // const blackBox = this.scene.add.rectangle(650, 20, 550, 40, 0x000000).setOrigin(0.5, 0);
@@ -110,6 +116,10 @@ export class VirusContainment extends Task {
 
     if (!this.quarantineBox || !this.safeArea) {
       console.error("Failed to load quarantine or safe area images");
+    }
+
+    if (this.quarantineBox.input === null || this.safeArea.input === null) {
+      console.error("Input is null for quarantine or safe area");
     }
 
     // increase hit box size
@@ -167,14 +177,42 @@ export class VirusContainment extends Task {
         .setDepth(1);
     }
 
+    this.updateDifficultyChances();
+    // this.isObfuscated = true;
+
+    const fileDesc = currentFile.description;
+
     this.fileText = this.scene.add
-      .text(centerX, centerY + 50, currentFile.description, {
+      .text(centerX, centerY + 50, fileDesc, {
         color: "#ffffff",
         align: "center",
         stroke: "#000000",
         strokeThickness: 1,
       })
       .setOrigin(0.5);
+
+    if (this.isObfuscated) {
+      const obfuscatedText = this.obfuscateText(currentFile.description);
+      this.fileText.setText(obfuscatedText);
+      this.fileText.setAlpha(0.8);
+      this.scene.tweens.add({
+        targets: this.fileText,
+        alpha: { from: 1, to: 0.6 },
+        duration: 2000,
+        yoyo: true,
+        // repeat: -1,
+      });
+      // this.scene.tweens.add({
+      //   targets: this.fileText,
+      //   x: { from: this.fileText.x - 1, to: this.fileText.x + 1 },
+      //   duration: 100,
+      //   yoyo: true,
+      //   repeat: -1,
+      // });
+      this.scene.time.delayedCall(2000, () => {
+        this.fileText.setText(fileDesc);
+      });
+    }
 
     this.fileObject.on("drag", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       this.fileObject.x = dragX;
@@ -260,5 +298,36 @@ export class VirusContainment extends Task {
     this.safeArea.destroy();
     this.quarantineBoxText.destroy();
     this.safeAreaText.destroy();
+  }
+
+  private showInstructions() {
+    this.instructionsText = this.scene.add
+      .text(
+        this.scene.cameras.main.width / 2,
+        this.scene.cameras.main.height / 2 - 300,
+        "Instructions: Determine if the file is infected or not.\nDrag it to the appropriate area.",
+        {
+          fontSize: "24px",
+          color: "#ffffff",
+          align: "center",
+          fontStyle: "bold",
+        },
+      )
+      .setOrigin(0.5);
+  }
+
+  private updateDifficultyChances() {
+    const currentRound = (this.scene.registry.get("round") as number) || 1;
+    const maxObsfuscationProb = 0.5;
+    const roundMultiplier = 0.05;
+    const obsfucationProb = Math.min(maxObsfuscationProb, roundMultiplier * currentRound);
+    this.isObfuscated = Math.random() < obsfucationProb;
+  }
+
+  private obfuscateText(text: string): string {
+    return text
+      .split("")
+      .map((char) => (char !== " " ? Math.floor(Math.random() * 10).toString() : " "))
+      .join("");
   }
 }
