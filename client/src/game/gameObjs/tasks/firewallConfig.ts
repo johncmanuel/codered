@@ -329,7 +329,7 @@ export class FirewallConfig extends Task {
     const round = (this.scene.registry.get("round") as number) || 1;
 
     // compute how many octets should be the same
-    const maxSharedOctets = 2;
+    const maxSharedOctets = 1;
     const sharedOctetCount = Math.min(Math.floor(round / 2), maxSharedOctets);
     const baseOctets = [];
 
