@@ -94,6 +94,7 @@ export class CodeRed extends Scene {
     this.load.image("calender", "/assets/calender.png");
     this.load.image("volume", "/assets/volume-up.png");
     this.load.image("clock", "/assets/clock.png");
+    this.load.image("batteryOutline", "/assets/battery-outline.png");
   }
 
   // load the game objects stuff here
@@ -142,6 +143,8 @@ export class CodeRed extends Scene {
       EventBus.emit("updateHealth", dataHealthObj);
       // ensure registry keeps actual data health
       this.registry.set("dataHealth", dataHealth);
+
+      this.gameplayScreen.updateBattery(dataHealth);
     });
 
     // prep for start of new round

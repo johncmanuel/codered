@@ -9,6 +9,8 @@ export class ControlButtons {
   private padding: number = 100;
   private columns: number = 2;
   private buttonImages: GameObjects.Image[] = [];
+  private normalButtonColor: string = "#0000ff";
+  private hoverButtonColor: string = "#000080";
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -63,19 +65,32 @@ export class ControlButtons {
 
       const button = this.scene.add
         .text(x, y, control, {
-          fontFamily: "Arial",
+          fontFamily: "Audiowide",
           fontSize: "16px",
           color: "#ffffff",
-          backgroundColor: "#0000ff",
+          stroke: "black",
+          strokeThickness: 2,
+          backgroundColor: this.normalButtonColor,
           padding: { x: 10, y: 10 },
         })
         .setOrigin(0.5, 0.5)
         .setInteractive({ useHandCursor: true })
         .setData("control", control);
 
+      button.on("pointerover", () => {
+        button.setStyle({ backgroundColor: this.hoverButtonColor });
+        button.setScale(1.05);
+      });
+
+      button.on("pointerout", () => {
+        button.setStyle({ backgroundColor: this.normalButtonColor });
+        button.setScale(1.0);
+      });
+
       button.on("pointerdown", () => {
         this.handleClickOnBtn(control);
       });
+
       button.setVisible(true);
 
       this.buttons.push(button);
@@ -91,6 +106,9 @@ export class ControlButtons {
     const button = this.buttons[btnIdx];
     button.setInteractive(false);
     button.off("pointerdown");
+    button.off("pointerover");
+    button.off("pointerout");
+    button.setStyle({ backgroundColor: "#666666" });
   }
 
   enableBtn(btnIdx: number) {
@@ -100,9 +118,22 @@ export class ControlButtons {
     }
     const button = this.buttons[btnIdx];
     button.setInteractive({ useHandCursor: true });
+
     button.on("pointerdown", () => {
       this.handleClickOnBtn(button.getData("control"));
     });
+
+    button.on("pointerover", () => {
+      button.setStyle({ backgroundColor: this.hoverButtonColor });
+      button.setScale(1.05);
+    });
+
+    button.on("pointerout", () => {
+      button.setStyle({ backgroundColor: this.normalButtonColor });
+      button.setScale(1.0);
+    });
+
+    button.setStyle({ backgroundColor: this.normalButtonColor });
   }
 
   hide() {
@@ -142,5 +173,16 @@ export class ControlButtons {
       button.setFlip(false, false);
     });
     console.log("Control buttons unflipped");
+  }
+
+  updateButtonColors(normalColor: string, hoverColor: string) {
+    this.normalButtonColor = normalColor;
+    this.hoverButtonColor = hoverColor;
+
+    this.buttons.forEach((button) => {
+      if (button.input && button.input.enabled) {
+        button.setStyle({ backgroundColor: this.normalButtonColor });
+      }
+    });
   }
 }

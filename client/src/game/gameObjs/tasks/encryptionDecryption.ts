@@ -43,11 +43,11 @@ export class EncryptionDecryption extends Task {
 
     this.displayQuestion();
     this.box = this.scene.add
-      .rectangle(10, 10, this.scene.cameras.main.width - 20, 40, 0x65e305)
+      .rectangle(10, 18, this.scene.cameras.main.width - 20, 40, 0x65e305)
       .setOrigin(0, 0)
       .setDepth(0);
     this.boxText = this.scene.add
-      .text(620, 30, "", {
+      .text(620, 38, "", {
         fontFamily: "AudioWide",
         fontSize: "34px",
         color: "#FE0000",
