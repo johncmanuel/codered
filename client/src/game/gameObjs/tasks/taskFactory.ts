@@ -31,11 +31,3 @@ export function createTask(scene: Scene, taskId: string, taskType: Tasks): Task 
       return new FillerTask(scene, taskId);
   }
 }
-
-// TODO: work on this later to prevent switch statement from being too long
-// Use for creating tasks based on their type
-// export const TaskConstructors: Record<Tasks, TaskConstructor> = {
-//   [Tasks.FIREWALL_CONFIG]: FirewallConfig,
-// };
-//
-// export type TaskConstructor = new (scene: Scene, taskId: string) => Task;
