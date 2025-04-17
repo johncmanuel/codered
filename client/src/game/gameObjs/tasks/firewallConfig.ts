@@ -8,7 +8,7 @@ export class FirewallConfig extends Task {
   private totalIPs: number;
 
   private mistakes: number;
-  private mistakesAllowed: number = 3;
+  private mistakesAllowed: number = 2;
   private percentageOfTrustedIPs: number = 0.3;
 
   private whitelistBtn: Phaser.GameObjects.Text;
@@ -29,12 +29,20 @@ export class FirewallConfig extends Task {
   private correctSound: Phaser.Sound.BaseSound;
   private incorrectSound: Phaser.Sound.BaseSound;
 
+  private isObfuscationEnabled: boolean;
+
+  // use the stroop effect!
+  // https://en.wikipedia.org/wiki/Stroop_effect
+  private isColorTrickeryEnabled: boolean;
+
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
     // TODO: adjust number of IPs to generate based on number of rounds
     // or through something that makes the game harder
-    this.trustedIPs = this.generateRandomIPs(5);
-    this.ipQueue = this.generateIPQueue(4);
+    const round = (this.scene.registry.get("round") as number) || 1;
+
+    this.trustedIPs = this.generateRandomIPs(this.calculateTrustedIPCount(round));
+    this.ipQueue = this.generateIPQueue(this.calculateNumIPsToConfigure(round));
     this.totalIPs = this.ipQueue.length;
     this.mistakes = 0;
     this.currentIP = "";
@@ -99,7 +107,7 @@ export class FirewallConfig extends Task {
 
   private showTrustedIPs() {
     this.trustedIPsText = this.scene.add.text(
-      900,
+      950,
       200,
       "Trusted IPs:\n" + this.trustedIPs.join("\n"),
       {
@@ -154,21 +162,39 @@ export class FirewallConfig extends Task {
       })
       .setDepth(1);
 
+    this.updateDifficultyChances();
+    // this.isColorTrickeryEnabled = true;
+    // this.isObfuscationEnabled = true;
+    const red = "#ff0000";
+    const green = "#00ff00";
+    const whitelistColor = this.isColorTrickeryEnabled ? red : green; // red instead of green
+    const blacklistColor = this.isColorTrickeryEnabled ? green : red; // green instead of red
+
+    // flicker the given IP address
+    if (this.isObfuscationEnabled) {
+      this.scene.tweens.add({
+        targets: this.currentIPText,
+        alpha: { from: 1, to: 0.0 },
+        duration: 2000,
+        yoyo: true,
+        repeat: -1,
+      });
+    }
+
     this.whitelistImage = this.scene.add.image(400, 600, "folder").setScale(0.7);
     this.whitelistBtn = this.scene.add
-      .text(335, 600, "Whitelist", { fontSize: "24px", color: "black", fontStyle: "bold" })
+      .text(335, 600, "Whitelist", { fontSize: "24px", color: whitelistColor, fontStyle: "bold" })
       .setInteractive()
       .setDepth(1)
       .on("pointerdown", () => this.handleDecision(true));
 
     this.blacklistImage = this.scene.add.image(805, 600, "folder").setScale(0.7);
     this.blacklistBtn = this.scene.add
-      .text(740, 600, "Blacklist", { fontSize: "24px", color: "black", fontStyle: "bold" })
+      .text(740, 600, "Blacklist", { fontSize: "24px", color: blacklistColor, fontStyle: "bold" })
       .setInteractive()
       .setDepth(1)
       .on("pointerdown", () => this.handleDecision(false));
 
-    // Display remaining IPs
     this.ipCountText = this.scene.add.text(
       450,
       150,
@@ -265,31 +291,64 @@ export class FirewallConfig extends Task {
 
   private generateIPQueue(totalIPs: number): string[] {
     const ipQueue: string[] = [];
+    const round = (this.scene.registry.get("round") as number) || 1;
     const trustedIPsToInclude = Math.ceil(totalIPs * this.percentageOfTrustedIPs);
-    // ensure the number of trusted IPs not exceeded
     const trustedIPsInQueue = Math.min(trustedIPsToInclude, this.trustedIPs.length);
+    const maxNearMissChance = 0.7;
 
     for (let i = 0; i < trustedIPsInQueue; i++) {
       ipQueue.push(this.trustedIPs[i]);
     }
 
     const remainingIPs = totalIPs - trustedIPsInQueue;
+
     for (let i = 0; i < remainingIPs; i++) {
-      let randomIP = this.generateRandomIP();
-      // ensure the random IP is not already in the trusted IPs list
-      while (this.trustedIPs.includes(randomIP)) {
+      let randomIP: string;
+      const nearMissChance = Math.min(round * 0.1, maxNearMissChance);
+
+      if (Math.random() < nearMissChance) {
+        // get a trusted IP and modify one part
+        const base = Phaser.Utils.Array.GetRandom(this.trustedIPs);
+        randomIP = this.generateSimilarLookingIP(base);
+      } else {
+        // Completely random non-trusted IP
         randomIP = this.generateRandomIP();
+        while (this.trustedIPs.includes(randomIP)) {
+          randomIP = this.generateRandomIP();
+        }
       }
+
       ipQueue.push(randomIP);
     }
+
     return Phaser.Utils.Array.Shuffle(ipQueue);
   }
 
   private generateRandomIPs(count: number): string[] {
     const ips: string[] = [];
-    for (let i = 0; i < count; i++) {
-      ips.push(this.generateRandomIP());
+    const round = (this.scene.registry.get("round") as number) || 1;
+
+    // compute how many octets should be the same
+    const maxSharedOctets = 2;
+    const sharedOctetCount = Math.min(Math.floor(round / 2), maxSharedOctets);
+    const baseOctets = [];
+
+    for (let i = 0; i < sharedOctetCount; i++) {
+      baseOctets.push(Math.floor(Math.random() * 256));
     }
+
+    for (let i = 0; i < count; i++) {
+      const ipParts = [...baseOctets];
+
+      // fill remaining octets randomly
+      while (ipParts.length < 4) {
+        ipParts.push(Math.floor(Math.random() * 256));
+      }
+
+      const ip = ipParts.join(".");
+      ips.push(ip);
+    }
+
     return ips;
   }
 
@@ -297,5 +356,45 @@ export class FirewallConfig extends Task {
     return `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(
       Math.random() * 256,
     )}.${Math.floor(Math.random() * 256)}`;
+  }
+
+  private updateDifficultyChances() {
+    const maxObfucsationChance = 0.9;
+    const maxColorTrickeryChance = 0.8;
+    const roundMultiplier = 0.05; // add 5% increase per round
+
+    const currentRound = (this.scene.registry.get("round") as number) || 1;
+    const obfuscationChance = Math.min(currentRound * roundMultiplier, maxObfucsationChance);
+    const colorTrickeryChance = Math.min(currentRound * roundMultiplier, maxColorTrickeryChance);
+
+    this.isObfuscationEnabled = Math.random() < obfuscationChance;
+    this.isColorTrickeryEnabled = Math.random() < colorTrickeryChance;
+  }
+
+  private calculateTrustedIPCount(round: number): number {
+    const base = 5;
+    const scalingFactor = 3;
+    const maxIPs = 25;
+
+    return Math.min(base + Math.floor(round * scalingFactor), maxIPs);
+  }
+
+  // i wouldn't want to configure more than 5 IPs at once lol
+  private calculateNumIPsToConfigure(round: number) {
+    const maxIPs = 5;
+    return Math.min(maxIPs, round);
+  }
+
+  private generateSimilarLookingIP(baseIP: string): string {
+    const parts = baseIP.split(".").map(Number);
+    const indexToChange = Phaser.Math.Between(0, 3);
+    let newPart = parts[indexToChange];
+
+    // nudge up or down by 1–5 but keep within 0–255
+    const delta = Phaser.Math.Between(1, 5) * (Math.random() < 0.5 ? -1 : 1);
+    newPart = Phaser.Math.Clamp(newPart + delta, 0, 255);
+
+    parts[indexToChange] = newPart;
+    return parts.join(".");
   }
 }
