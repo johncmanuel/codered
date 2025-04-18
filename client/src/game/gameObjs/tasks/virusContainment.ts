@@ -4,23 +4,29 @@ import { Scene } from "phaser";
 export class VirusContainment extends Task {
   private files: { name: string; description: string; isInfected: boolean }[];
   private currentFileIndex: number;
+
   private quarantineBox: Phaser.GameObjects.Sprite;
   private safeArea: Phaser.GameObjects.Sprite;
+
   private fileObject: Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle;
   private fileObjectStartingPos = { x: 650, y: 310 };
+
   private errorCount: number = 0;
   private maxErrors: number = 2;
   private score: number = 0;
   private maxScore: number = 2;
+
+  private instructionsText: Phaser.GameObjects.Text;
   private fileText: Phaser.GameObjects.Text;
   private quarantineBoxText: Phaser.GameObjects.Text;
   private safeAreaText: Phaser.GameObjects.Text;
+
   private correctSound: Phaser.Sound.BaseSound;
   private incorrectSound: Phaser.Sound.BaseSound;
 
   private isObfuscated: boolean;
 
-  private instructionsText: Phaser.GameObjects.Text;
+  private activeTimers: Phaser.Time.TimerEvent[] = [];
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
@@ -94,7 +100,20 @@ export class VirusContainment extends Task {
 
   async start(): Promise<void> {
     await this.preload();
-    this.showInstructions();
+
+    this.instructionsText = this.scene.add
+      .text(
+        this.scene.cameras.main.width / 2,
+        this.scene.cameras.main.height / 2 - 300,
+        "Instructions: Determine if the file is infected or not.\nDrag it to the appropriate area.",
+        {
+          fontSize: "24px",
+          color: "#ffffff",
+          align: "center",
+          fontStyle: "bold",
+        },
+      )
+      .setOrigin(0.5);
 
     this.correctSound = this.scene.sound.add("correct");
     this.incorrectSound = this.scene.sound.add("incorrect");
@@ -178,7 +197,7 @@ export class VirusContainment extends Task {
     }
 
     this.updateDifficultyChances();
-    // this.isObfuscated = true;
+    this.isObfuscated = true;
 
     const fileDesc = currentFile.description;
 
@@ -192,26 +211,35 @@ export class VirusContainment extends Task {
       .setOrigin(0.5);
 
     if (this.isObfuscated) {
-      const obfuscatedText = this.obfuscateText(currentFile.description);
-      this.fileText.setText(obfuscatedText);
-      this.fileText.setAlpha(0.8);
-      this.scene.tweens.add({
-        targets: this.fileText,
-        alpha: { from: 1, to: 0.6 },
-        duration: 2000,
-        yoyo: true,
-        // repeat: -1,
-      });
-      // this.scene.tweens.add({
-      //   targets: this.fileText,
-      //   x: { from: this.fileText.x - 1, to: this.fileText.x + 1 },
-      //   duration: 100,
-      //   yoyo: true,
-      //   repeat: -1,
-      // });
-      this.scene.time.delayedCall(2000, () => {
-        this.fileText.setText(fileDesc);
-      });
+      const obfuscatedTextDurationMs = 1500;
+      const glitchEffectDurationMs = 50; // basically how fast the glitch effect is
+
+      if (this.fileText) {
+        this.applyGlitchEffect(fileDesc, obfuscatedTextDurationMs, glitchEffectDurationMs);
+
+        // add a blinking effect
+        this.scene.tweens.add({
+          targets: this.fileText,
+          alpha: { from: 1, to: 0.6 },
+          duration: 2000,
+          yoyo: true,
+          // repeat: -1,
+        });
+        // add a shaking effect
+        this.scene.tweens.add({
+          targets: this.fileText,
+          x: { from: this.fileText.x - 1, to: this.fileText.x + 1 },
+          duration: 2000,
+          yoyo: true,
+          // repeat: -1,
+        });
+
+        this.scene.time.delayedCall(2000, () => {
+          if (this.fileText && this.fileText.active) {
+            this.fileText.setText(fileDesc);
+          }
+        });
+      }
     }
 
     this.fileObject.on("drag", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -265,10 +293,7 @@ export class VirusContainment extends Task {
         this.complete();
         return;
       }
-      this.currentFileIndex = Math.floor(Math.random() * this.files.length);
-      this.fileObject.destroy();
-      this.fileText.destroy();
-      this.spawnFile(this.currentFileIndex);
+      this.handleNextFile();
     } else {
       // Incorrect choice
       this.errorCount++;
@@ -281,39 +306,31 @@ export class VirusContainment extends Task {
         this.fail();
         return;
       }
-      this.currentFileIndex = Math.floor(Math.random() * this.files.length);
-      this.fileObject.destroy();
-      this.fileText.destroy();
-      this.spawnFile(this.currentFileIndex);
+      this.handleNextFile();
     }
+  }
+
+  private handleNextFile() {
+    this.currentFileIndex = Math.floor(Math.random() * this.files.length);
+    this.fileObject.destroy();
+    this.fileText.destroy();
+    this.scene.tweens.killTweensOf(this.fileText);
+    this.spawnFile(this.currentFileIndex);
   }
 
   update(): void {}
 
   cleanup(): void {
     super.cleanup();
+    this.activeTimers?.forEach((timer) => timer.remove(false));
+    this.activeTimers = [];
     this.fileObject?.destroy();
     this.fileText?.destroy();
-    this.quarantineBox.destroy();
-    this.safeArea.destroy();
-    this.quarantineBoxText.destroy();
-    this.safeAreaText.destroy();
-  }
-
-  private showInstructions() {
-    this.instructionsText = this.scene.add
-      .text(
-        this.scene.cameras.main.width / 2,
-        this.scene.cameras.main.height / 2 - 300,
-        "Instructions: Determine if the file is infected or not.\nDrag it to the appropriate area.",
-        {
-          fontSize: "24px",
-          color: "#ffffff",
-          align: "center",
-          fontStyle: "bold",
-        },
-      )
-      .setOrigin(0.5);
+    this.quarantineBox?.destroy();
+    this.safeArea?.destroy();
+    this.quarantineBoxText?.destroy();
+    this.safeAreaText?.destroy();
+    this.instructionsText?.destroy();
   }
 
   private updateDifficultyChances() {
@@ -324,6 +341,34 @@ export class VirusContainment extends Task {
     this.isObfuscated = Math.random() < obsfucationProb;
   }
 
+  private applyGlitchEffect(
+    text: string,
+    durationMs: number,
+    intervalMs: number,
+    // textObj: Phaser.GameObjects.Text,
+  ) {
+    // set timer to rapidly change characters to random numbers
+    const glitchTimer = this.scene.time.addEvent({
+      delay: intervalMs,
+      loop: true,
+      callback: () => {
+        if (this.fileText && this.fileText.active) {
+          const glitchedText = this.obfuscateText(text);
+          this.fileText.setText(glitchedText);
+        }
+      },
+    });
+
+    const restoreDescTimer = this.scene.time.delayedCall(durationMs, () => {
+      glitchTimer.remove(false);
+      this.fileText.setText(text);
+    });
+
+    if (!this.activeTimers) this.activeTimers = [];
+    this.activeTimers.push(glitchTimer, restoreDescTimer);
+  }
+
+  // replaces each character with a random number
   private obfuscateText(text: string): string {
     return text
       .split("")
