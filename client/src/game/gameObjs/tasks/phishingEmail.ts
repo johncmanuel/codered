@@ -1,14 +1,18 @@
 import { Task } from "./task";
 import { Scene } from "phaser";
 
+export type Email = {
+  sender: string;
+  recipient: string;
+  subject: string;
+  body: string;
+  isPhishing: boolean;
+};
+
+export type ObfuscatableEmailField = "sender" | "subject" | "body";
+
 export class PhishingEmail extends Task {
-  private emails: {
-    sender: string;
-    recipient: string;
-    subject: string;
-    body: string;
-    isPhishing: boolean;
-  }[];
+  private emails: Email[];
   // prevent duplicate emails from being seen
   private emailsSeen: Set<number> = new Set();
   private score: number = 0;
@@ -44,10 +48,10 @@ export class PhishingEmail extends Task {
     const playerRecipient = "randomemployee@therandomcompany.com";
     return [
       {
-        sender: "support@bank.com",
+        sender: "support@bankofscammers.com",
         recipient: playerRecipient,
         subject: "Urgent: Your Account Has Been Compromised",
-        body: "Dear user, we have detected suspicious activity on your account. Please click the link below to reset your password immediately:\n\nhttps://fake-bank.com/reset-password\n\nIf you did not request this change, please contact us at support@bank.com.",
+        body: "Dear user, we have detected suspicious activity on your account. Please click the link below to reset your password immediately:\n\nhttps://bankofscammers.com/reset-password\n\nIf you did not request this change, please contact us at support@bank.com.",
         isPhishing: true,
       },
       {
@@ -61,7 +65,7 @@ export class PhishingEmail extends Task {
         sender: "noreply@paypal.com",
         recipient: playerRecipient,
         subject: "Action Required: Verify Your Account",
-        body: "We noticed unusual login attempts on your PayPal account. To secure your account, please verify your identity by clicking the link below:\n\nhttps://fake-paypal.com/verify\n\nIf this was not you, please contact us immediately.",
+        body: "We noticed unusual login attempts on your PayPal account. To secure your account, please verify your identity by clicking the link below:\n\nhttps://paypal-real.com/verify\n\nIf this was not you, please contact us immediately.",
         isPhishing: true,
       },
       {
@@ -75,7 +79,7 @@ export class PhishingEmail extends Task {
         sender: "prizes@lottery.com",
         recipient: playerRecipient,
         subject: "Congratulations! You've Won $1000",
-        body: "You are the lucky winner of a $1000 gift card! Click the link below to claim your prize:\n\nhttps://fake-lottery.com/claim-prize\n\nHurry, this offer expires soon!",
+        body: "You are the lucky winner of a $1000 gift card! Click the link below to claim your prize:\n\nhttps://ez-lottery.com/claim-prize\n\nHurry, this offer expires soon!",
         isPhishing: true,
       },
       {
@@ -89,7 +93,7 @@ export class PhishingEmail extends Task {
         sender: "no-reply@facebook.com",
         recipient: playerRecipient,
         subject: "Your Account Has Been Temporarily Locked",
-        body: "Due to suspicious activity, your account has been temporarily locked. Click the link below to unlock your account:\n\nhttps://fake-facebook.com/unlock-account\n\nIf you did not request this, please contact us immediately.",
+        body: "Due to suspicious activity, your account has been temporarily locked. Click the link below to unlock your account:\n\nhttps://facebook-real.com/unlock-account\n\nIf you did not request this, please contact us immediately.",
         isPhishing: true,
       },
       {
@@ -103,21 +107,21 @@ export class PhishingEmail extends Task {
         sender: "billing@netflix.com",
         recipient: playerRecipient,
         subject: "Payment Failed - Update Your Payment Information",
-        body: "We were unable to process your last payment. Please update your payment details to avoid service interruption:\n\nhttps://fake-netflix.com/update-payment",
+        body: "We were unable to process your last payment. Please update your payment details to avoid service interruption:\n\nhttps://netflix-verify.com/update-payment",
         isPhishing: true,
       },
       {
-        sender: "noreply@twitter.com",
+        sender: "noreply@x.com",
         recipient: playerRecipient,
-        subject: "Your Twitter Account Has Been Compromised",
-        body: "We detected suspicious activity on your Twitter account. Click the link below to secure your account:\n\nhttps://twitter.com/account/secure",
+        subject: "Your X Account Has Been Compromised",
+        body: "We detected suspicious activity on your Twitter account. Click the link below to secure your account:\n\nhttps://x.com/account/secure",
         isPhishing: false,
       },
       {
         sender: "support@dropbox.com",
         recipient: playerRecipient,
         subject: "Your Dropbox Storage Is Full",
-        body: "Your Dropbox storage is full. Upgrade your plan to continue syncing your files:\n\nhttps://fake-dropbox.com/upgrade",
+        body: "Your Dropbox storage is full. Upgrade your plan to continue syncing your files:\n\nhttps://dropbox-login.com/upgrade",
         isPhishing: true,
       },
       {
@@ -131,7 +135,7 @@ export class PhishingEmail extends Task {
         sender: "support@irs.gov",
         recipient: playerRecipient,
         subject: "Urgent: Tax Refund Notification",
-        body: "You are eligible for a tax refund. Click the link below to claim your refund:\n\nhttps://fake-irs.com/claim-refund",
+        body: "You are eligible for a tax refund. Click the link below to claim your refund:\n\nhttps://irs-tax-us.com/claim-refund",
         isPhishing: true,
       },
       {
@@ -145,7 +149,7 @@ export class PhishingEmail extends Task {
         sender: "support@paypal.com",
         recipient: playerRecipient,
         subject: "Your Account Has Been Limited",
-        body: "We have limited your account due to suspicious activity. Click the link below to resolve this issue:\n\nhttps://fake-paypal.com/resolve-issue",
+        body: "We have limited your account due to suspicious activity. Click the link below to resolve this issue:\n\nhttps://paypal-secure.com/resolve-issue",
         isPhishing: true,
       },
       {
@@ -159,7 +163,7 @@ export class PhishingEmail extends Task {
         sender: "security@amazon.com",
         recipient: playerRecipient,
         subject: "Suspicious Activity Detected on Your Account",
-        body: "We detected unusual activity on your Amazon account. Click the link below to secure your account:\n\nhttps://fake-amazon.com/secure-account",
+        body: "We detected unusual activity on your Amazon account. Click the link below to secure your account:\n\nhttps://amazon.security.com/secure-account",
         isPhishing: true,
       },
       {
@@ -191,8 +195,14 @@ export class PhishingEmail extends Task {
     while (this.emailsSeen.has(randomEmailIndex)) {
       randomEmailIndex = Math.floor(Math.random() * this.emails.length);
     }
-    const currentEmail = this.emails[randomEmailIndex];
+    let currentEmail = this.emails[randomEmailIndex];
     this.emailsSeen.add(randomEmailIndex);
+
+    const effectChance = this.getEffectProbability();
+    if (this.shouldApplyEffect(effectChance)) {
+      console.log("Applying effect to email");
+      currentEmail = this.obfuscateEmailDetails(currentEmail);
+    }
 
     const emailContent = `
       From: ${currentEmail.sender}
@@ -267,5 +277,29 @@ export class PhishingEmail extends Task {
       console.log("You lose!");
       this.fail();
     }
+  }
+
+  private obfuscateEmailDetails(email: Email): Email {
+    // replaces letters with *
+    const obscure = (text: string) => text.replace(/[a-zA-Z]/g, () => "*");
+
+    const emailCopy = { ...email };
+    const fields: ObfuscatableEmailField[] = ["sender", "subject", "body"];
+    const chosen = Phaser.Utils.Array.GetRandom(fields);
+    console.log("Obfuscating field:", chosen);
+
+    // don't mind that emoji
+    emailCopy[chosen] = obscure(emailCopy[chosen] + "😈");
+    return emailCopy;
+  }
+
+  private shouldApplyEffect(probability: number): boolean {
+    return Math.random() < probability;
+  }
+
+  private getEffectProbability(): number {
+    const cap = 0.8;
+    const round = (this.scene.registry.get("round") as number) || 1;
+    return Math.min(0.2 + round * 0.1, cap);
   }
 }
