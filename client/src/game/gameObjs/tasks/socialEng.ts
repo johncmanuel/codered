@@ -83,39 +83,17 @@ export class SocialEng extends Task {
     this.clues.push(`Device: ${device}`);
     // this.clues.push(`Last Login: ${lastLogin}`);
 
-    const numClues = Phaser.Math.Between(2, 4);
+    // const numClues = Phaser.Math.Between(2, 4);
+    const round = (this.scene.registry.get("round") as number) || 1;
+    const { real: numReal, neutral: numNeutral } = this.getScaledClueCounts(round);
+    // console.log("numReal, numNeutral", numReal, numNeutral);
 
     if (!this.isLegitimate) {
-      // add sus clues
-      this.addRandomClues(
-        [
-          `VPN detected (unusual for this employee)`,
-          `Typing speed unusually ${Phaser.Math.Between(0, 1) ? "fast" : "slow"}`,
-          `Failed biometric scan`,
-          `Unusual mouse movement patterns`,
-          `Login from ${this.getRandomLocation()} just 5 minutes ago`,
-          `Using ${this.getRandomDevice()} which they don't normally use`,
-          `Password entered with ${Phaser.Math.Between(0, 1) ? "no" : "many"} typos`,
-          `Accessing unusual resources for this role`,
-          `Login attempt during non-working hours`,
-        ],
-        numClues,
-      );
+      this.addRandomClues(this.getImpostorClues(), numReal);
     } else {
-      // add legit clues
-      this.addRandomClues(
-        [
-          `Matches typical login behavior`,
-          `Biometric verification passed`,
-          `Using known device fingerprint`,
-          `Typing patterns match employee profile`,
-          `Following normal work schedule`,
-          `Accessing expected resources for role`,
-          `Login during regular working hours`,
-        ],
-        numClues,
-      );
+      this.addRandomClues(this.getLegitClues(), numReal);
     }
+    this.addRandomClues(this.getNeutralClues(), numNeutral);
   }
 
   private addRandomClues(cluePool: string[], count: number) {
@@ -127,6 +105,21 @@ export class SocialEng extends Task {
       // Avoid duplicate clues
       availableClues.splice(randomIndex, 1);
     }
+  }
+
+  // number of clues increases as number of rounds increase
+  private getScaledClueCounts(round: number): { real: number; neutral: number } {
+    const clueMultiplierLimit = 2;
+    const baseClueCount = Phaser.Math.Between(2, 4);
+    const clueMultiplier = Math.min(1 + round / 5, clueMultiplierLimit);
+    const totalClues = Math.floor(baseClueCount * clueMultiplier);
+
+    const maxDecoyRatio = 0.5;
+    const neutralRatio = Math.min(round / 10, maxDecoyRatio);
+    const numNeutral = Math.floor(totalClues * neutralRatio);
+    const numReal = totalClues - numNeutral;
+
+    return { real: numReal, neutral: numNeutral };
   }
 
   private getRandomLocation(): string {
@@ -166,6 +159,42 @@ export class SocialEng extends Task {
   //   ];
   //   return times[Phaser.Math.Between(0, times.length - 1)];
   // }
+
+  private getImpostorClues(): string[] {
+    return [
+      `VPN detected (unusual for this employee)`,
+      `Typing speed unusually ${Phaser.Math.Between(0, 1) ? "fast" : "slow"}`,
+      `Failed biometric scan`,
+      `Unusual mouse movement patterns`,
+      // `Login from ${this.getRandomLocation()} just 5 minutes ago`,
+      `Using ${this.getRandomDevice()} which they don't normally use`,
+      `Password entered with ${Phaser.Math.Between(0, 1) ? "no" : "many"} typos`,
+      `Accessing unusual resources for this role`,
+      `Login attempt during non-working hours`,
+    ];
+  }
+
+  private getLegitClues(): string[] {
+    return [
+      `Matches typical login behavior`,
+      `Biometric verification passed`,
+      `Using known device fingerprint`,
+      `Typing patterns match employee profile`,
+      `Following normal work schedule`,
+      `Accessing expected resources for role`,
+      `Login during regular working hours`,
+    ];
+  }
+
+  // add these clues just to throw players off more
+  private getNeutralClues(): string[] {
+    return [
+      "Email client opened after login",
+      "Used approved browser",
+      "No recent password change",
+      "MFA token verified",
+    ];
+  }
 
   private createDecisionButtons() {
     this.legitimateButton = this.scene.add
