@@ -36,7 +36,7 @@ export class Sandbox extends Scene {
       console.log("Rect2 clicked");
     });
 
-    this.taskManager.addTask(testId, createTask(this, testId, Tasks.NETWORK_MAPPING));
+    this.taskManager.addTask(testId, createTask(this, testId, Tasks.SYSTEM_REBOOT));
 
     console.log("Added task");
     this.taskManager.startTask(testId);
