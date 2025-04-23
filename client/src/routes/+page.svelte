@@ -254,6 +254,20 @@
     all: unset;
   }
 
+  .leave-button {
+    background-color: #222222;
+    color: white;
+    font-size: 24px;
+    font-family: "Audiowide", sans-serif;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    position: absolute;
+    left: 730px;
+    top: 600px;
+  }
+
   button.no-hover:hover {
     background-color: initial;
     transform: none;

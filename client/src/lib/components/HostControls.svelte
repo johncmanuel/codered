@@ -12,8 +12,9 @@
 <style>
   .host-controls {
     display: flex;
-    justify-content: center;
+    justify-content: left;
     margin-top: 20px;
+    margin-left: 100px;
   }
 
   .start-button {
@@ -28,6 +29,6 @@
   }
 
   .start-button:hover {
-    background-color: #333333;
+    background-color: rgb(190, 10, 10);
   }
 </style>
