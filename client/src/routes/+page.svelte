@@ -255,6 +255,7 @@
   }
 
   .leave-button {
+    display: flex;
     background-color: #222222;
     color: white;
     font-size: 24px;
@@ -264,8 +265,8 @@
     cursor: pointer;
     transition: background-color 0.3s;
     position: absolute;
-    left: 730px;
-    top: 600px;
+    margin-left: 310px;
+    margin-top: 20px;
   }
 
   button.no-hover:hover {
