@@ -14,12 +14,44 @@ export class SocialEng extends Task {
   private employeeName: string;
   private header: GameObjects.Text;
 
+  private correctSound: Phaser.Sound.BaseSound;
+  private incorrectSound: Phaser.Sound.BaseSound;
+
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
     this.createBlockingOverlay();
   }
 
-  start() {
+  async preload(): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.scene.textures.exists("correct")) {
+        console.log("Audio already loaded");
+        resolve();
+        return;
+      }
+
+      this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
+      this.scene.load.audio("incorrect", "/assets/wrongsoundeffect.mp3");
+
+      this.scene.load.on("complete", () => {
+        console.log("All audios loaded successfully");
+        resolve();
+      });
+
+      this.scene.load.on("loaderror", (file: any) => {
+        console.error("Error loading audio:", file.src);
+        resolve();
+      });
+
+      this.scene.load.start();
+    });
+  }
+
+  async start() {
+    await this.preload();
+    this.correctSound = this.scene.sound.add("correct");
+    this.incorrectSound = this.scene.sound.add("incorrect");
+
     this.isLegitimate = Phaser.Math.Between(0, 1) === 1;
     this.employeeName = this.generateEmployeeName();
     this.generateLoginDetails();
@@ -218,8 +250,14 @@ export class SocialEng extends Task {
 
     this.legitimateButton.on("pointerdown", () => {
       if (this.isLegitimate) {
+        if (this.correctSound) {
+          this.correctSound.play();
+        }
         this.complete();
       } else {
+        if (this.incorrectSound) {
+          this.incorrectSound.play();
+        }
         this.fail();
       }
     });
@@ -245,8 +283,14 @@ export class SocialEng extends Task {
 
     this.impostorButton.on("pointerdown", () => {
       if (!this.isLegitimate) {
+        if (this.correctSound) {
+          this.correctSound.play();
+        }
         this.complete();
       } else {
+        if (this.incorrectSound) {
+          this.incorrectSound.play();
+        }
         this.fail();
       }
     });

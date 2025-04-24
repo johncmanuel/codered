@@ -22,6 +22,8 @@ export class PhishingEmail extends Task {
   private emailText: Phaser.GameObjects.Text;
   private phishingButton: Phaser.GameObjects.Text;
   private safeButton: Phaser.GameObjects.Text;
+  private correctSound: Phaser.Sound.BaseSound;
+  private incorrectSound: Phaser.Sound.BaseSound;
 
   constructor(scene: Scene, taskId: string) {
     super(scene, taskId);
@@ -29,9 +31,36 @@ export class PhishingEmail extends Task {
     this.emails = this.generateEmails();
   }
 
-  start() {
-    console.log("Starting PHISHING_EMAIL task");
+  async preload(): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.scene.textures.exists("correct")) {
+        console.log("Audio already loaded");
+        resolve();
+        return;
+      }
 
+      this.scene.load.audio("correct", "/assets/correctsoundeffect.mp3");
+      this.scene.load.audio("incorrect", "/assets/wrongsoundeffect.mp3");
+
+      this.scene.load.on("complete", () => {
+        console.log("All audios loaded successfully");
+        resolve();
+      });
+
+      this.scene.load.on("loaderror", (file: any) => {
+        console.error("Error loading audio:", file.src);
+        resolve();
+      });
+
+      this.scene.load.start();
+    });
+  }
+
+  async start() {
+    console.log("Starting PHISHING_EMAIL task");
+    await this.preload();
+    this.correctSound = this.scene.sound.add("correct");
+    this.incorrectSound = this.scene.sound.add("incorrect");
     this.displayEmail();
   }
 
@@ -248,9 +277,15 @@ export class PhishingEmail extends Task {
 
     if (isPhishing === currentEmail.isPhishing) {
       this.score++;
+      if (this.correctSound) {
+        this.correctSound.play();
+      }
       console.log("Correct choice!");
     } else {
       this.fails++;
+      if (this.incorrectSound) {
+        this.incorrectSound.play();
+      }
       console.log("Incorrect choice!");
     }
 
