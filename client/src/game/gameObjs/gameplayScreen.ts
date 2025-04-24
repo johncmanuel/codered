@@ -79,7 +79,7 @@ export class GameplayScreen {
     this.timeText.setOrigin(0.5, 0.4).setDepth(0);
 
     this.clock = this.scene.add.image(
-      this.scene.cameras.main.width - 185,
+      this.scene.cameras.main.width - 175,
       headerHeight / 2,
       "clock",
     );
