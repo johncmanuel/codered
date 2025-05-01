@@ -16,7 +16,7 @@
   $: hasStarted = false;
   let showAbout = false;
 
-  const mainMenuSong = new Audio("/assets/mainmenu.wav");
+  const mainMenuSong = new Audio("/assets/ingame_music.wav");
   let isMuted = false;
   let isPlaying = false;
   let showVolumeSlider = false;
