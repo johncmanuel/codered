@@ -39,7 +39,7 @@ export class GameplayScreen {
     this.wifiIcon.setOrigin(0, 0.5).setScale(0.1).setDepth(0);
 
     this.calender = this.scene.add.image(
-      this.scene.cameras.main.width - 400,
+      this.scene.cameras.main.width - 395,
       headerHeight / 2,
       "calender",
     );
@@ -51,7 +51,7 @@ export class GameplayScreen {
       year: "numeric",
     });
     this.dateText = this.scene.add.text(
-      this.scene.cameras.main.width - 350,
+      this.scene.cameras.main.width - 340,
       headerHeight / 2,
       currentDate,
       {
