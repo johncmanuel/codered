@@ -1,4 +1,4 @@
-# codered
+# Code Red
 
 ## Update (5-7-25)
 The Colyseus server will be taken down as of today!
