@@ -1,8 +1,6 @@
 # https://docs.colyseus.io/deployment#docker
 
-FROM node:22
-
-ENV PORT 2567
+FROM node:22-alpine
 
 WORKDIR /usr/src/app
 
@@ -15,6 +13,9 @@ RUN npm ci --only=production
 
 COPY . .
 
+RUN npm run build
+
 EXPOSE 2567
 
-CMD [ "npm", "start" ]
+# CMD [ "npm", "start" ]
+CMD ["node", "build/index.js"]
