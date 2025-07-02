@@ -1,8 +1,5 @@
 # Code Red
 
-## Update (5-7-25)
-The Colyseus server will be taken down as of today!
-
 ## Blog Post + Demo
 
 Summarizes the project and covers a quick demo at the end!
