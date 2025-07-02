@@ -25,6 +25,7 @@ RUN npm ci --only=production
 COPY --from=builder /usr/src/app/build ./build
 
 EXPOSE 2567
+ENV NODE_ENV=production
 
 # CMD [ "npm", "start" ]
 CMD ["node", "build/index.js"]
