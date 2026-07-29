@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - "server/**"
+      - ".github/workflows/docker-deploy.yml"
 
 env:
   REGISTRY: ghcr.io
