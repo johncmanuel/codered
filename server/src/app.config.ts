@@ -37,6 +37,11 @@ export default config({
         : // hardcoding this for now lol
           ["https://codered-snowy.vercel.app"];
 
+    app.use((req, res, next) => {
+      res.header("Access-Control-Allow-Private-Network", "true");
+      next();
+    });
+
     app.use(
       cors({
         origin: allowedOrigins,
